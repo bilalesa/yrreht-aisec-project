@@ -286,3 +286,36 @@ def test_live_scanner_job_rejected_until_ready() -> None:
         },
     )
     assert response.status_code == 409
+
+
+# BAM_BANK_UI_REVISION_V35
+
+
+def test_scanner_status_uses_app_generated_config() -> None:
+    response = client.get("/api/scanner/tmas/status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["configConfigured"] is True
+    assert body["configSource"] == "app-generated"
+    assert "defaultTenantReady" in body
+    assert "customTenantSupported" in body
+
+
+def test_custom_tenant_requires_one_time_key() -> None:
+    response = client.post(
+        "/api/scanner/jobs",
+        json={
+            "mode": "live",
+            "target": "vulnerable",
+            "objectives": ["system-prompt"],
+            "tenant_mode": "custom",
+            "tenant_region": "ap-southeast-1",
+        },
+    )
+
+    # TMAS may be absent in the unit-test image. Both outcomes must be
+    # truthful and must never create a job without a customer key.
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert detail["message"]
+    assert response.json().get("jobId") is None

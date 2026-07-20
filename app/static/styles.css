@@ -7757,3 +7757,189 @@ button[data-bam-scanner-mode="live"].active{
     grid-template-columns:1fr 1fr!important;
   }
 }
+
+
+/* BAM_BANK_UI_REVISION_V35 */
+
+#bam-scanner-live-setup-v31{
+  padding:16px!important;
+}
+
+.bam-scanner-tenant-v35{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:14px!important;
+}
+
+.bam-scanner-tenant-v35>header{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+}
+
+.bam-scanner-tenant-v35>header>div{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+}
+
+.bam-scanner-tenant-v35>header strong{
+  color:#20304A!important;
+  font-size:14px!important;
+  font-weight:740!important;
+}
+
+.bam-scanner-tenant-v35>header small{
+  color:#74839A!important;
+  font-size:9.5px!important;
+  line-height:1.45!important;
+}
+
+.bam-tenant-choice-grid-v35{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+
+.bam-tenant-choice-grid-v35 button{
+  min-height:82px!important;
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:11px!important;
+  padding:13px!important;
+  border:1px solid #DBE4EF!important;
+  border-radius:15px!important;
+  color:#273650!important;
+  background:#FFFFFF!important;
+  text-align:left!important;
+}
+
+.bam-tenant-choice-grid-v35 button:hover{
+  border-color:#AFC3DF!important;
+  background:#FAFBFD!important;
+}
+
+.bam-tenant-choice-grid-v35 button.active{
+  border-color:#5D85CD!important;
+  box-shadow:
+    0 0 0 3px rgba(66,105,180,.09),
+    0 10px 24px rgba(36,60,100,.07)!important;
+}
+
+.bam-tenant-choice-icon-v35{
+  width:38px!important;
+  height:38px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:12px!important;
+  color:#2E61B8!important;
+  background:#EAF1FC!important;
+  font-size:14px!important;
+  font-weight:800!important;
+}
+
+.bam-tenant-choice-grid-v35 button>span:last-child{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+}
+
+.bam-tenant-choice-grid-v35 button strong{
+  color:#22324B!important;
+  font-size:11px!important;
+  font-weight:720!important;
+}
+
+.bam-tenant-choice-grid-v35 button small{
+  color:#79869A!important;
+  font-size:8.5px!important;
+  line-height:1.4!important;
+}
+
+.bam-tenant-panel-v35{
+  padding:13px 14px!important;
+  border:1px solid #DCE5EF!important;
+  border-radius:14px!important;
+  background:#F8FAFC!important;
+}
+
+.bam-tenant-panel-v35.hidden{
+  display:none!important;
+}
+
+.bam-tenant-panel-v35>div:first-child{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+}
+
+.bam-tenant-panel-v35>div:first-child span{
+  color:#263650!important;
+  font-size:10.5px!important;
+  font-weight:680!important;
+}
+
+.bam-tenant-panel-v35>div:first-child strong{
+  padding:5px 8px!important;
+  border-radius:999px!important;
+  color:#236E59!important;
+  background:#E5F5EF!important;
+  font-size:7.5px!important;
+  font-weight:760!important;
+}
+
+.bam-tenant-panel-v35>small{
+  display:block!important;
+  margin-top:7px!important;
+  color:#78869A!important;
+  font-size:8.5px!important;
+  line-height:1.45!important;
+}
+
+.bam-custom-tenant-grid-v35{
+  display:grid!important;
+  grid-template-columns:minmax(180px,.7fr) minmax(260px,1.3fr)!important;
+  gap:11px!important;
+}
+
+.bam-custom-tenant-grid-v35 label{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:6px!important;
+}
+
+.bam-custom-tenant-grid-v35 label>span{
+  color:#46566F!important;
+  font-size:8.5px!important;
+  font-weight:680!important;
+}
+
+.bam-custom-tenant-grid-v35 select,
+.bam-custom-tenant-grid-v35 input{
+  width:100%!important;
+  min-height:44px!important;
+  padding:0 12px!important;
+  border:1px solid #D7E1EC!important;
+  border-radius:12px!important;
+  color:#263650!important;
+  background:#FFFFFF!important;
+  font-size:9.5px!important;
+}
+
+.bam-one-time-note-v35{
+  display:block!important;
+  margin-top:9px!important;
+  color:#78869A!important;
+  font-size:8.5px!important;
+  line-height:1.45!important;
+}
+
+@media(max-width:720px){
+  .bam-tenant-choice-grid-v35,
+  .bam-custom-tenant-grid-v35{
+    grid-template-columns:1fr!important;
+  }
+}

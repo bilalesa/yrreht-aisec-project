@@ -7145,6 +7145,82 @@ exposePresenterLabFromUrl();
     )?.dataset.bamScannerMode || scanner.mode || 'demo';
   }
 
+  function selectedTenantMode() {
+    return q('#bam-scanner-tenant-v35')?.dataset.mode ||
+      'default';
+  }
+
+  function customTenantKey() {
+    return q('#bam-scanner-custom-key-v35')?.value.trim() || '';
+  }
+
+  function customTenantRegion() {
+    return q('#bam-scanner-custom-region-v35')?.value ||
+      scanner.status?.defaultRegion ||
+      scanner.status?.region ||
+      'ap-southeast-1';
+  }
+
+  function tenantLiveReady() {
+    if (selectedTenantMode() === 'custom') {
+      return Boolean(
+        scanner.status?.tmasInstalled &&
+        customTenantKey() &&
+        customTenantRegion()
+      );
+    }
+
+    return Boolean(
+      scanner.status?.defaultTenantReady ??
+      scanner.status?.liveReady
+    );
+  }
+
+  function tenantMissingItems() {
+    const missing = [];
+
+    if (!scanner.status?.tmasInstalled) {
+      missing.push('TMAS CLI');
+    }
+
+    if (selectedTenantMode() === 'custom') {
+      if (!customTenantKey()) {
+        missing.push('Vision One API key');
+      }
+      if (!customTenantRegion()) {
+        missing.push('Vision One region');
+      }
+    } else if (
+      !(
+        scanner.status?.defaultTenantConfigured ??
+        scanner.status?.visionOneKeyConfigured
+      )
+    ) {
+      missing.push('server Vision One API key');
+    }
+
+    return missing;
+  }
+
+  function tenantJobFields() {
+    if (selectedTenantMode() === 'custom') {
+      return {
+        tenant_mode: 'custom',
+        tenant_api_key: customTenantKey(),
+        tenant_region: customTenantRegion()
+      };
+    }
+
+    return {
+      tenant_mode: 'default'
+    };
+  }
+
+  function clearOneTimeTenantKey() {
+    const input = q('#bam-scanner-custom-key-v35');
+    if (input) input.value = '';
+  }
+
   function showStep(step) {
     const numeric = Number(step);
 
@@ -7214,6 +7290,7 @@ exposePresenterLabFromUrl();
     scanner.mode = mode();
     const selected = text();
     const isLive = scanner.mode === 'live';
+    const selectedLiveReady = tenantLiveReady();
     const resultStep = q(
       '#scanner-content .scanner-steps button[data-step="3"]'
     );
@@ -7247,7 +7324,7 @@ exposePresenterLabFromUrl();
         ? selected.runLive
         : selected.runDemo;
       run.disabled = scanner.running ||
-        (isLive && !scanner.liveReady);
+        (isLive && !selectedLiveReady);
       run.setAttribute(
         'aria-disabled',
         run.disabled ? 'true' : 'false'
@@ -7261,8 +7338,8 @@ exposePresenterLabFromUrl();
     const setup = q('#bam-scanner-live-setup-v31');
     setup?.classList.toggle('visible', isLive);
 
-    if (isLive && !scanner.liveReady) {
-      const missing = scannerMissing(scanner.status);
+    if (isLive && !selectedLiveReady) {
+      const missing = tenantMissingItems();
       showScannerNotice(
         `${selected.liveNotReady} ` +
         `${selected.liveMissing}: ${missing.join(', ') || 'configuration'}.`,
@@ -7344,7 +7421,10 @@ exposePresenterLabFromUrl();
   async function fetchScannerStatus() {
     try {
       scanner.status = await request('/api/scanner/tmas/status');
-      scanner.liveReady = Boolean(scanner.status?.liveReady);
+      scanner.liveReady = Boolean(
+        scanner.status?.defaultTenantReady ??
+        scanner.status?.liveReady
+      );
     } catch (_) {
       scanner.status = null;
       scanner.liveReady = false;
@@ -7429,7 +7509,7 @@ exposePresenterLabFromUrl();
       return;
     }
 
-    if (scanner.mode === 'live' && !scanner.liveReady) {
+    if (scanner.mode === 'live' && !tenantLiveReady()) {
       syncScannerUi();
       return;
     }
@@ -7447,7 +7527,8 @@ exposePresenterLabFromUrl();
         body: JSON.stringify({
           mode: scanner.mode,
           target,
-          objectives
+          objectives,
+          ...tenantJobFields()
         })
       });
 
@@ -7457,6 +7538,10 @@ exposePresenterLabFromUrl();
 
       scanner.jobId = started.jobId;
       scanner.jobAccepted = true;
+      if (scanner.mode === 'live' &&
+          selectedTenantMode() === 'custom') {
+        clearOneTimeTenantKey();
+      }
       renderProgress();
       q('#scan-progress')?.classList.remove('hidden');
       q('#scan-results')?.classList.add('hidden');
@@ -7921,6 +8006,12 @@ exposePresenterLabFromUrl();
 
     install();
     fetchScannerStatus();
+
+    document.addEventListener(
+      'bam:scanner-tenant-change',
+      () => syncScannerUi()
+    );
+
     window.setTimeout(install, 220);
     window.setTimeout(install, 850);
   }
@@ -7934,5 +8025,255 @@ exposePresenterLabFromUrl();
   q('#settings-language')?.addEventListener(
     'change',
     () => window.setTimeout(syncLanguage, 0)
+  );
+})();
+
+
+/* BAM_BANK_UI_REVISION_V35 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [
+    ...root.querySelectorAll(selector)
+  ];
+
+  const regionNames = {
+    'us-east-1': 'United States',
+    'eu-central-1': 'Europe / Germany',
+    'ap-northeast-1': 'Japan',
+    'ap-southeast-1': 'Singapore',
+    'ap-southeast-2': 'Australia',
+    'ap-south-1': 'India',
+    'eu-west-2': 'United Kingdom',
+    'ca-central-1': 'Canada',
+    'me-central-1': 'UAE / Middle East'
+  };
+
+  function isIndonesian() {
+    return (
+      localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id'
+    );
+  }
+
+  function wording() {
+    return isIndonesian()
+      ? {
+          title: 'Tujuan hasil scan',
+          subtitle:
+            'Pilih tenant default atau gunakan tenant Vision One lain untuk satu kali scan.',
+          default: 'Tenant default',
+          defaultBody:
+            'Menggunakan API key dan region yang sudah dikonfigurasi di server.',
+          custom: 'Tenant lain',
+          customBody:
+            'Hasil scan dikirim ke tenant yang sesuai dengan key ini.',
+          region: 'Region Vision One',
+          key: 'API key Vision One',
+          keyPlaceholder:
+            'Digunakan satu kali dan tidak disimpan',
+          configured: 'Siap digunakan',
+          incomplete: 'Belum dikonfigurasi',
+          cliMissing: 'TMAS CLI belum tersedia',
+          oneTime:
+            'API key hanya dipakai untuk job ini, tidak disimpan di browser atau job history.'
+        }
+      : {
+          title: 'Scan result destination',
+          subtitle:
+            'Use the default tenant or route this one scan to another Vision One tenant.',
+          default: 'Default tenant',
+          defaultBody:
+            'Uses the API key and region already configured on the server.',
+          custom: 'Another tenant',
+          customBody:
+            'The completed assessment is published to the tenant associated with this key.',
+          region: 'Vision One region',
+          key: 'Vision One API key',
+          keyPlaceholder:
+            'Used once and never saved',
+          configured: 'Ready',
+          incomplete: 'Not configured',
+          cliMissing: 'TMAS CLI unavailable',
+          oneTime:
+            'The API key is used for this job only and is not stored in the browser or job history.'
+        };
+  }
+
+  async function loadStatus() {
+    try {
+      const response = await fetch('/api/scanner/tmas/status');
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function emitChange() {
+    document.dispatchEvent(
+      new CustomEvent('bam:scanner-tenant-change')
+    );
+  }
+
+  function setMode(root, mode) {
+    root.dataset.mode = mode;
+
+    qa('[data-tenant-choice]', root).forEach(button => {
+      const active = button.dataset.tenantChoice === mode;
+      button.classList.toggle('active', active);
+      button.setAttribute(
+        'aria-pressed',
+        active ? 'true' : 'false'
+      );
+    });
+
+    q('#bam-scanner-default-panel-v35', root)
+      ?.classList.toggle('hidden', mode !== 'default');
+    q('#bam-scanner-custom-panel-v35', root)
+      ?.classList.toggle('hidden', mode !== 'custom');
+
+    emitChange();
+  }
+
+  async function render() {
+    const setup = q('#bam-scanner-live-setup-v31');
+    if (!setup) return false;
+    if (q('#bam-scanner-tenant-v35', setup)) return true;
+
+    const status = await loadStatus();
+    const words = wording();
+    const defaultRegion =
+      status?.defaultRegion ||
+      status?.region ||
+      'ap-southeast-1';
+    const defaultReady = Boolean(
+      status?.defaultTenantReady
+    );
+    const tmasReady = Boolean(status?.tmasInstalled);
+
+    setup.innerHTML = `
+      <section id="bam-scanner-tenant-v35"
+               class="bam-scanner-tenant-v35"
+               data-mode="default">
+        <header>
+          <div>
+            <strong>${words.title}</strong>
+            <small>${words.subtitle}</small>
+          </div>
+        </header>
+
+        <div class="bam-tenant-choice-grid-v35">
+          <button type="button"
+                  class="active"
+                  data-tenant-choice="default"
+                  aria-pressed="true">
+            <span class="bam-tenant-choice-icon-v35">B</span>
+            <span>
+              <strong>${words.default}</strong>
+              <small>${words.defaultBody}</small>
+            </span>
+          </button>
+
+          <button type="button"
+                  data-tenant-choice="custom"
+                  aria-pressed="false">
+            <span class="bam-tenant-choice-icon-v35">↗</span>
+            <span>
+              <strong>${words.custom}</strong>
+              <small>${words.customBody}</small>
+            </span>
+          </button>
+        </div>
+
+        <div id="bam-scanner-default-panel-v35"
+             class="bam-tenant-panel-v35">
+          <div>
+            <span>${regionNames[defaultRegion] || defaultRegion}</span>
+            <strong>${
+              !tmasReady
+                ? words.cliMissing
+                : defaultReady
+                  ? words.configured
+                  : words.incomplete
+            }</strong>
+          </div>
+          <small>
+            ${
+              isIndonesian()
+                ? 'Hasil lengkap muncul pada AI Security → AI Scanner di tenant default.'
+                : 'The full result appears in AI Security → AI Scanner on the default tenant.'
+            }
+          </small>
+        </div>
+
+        <div id="bam-scanner-custom-panel-v35"
+             class="bam-tenant-panel-v35 hidden">
+          <div class="bam-custom-tenant-grid-v35">
+            <label>
+              <span>${words.region}</span>
+              <select id="bam-scanner-custom-region-v35">
+                ${Object.entries(regionNames).map(
+                  ([value, label]) => `
+                    <option value="${value}"
+                      ${value === defaultRegion ? 'selected' : ''}>
+                      ${label}
+                    </option>`
+                ).join('')}
+              </select>
+            </label>
+
+            <label>
+              <span>${words.key}</span>
+              <input id="bam-scanner-custom-key-v35"
+                     type="password"
+                     autocomplete="new-password"
+                     placeholder="${words.keyPlaceholder}">
+            </label>
+          </div>
+          <small class="bam-one-time-note-v35">
+            ${words.oneTime}
+          </small>
+        </div>
+      </section>`;
+
+    const root = q('#bam-scanner-tenant-v35', setup);
+
+    qa('[data-tenant-choice]', root).forEach(button => {
+      button.addEventListener('click', () => {
+        setMode(root, button.dataset.tenantChoice);
+      });
+    });
+
+    q('#bam-scanner-custom-region-v35', root)
+      ?.addEventListener('change', emitChange);
+    q('#bam-scanner-custom-key-v35', root)
+      ?.addEventListener('input', emitChange);
+
+    emitChange();
+    return true;
+  }
+
+  async function install() {
+    await render();
+  }
+
+  install();
+  window.setTimeout(install, 180);
+  window.setTimeout(install, 700);
+  window.setTimeout(install, 1500);
+
+  q('#language')?.addEventListener(
+    'change',
+    () => window.setTimeout(() => {
+      const setup = q('#bam-scanner-live-setup-v31');
+      const currentMode =
+        q('#bam-scanner-tenant-v35')?.dataset.mode ||
+        'default';
+      if (setup) setup.innerHTML = '';
+      render().then(() => {
+        const root = q('#bam-scanner-tenant-v35');
+        if (root) setMode(root, currentMode);
+      });
+    }, 0)
   );
 })();

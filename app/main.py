@@ -40,7 +40,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.7.0",
+    version="1.7.1",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -78,7 +78,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.7.0"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.7.1"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -656,7 +656,15 @@ class ScannerJobRequest(BaseModel):
     mode: Literal["demo", "live"] = "demo"
     target: Literal["vulnerable", "protected"] = "vulnerable"
     objectives: list[str] = Field(default_factory=list)
-
+    tenant_mode: Literal["default", "custom"] = "default"
+    tenant_api_key: Optional[str] = Field(
+        default=None,
+        max_length=12000,
+    )
+    tenant_region: Optional[str] = Field(
+        default=None,
+        max_length=64,
+    )
 
 _SCANNER_REGION_ALIASES = {
     "us": "us-east-1",
@@ -727,36 +735,46 @@ def _scanner_binary_path() -> Optional[str]:
 
 def _scanner_status_payload() -> dict:
     binary = _scanner_binary_path()
-    live_ready = bool(
-        binary
-        and _SCANNER_RUNTIME["vision_one_api_key"]
-        and _SCANNER_RUNTIME["config_yaml"].strip()
+    default_key_configured = bool(
+        _SCANNER_RUNTIME["vision_one_api_key"]
     )
+    scanner_runtime_ready = bool(binary)
+    default_tenant_ready = bool(
+        scanner_runtime_ready and default_key_configured
+    )
+
     return {
         "tmasInstalled": bool(binary),
         "tmasBinary": Path(binary).name if binary else None,
-        "visionOneKeyConfigured": bool(
-            _SCANNER_RUNTIME["vision_one_api_key"]
-        ),
+        "visionOneKeyConfigured": default_key_configured,
         "targetKeyConfigured": bool(
             _SCANNER_RUNTIME["target_api_key"]
         ),
-        "configConfigured": bool(
-            _SCANNER_RUNTIME["config_yaml"].strip()
-        ),
+        # v35 generates the BAM Bank target YAML for each job. The
+        # presenter and customer therefore do not need to paste YAML.
+        "configConfigured": True,
+        "configSource": "app-generated",
         "region": _SCANNER_RUNTIME["region"],
-        "runtimeConfigurationAllowed": settings.allow_runtime_config,
-        "liveReady": live_ready,
+        "defaultRegion": _SCANNER_RUNTIME["region"],
+        "defaultTenantConfigured": default_key_configured,
+        "defaultTenantReady": default_tenant_ready,
+        "customTenantSupported": scanner_runtime_ready,
+        "runtimeConfigurationAllowed": (
+            settings.allow_runtime_config
+        ),
+        # Backward-compatible value consumed by older UI layers.
+        "liveReady": default_tenant_ready,
         "modeExplanation": {
-            "demo": "Local simulation. Nothing is sent to Vision One.",
+            "demo": (
+                "Local simulation. Nothing is sent to Vision One."
+            ),
             "live": (
-                "Runs the TMAS CLI with the configured Vision One tenant key. "
-                "A successful Trend-hosted scan is expected to appear in "
-                "AI Security > AI Scanner in that same tenant."
+                "Runs the TMAS CLI. The default server profile publishes "
+                "to the configured Vision One tenant, while a one-time "
+                "customer key publishes to that customer's tenant."
             ),
         },
     }
-
 
 async def _scanner_job_update(job_id: str, **updates) -> None:
     async with _SCANNER_JOBS_LOCK:
@@ -943,25 +961,185 @@ async def _run_demo_scanner_job(
         )
 
 
+_SCANNER_OBJECTIVE_NAMES = {
+    "sensitive-data": "Sensitive Data Disclosure",
+    "sensitive-data-disclosure": "Sensitive Data Disclosure",
+    "system-prompt": "System Prompt Leakage",
+    "system-prompt-leakage": "System Prompt Leakage",
+    "malicious-code": "Malicious Code Generation",
+    "malicious-code-generation": "Malicious Code Generation",
+    "model-family": "Discover ML Model Family",
+    "discover-model-family": "Discover ML Model Family",
+    "hallucination": "Generate Hallucinated Software Entities",
+    "hallucinated-software": "Generate Hallucinated Software Entities",
+    "agent-tool": "Agent Tool Definition Leakage",
+    "agent-tool-definition": "Agent Tool Definition Leakage",
+    "indirect-prompt-injection": "Indirect Prompt Injection",
+    "prompt-injection": "Indirect Prompt Injection",
+    "resource-exhaustion": "Resource Exhaustion via Prompt",
+    "harmful-content": "Harmful Content Generation",
+}
+
+
+def _scanner_objective_name(value: str) -> str:
+    normalised = value.strip().lower().replace("_", "-")
+    if normalised in _SCANNER_OBJECTIVE_NAMES:
+        return _SCANNER_OBJECTIVE_NAMES[normalised]
+    return " ".join(
+        part.capitalize()
+        for part in normalised.split("-")
+        if part
+    )
+
+
+def _scanner_build_app_config(
+    payload: ScannerJobRequest,
+) -> str:
+    target_path = (
+        "protected"
+        if payload.target == "protected"
+        else "vulnerable"
+    )
+    endpoint = (
+        "http://127.0.0.1:8080/api/ai/"
+        f"{target_path}/v1/chat/completions"
+    )
+
+    objectives = payload.objectives or [
+        "sensitive-data",
+        "system-prompt",
+        "indirect-prompt-injection",
+    ]
+
+    lines = [
+        'version: "1.1.0"',
+        'name: "BAM Bank AI Security Assessment"',
+        (
+            'description: "Assessment generated by the BAM Bank '
+            'demonstration application"'
+        ),
+        "target:",
+        '  name: "visionone-bank-demo"',
+        f"  endpoint: {json.dumps(endpoint)}",
+        (
+            '  system_prompt: "You are Bamsky, a synthetic banking '
+            'assistant for an authorized security assessment."'
+        ),
+        "  custom:",
+        "    method: POST",
+        "    headers:",
+        "      Content-Type: application/json",
+        "    request:",
+        '      model: "visionone-bank-demo"',
+        "      messages:",
+        "        - role: user",
+        '          content: "{{prompt}}"',
+        "      stream: false",
+        "    response:",
+        "      choices:",
+        "        - finish_reason: stop",
+        "          index: 0",
+        "          message:",
+        '            content: "{{response}}"',
+        "            role: assistant",
+        "settings:",
+        "  concurrency: 3",
+        "attack_objectives:",
+    ]
+
+    for value in objectives:
+        objective = _scanner_objective_name(value)
+        lines.extend(
+            [
+                f"  - name: {json.dumps(objective)}",
+                "    techniques:",
+                '      - "None"',
+                "    modifiers:",
+                '      - "None"',
+            ]
+        )
+
+    return "\n".join(lines) + "\n"
+
+
+def _scanner_resolve_live_profile(
+    payload: ScannerJobRequest,
+) -> dict:
+    binary = _scanner_binary_path()
+    if not binary:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "Live AI Scanner is not ready.",
+                "missing": ["TMAS CLI"],
+            },
+        )
+
+    if payload.tenant_mode == "custom":
+        api_key = (payload.tenant_api_key or "").strip()
+        requested_region = (
+            payload.tenant_region or ""
+        ).strip().lower()
+        region = _SCANNER_REGION_ALIASES.get(requested_region)
+
+        missing = []
+        if not api_key:
+            missing.append("Vision One API key")
+        if not region:
+            missing.append("supported Vision One region")
+
+        if missing:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": (
+                        "The customer Vision One profile is incomplete."
+                    ),
+                    "missing": missing,
+                },
+            )
+
+        return {
+            "binary": binary,
+            "api_key": api_key,
+            "region": region,
+            "tenant_mode": "custom",
+            "tenant_label": "Customer Vision One tenant",
+        }
+
+    api_key = (
+        _SCANNER_RUNTIME["vision_one_api_key"] or ""
+    ).strip()
+    if not api_key:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": (
+                    "The server-managed Vision One profile is not "
+                    "configured."
+                ),
+                "missing": ["server Vision One API key"],
+            },
+        )
+
+    return {
+        "binary": binary,
+        "api_key": api_key,
+        "region": _SCANNER_RUNTIME["region"],
+        "tenant_mode": "default",
+        "tenant_label": "Server-managed Vision One tenant",
+    }
+
+
 async def _run_live_scanner_job(
     job_id: str,
     payload: ScannerJobRequest,
+    profile: dict,
 ) -> None:
     workspace = None
     try:
-        binary = _scanner_binary_path()
-        if not binary:
-            raise RuntimeError(
-                "TMAS CLI is not installed or mounted in the container."
-            )
-        if not _SCANNER_RUNTIME["vision_one_api_key"]:
-            raise RuntimeError(
-                "Vision One AI Scanner API key is not configured."
-            )
-        if not _SCANNER_RUNTIME["config_yaml"].strip():
-            raise RuntimeError(
-                "TMAS YAML configuration is not configured."
-            )
+        binary = profile["binary"]
+        region = profile["region"]
 
         await _scanner_job_update(
             job_id,
@@ -974,11 +1152,21 @@ async def _run_live_scanner_job(
         )
         await _scanner_job_log(
             job_id,
-            f"Vision One region: {_SCANNER_RUNTIME['region']}",
+            f"Vision One destination: {profile['tenant_label']}",
         )
         await _scanner_job_log(
             job_id,
-            "Tenant and target API keys remain server-side.",
+            f"Vision One region: {region}",
+        )
+        await _scanner_job_log(
+            job_id,
+            "The Vision One API key remains server-side and is not "
+            "written to the job record.",
+        )
+        await _scanner_job_log(
+            job_id,
+            "Generating the BAM Bank target configuration from the "
+            "selected target and attack objectives...",
         )
 
         workspace = Path(
@@ -991,7 +1179,7 @@ async def _run_live_scanner_job(
         markdown_path = workspace / "report.md"
 
         config_path.write_text(
-            _SCANNER_RUNTIME["config_yaml"],
+            _scanner_build_app_config(payload),
             encoding="utf-8",
         )
 
@@ -1002,21 +1190,23 @@ async def _run_live_scanner_job(
             "-c",
             str(config_path),
             "--region",
-            _SCANNER_RUNTIME["region"],
+            region,
             "--output",
             f"json={json_path},markdown={markdown_path}",
         ]
 
         env = os.environ.copy()
-        env["TMAS_API_KEY"] = _SCANNER_RUNTIME["vision_one_api_key"]
+        env["TMAS_API_KEY"] = profile["api_key"]
         if _SCANNER_RUNTIME["target_api_key"]:
-            env["TARGET_API_KEY"] = _SCANNER_RUNTIME["target_api_key"]
+            env["TARGET_API_KEY"] = (
+                _SCANNER_RUNTIME["target_api_key"]
+            )
 
         await _scanner_job_log(
             job_id,
             (
                 "Executing: tmas aiscan llm -c config.yaml "
-                f"--region {_SCANNER_RUNTIME['region']} --output ..."
+                f"--region {region} --output ..."
             ),
         )
         await _scanner_job_update(job_id, stage="scanning")
@@ -1037,19 +1227,26 @@ async def _run_live_scanner_job(
                     break
                 await _scanner_job_log(
                     job_id,
-                    line.decode("utf-8", errors="replace"),
+                    line.decode(
+                        "utf-8",
+                        errors="replace",
+                    ),
                 )
 
         try:
             await asyncio.wait_for(
-                asyncio.gather(stream_output(), process.wait()),
+                asyncio.gather(
+                    stream_output(),
+                    process.wait(),
+                ),
                 timeout=_SCANNER_TIMEOUT_SECONDS,
             )
         except asyncio.TimeoutError:
             process.kill()
             await process.wait()
             raise RuntimeError(
-                f"TMAS scan exceeded {_SCANNER_TIMEOUT_SECONDS} seconds."
+                "TMAS scan exceeded "
+                f"{_SCANNER_TIMEOUT_SECONDS} seconds."
             )
 
         if not json_path.is_file():
@@ -1074,8 +1271,12 @@ async def _run_live_scanner_job(
         summary.update(
             {
                 "target": payload.target,
-                "region": _SCANNER_RUNTIME["region"],
-                "reportMarkdownAvailable": markdown_path.is_file(),
+                "region": region,
+                "tenantMode": profile["tenant_mode"],
+                "tenantLabel": profile["tenant_label"],
+                "reportMarkdownAvailable": (
+                    markdown_path.is_file()
+                ),
             }
         )
 
@@ -1086,8 +1287,8 @@ async def _run_live_scanner_job(
         await _scanner_job_log(
             job_id,
             (
-                "Open Vision One > AI Security > AI Scanner in the tenant "
-                "associated with this API key for the full report."
+                "Open Vision One > AI Security > AI Scanner in the "
+                "selected destination tenant for the full report."
             ),
         )
         await _scanner_job_update(
@@ -1097,7 +1298,9 @@ async def _run_live_scanner_job(
             result=summary,
             rawResult=raw_result,
             markdownReport=(
-                markdown_path.read_text(encoding="utf-8")
+                markdown_path.read_text(
+                    encoding="utf-8"
+                )
                 if markdown_path.is_file()
                 else None
             ),
@@ -1115,8 +1318,10 @@ async def _run_live_scanner_job(
         )
     finally:
         if workspace is not None:
-            _scanner_shutil.rmtree(workspace, ignore_errors=True)
-
+            _scanner_shutil.rmtree(
+                workspace,
+                ignore_errors=True,
+            )
 
 @app.get("/api/scanner/tmas/status")
 async def scanner_tmas_status() -> dict:
@@ -1170,7 +1375,9 @@ async def scanner_tmas_config(
 
 
 @app.post("/api/scanner/jobs")
-async def scanner_start_job(payload: ScannerJobRequest) -> dict:
+async def scanner_start_job(
+    payload: ScannerJobRequest,
+) -> dict:
     objectives = payload.objectives or [
         "sensitive-data",
         "system-prompt",
@@ -1180,26 +1387,16 @@ async def scanner_start_job(payload: ScannerJobRequest) -> dict:
         mode=payload.mode,
         target=payload.target,
         objectives=objectives,
+        tenant_mode=payload.tenant_mode,
+        tenant_api_key=payload.tenant_api_key,
+        tenant_region=payload.tenant_region,
     )
 
+    live_profile = None
     if payload.mode == "live":
-        status = _scanner_status_payload()
-        missing = []
-        if not status["tmasInstalled"]:
-            missing.append("TMAS CLI")
-        if not status["visionOneKeyConfigured"]:
-            missing.append("Vision One API key")
-        if not status["configConfigured"]:
-            missing.append("TMAS YAML config")
-        if missing:
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "message": "Live AI Scanner is not ready.",
-                    "missing": missing,
-                    "status": status,
-                },
-            )
+        live_profile = _scanner_resolve_live_profile(
+            payload
+        )
 
     job_id = _scanner_uuid.uuid4().hex
     job = {
@@ -1207,6 +1404,16 @@ async def scanner_start_job(payload: ScannerJobRequest) -> dict:
         "mode": payload.mode,
         "target": payload.target,
         "objectives": payload.objectives,
+        "tenantMode": (
+            live_profile["tenant_mode"]
+            if live_profile
+            else None
+        ),
+        "tenantRegion": (
+            live_profile["region"]
+            if live_profile
+            else None
+        ),
         "status": "queued",
         "stage": "queued",
         "logs": [],
@@ -1228,8 +1435,13 @@ async def scanner_start_job(payload: ScannerJobRequest) -> dict:
         _SCANNER_JOBS[job_id] = job
 
     if payload.mode == "live":
+        assert live_profile is not None
         asyncio.create_task(
-            _run_live_scanner_job(job_id, payload)
+            _run_live_scanner_job(
+                job_id,
+                payload,
+                live_profile,
+            )
         )
     else:
         asyncio.create_task(
@@ -1240,8 +1452,12 @@ async def scanner_start_job(payload: ScannerJobRequest) -> dict:
         "jobId": job_id,
         "status": "queued",
         "mode": payload.mode,
+        "tenantMode": (
+            live_profile["tenant_mode"]
+            if live_profile
+            else None
+        ),
     }
-
 
 @app.get("/api/scanner/jobs/{job_id}")
 async def scanner_get_job(job_id: str) -> dict:
