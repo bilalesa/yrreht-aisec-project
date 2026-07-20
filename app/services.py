@@ -42,6 +42,7 @@ class AIGuardClient:
         policies = self.runtime.snapshot().get("policies", {})
 
         rules: list[tuple[str, str]] = []
+
         if policies.get("promptInjection", True):
             rules.extend(
                 [
@@ -50,32 +51,45 @@ class AIGuardClient:
                         "Prompt injection attempt",
                     ),
                     (
-                        r"reveal.{0,40}(system prompt|hidden instructions)",
+                        r"reveal.{0,60}(system prompt|hidden instructions)",
                         "System prompt extraction",
+                    ),
+                    (
+                        r"(follow|obey).{0,40}(retrieved|document).{0,40}instruction",
+                        "Indirect prompt injection attempt",
                     ),
                 ]
             )
+
         if policies.get("jailbreak", True):
-            rules.append(
-                (
-                    r"\b(dan|developer mode|jailbreak)\b",
-                    "Jailbreak technique",
-                )
-            )
-        if policies.get("harmfulContent", True):
-            rules.append(
-                (
-                    r"\b(steal|exfiltrate|bypass authentication)\b",
-                    "Harmful or unauthorized request",
-                )
-            )
-        if policies.get("pii", True):
             rules.extend(
                 [
-                    (r"\b\d{16}\b", "Possible payment card data"),
                     (
-                        r"\b\d{16}\b|\b\d{15}\b",
-                        "Possible sensitive numeric identifier",
+                        r"\b(dan|developer mode|jailbreak)\b",
+                        "Jailbreak technique",
+                    ),
+                    (
+                        r"\b(role[- ]?play|pretend).{0,50}\b(bypass|ignore)\b",
+                        "Role-play bypass attempt",
+                    ),
+                ]
+            )
+
+        if policies.get("harmfulContent", True):
+            rules.extend(
+                [
+                    (
+                        r"\b(steal|exfiltrate|bypass authentication)\b",
+                        "Harmful or unauthorized request",
+                    ),
+                    (
+                        r"\b(phishing|credential[- ]?stealing|malware)\b",
+                        "Harmful content request",
+                    ),
+                    (
+                        r"(show|reveal|list|export).{0,60}"
+                        r"(all customer|customer sensitive|account list|private data)",
+                        "Unauthorized sensitive-data request",
                     ),
                 ]
             )
@@ -85,25 +99,40 @@ class AIGuardClient:
             for pattern, reason in rules
             if re.search(pattern, lowered, re.IGNORECASE)
         ]
-        redacted = (
-            re.sub(r"\b\d{15,16}\b", "[REDACTED]", text)
-            if policies.get("pii", True)
-            else text
-        )
+
+        # PII policy is a redaction control, not a reason to block otherwise
+        # legitimate content. This keeps the local demonstration aligned with
+        # the live "prefer: redact-pii" behaviour.
+        redacted = text
+        if policies.get("pii", True):
+            redacted = re.sub(
+                r"(?<!\d)(?:\d[ -]?){14,16}(?!\d)",
+                "[REDACTED]",
+                redacted,
+            )
 
         if reasons:
             return {
                 "action": "block",
                 "reasons": reasons,
                 "reason": reasons[0],
+                "engine": "local-demo",
             }
+
         if redacted != text:
             return {
                 "action": "allow",
                 "reasons": [],
                 "redactedRequest": {"prompt": redacted},
+                "engine": "local-demo",
+                "piiRedacted": True,
             }
-        return {"action": "allow", "reasons": []}
+
+        return {
+            "action": "allow",
+            "reasons": [],
+            "engine": "local-demo",
+        }
 
     async def _call(self, payload: Any, request_type: Optional[str] = None) -> dict:
         cfg = self.runtime.snapshot()
@@ -341,30 +370,58 @@ class FileSecurityService:
     def scan_and_store(self, temp_path: Path, original_name: str) -> dict:
         scan_error = None
         result: dict
-        if self.settings.file_security_enabled and (self.settings.file_security_api_key or self.settings.tmv1_api_key):
+        engine = "unavailable"
+
+        if self.settings.file_security_enabled and (
+            self.settings.file_security_api_key
+            or self.settings.tmv1_api_key
+        ):
             try:
                 result = self._sdk_scan(temp_path)
+                engine = "vision-one-sdk"
             except Exception as exc:  # SDK errors differ by version
                 scan_error = str(exc)
                 if not self.settings.file_security_demo_fallback:
                     raise
                 result = self._local_scan(temp_path)
+                engine = "local-demo-fallback"
         elif self.settings.file_security_demo_fallback:
             result = self._local_scan(temp_path)
+            engine = "local-demo"
         else:
             raise RuntimeError("File Security is not configured")
 
         found = result.get("foundMalwares") or []
         malicious = bool(result.get("scanResult")) or bool(found)
-        safe_name = f"{uuid.uuid4().hex[:10]}-{Path(original_name).name}"
-        destination = (self.quarantine_dir if malicious else self.clean_dir) / safe_name
+        safe_name = (
+            f"{uuid.uuid4().hex[:10]}-{Path(original_name).name}"
+        )
+        destination = (
+            self.quarantine_dir if malicious else self.clean_dir
+        ) / safe_name
         shutil.move(str(temp_path), destination)
+
+        live = engine == "vision-one-sdk"
+        fallback_used = engine in {
+            "local-demo",
+            "local-demo-fallback",
+        }
+
         return {
             "status": "quarantined" if malicious else "clean",
             "malicious": malicious,
             "storedAs": destination.name,
             "scan": result,
             "scanError": scan_error,
+            "engine": engine,
+            "live": live,
+            "fallbackUsed": fallback_used,
+            "asynchronous": False,
+            "assurance": (
+                "vision-one-live"
+                if live
+                else "local-demonstration"
+            ),
         }
 
     def upload_to_storage(self, temp_path: Path, original_name: str) -> dict:
@@ -388,6 +445,11 @@ class FileSecurityService:
             "bucket": self.settings.file_storage_s3_bucket,
             "objectKey": object_key,
             "message": "Uploaded to the monitored S3 bucket. Check File Security Scan Activity for the asynchronous result.",
+            "engine": "s3-storage",
+            "live": True,
+            "fallbackUsed": False,
+            "asynchronous": True,
+            "assurance": "pending-storage-verdict",
         }
 
 

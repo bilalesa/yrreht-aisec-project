@@ -40,7 +40,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.6.2",
+    version="1.7.0",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -78,7 +78,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.6.2"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.7.0"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -294,13 +294,84 @@ async def update_settings(payload: RuntimeSettingsRequest) -> dict:
 
 @app.post("/api/guard/test")
 async def guard_test(payload: ChatRequest) -> dict:
+    cfg = runtime.snapshot()
+    mode = (
+        "demo"
+        if cfg["force_demo_mode"]
+        else "live"
+        if cfg["configured"]
+        else "unavailable"
+    )
+
     try:
         result = await guard.inspect_prompt(payload.message)
-        return {"connected": True, "action": result.get("action", "allow"), "reasons": result.get("reasons", [])}
+        return {
+            "testPassed": True,
+            "connected": mode == "live",
+            "mode": mode,
+            "action": result.get("action", "allow"),
+            "reasons": result.get("reasons", []),
+            "piiRedacted": bool(result.get("piiRedacted")),
+        }
     except GuardBlocked as exc:
-        return {"connected": True, "action": "block", "reasons": exc.details.get("reasons", [exc.reason])}
+        return {
+            "testPassed": True,
+            "connected": mode == "live",
+            "mode": mode,
+            "action": "block",
+            "reasons": exc.details.get("reasons", [exc.reason]),
+            "piiRedacted": False,
+        }
     except GuardUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.get("/api/security/status")
+async def security_status() -> dict:
+    cfg = runtime.snapshot()
+    scanner_status = _scanner_status_payload()
+
+    if cfg["force_demo_mode"]:
+        guard_mode = "demo"
+    elif cfg["configured"]:
+        guard_mode = "live"
+    else:
+        guard_mode = "unavailable"
+
+    file_live = bool(
+        settings.file_security_enabled
+        and (
+            settings.file_security_api_key
+            or settings.tmv1_api_key
+        )
+    )
+
+    return {
+        "aiGuard": {
+            "mode": guard_mode,
+            "configured": cfg["configured"],
+            "demoFallback": cfg["force_demo_mode"],
+            "region": cfg["region"],
+            "preCall": True,
+            "postCall": True,
+        },
+        "aiScanner": scanner_status,
+        "fileSecurity": {
+            "enabled": settings.file_security_enabled,
+            "mode": (
+                "vision-one-sdk"
+                if file_live
+                else "local-demo"
+                if settings.file_security_demo_fallback
+                else "unavailable"
+            ),
+            "live": file_live,
+            "fallbackEnabled": settings.file_security_demo_fallback,
+            "storageConfigured": bool(
+                settings.file_storage_s3_bucket
+            ),
+        },
+    }
 
 
 @app.post("/api/chat")
