@@ -40,7 +40,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.6.1",
+    version="1.6.2",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -78,7 +78,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.6.1"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.6.2"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -561,3 +561,648 @@ async def spa_fallback(request: Request, exc: Exception):
     if request.url.path.startswith("/api/"):
         return JSONResponse(status_code=404, content={"detail": "Not found"})
     return FileResponse(STATIC_DIR / "index.html")
+
+
+# BAM_BANK_UI_REVISION_V31
+# Real TMAS AI Scanner jobs. The legacy /api/scanner/live endpoint remains
+# available for compatibility, but the v31 UI no longer presents it as a
+# Trend Vision One live scan because it only validates the endpoint directly.
+
+import shutil as _scanner_shutil
+import tempfile as _scanner_tempfile
+import uuid as _scanner_uuid
+from copy import deepcopy as _scanner_deepcopy
+
+
+class ScannerRuntimeConfigRequest(BaseModel):
+    vision_one_api_key: Optional[str] = Field(default=None, max_length=12000)
+    target_api_key: Optional[str] = Field(default=None, max_length=12000)
+    region: Optional[str] = Field(default=None, max_length=64)
+    config_yaml: Optional[str] = Field(default=None, max_length=500000)
+
+
+class ScannerJobRequest(BaseModel):
+    mode: Literal["demo", "live"] = "demo"
+    target: Literal["vulnerable", "protected"] = "vulnerable"
+    objectives: list[str] = Field(default_factory=list)
+
+
+_SCANNER_REGION_ALIASES = {
+    "us": "us-east-1",
+    "us-east-1": "us-east-1",
+    "eu": "eu-central-1",
+    "eu-central-1": "eu-central-1",
+    "jp": "ap-northeast-1",
+    "ap-northeast-1": "ap-northeast-1",
+    "sg": "ap-southeast-1",
+    "ap-southeast-1": "ap-southeast-1",
+    "au": "ap-southeast-2",
+    "ap-southeast-2": "ap-southeast-2",
+    "in": "ap-south-1",
+    "ap-south-1": "ap-south-1",
+    "uk": "eu-west-2",
+    "eu-west-2": "eu-west-2",
+    "ca": "ca-central-1",
+    "ca-central-1": "ca-central-1",
+    "mea": "me-central-1",
+    "me-central-1": "me-central-1",
+}
+
+_SCANNER_RUNTIME = {
+    "vision_one_api_key": (
+        os.getenv("AI_SCANNER_TMAS_API_KEY", "")
+        or os.getenv("TMAS_API_KEY", "")
+        or settings.tmv1_api_key
+    ),
+    "target_api_key": (
+        os.getenv("AI_SCANNER_TARGET_API_KEY", "")
+        or os.getenv("TARGET_API_KEY", "")
+        or settings.ai_scanner_target_token
+    ),
+    "region": _SCANNER_REGION_ALIASES.get(
+        os.getenv("AI_SCANNER_REGION", settings.tmv1_region).lower(),
+        "ap-southeast-1",
+    ),
+    "config_yaml": "",
+}
+
+_SCANNER_CONFIG_PATH = os.getenv("AI_SCANNER_CONFIG_PATH", "").strip()
+if _SCANNER_CONFIG_PATH:
+    try:
+        _SCANNER_RUNTIME["config_yaml"] = Path(
+            _SCANNER_CONFIG_PATH
+        ).read_text(encoding="utf-8")
+    except Exception:
+        logger.warning(
+            "Unable to read AI_SCANNER_CONFIG_PATH=%s",
+            _SCANNER_CONFIG_PATH,
+            exc_info=True,
+        )
+
+_SCANNER_JOBS: dict[str, dict] = {}
+_SCANNER_JOBS_LOCK = asyncio.Lock()
+_SCANNER_TMAS_BINARY = os.getenv("TMAS_BINARY", "tmas")
+_SCANNER_TIMEOUT_SECONDS = int(
+    os.getenv("AI_SCANNER_TIMEOUT_SECONDS", "1800")
+)
+
+
+def _scanner_binary_path() -> Optional[str]:
+    configured = Path(_SCANNER_TMAS_BINARY)
+    if configured.is_absolute() and configured.is_file():
+        return str(configured)
+    return _scanner_shutil.which(_SCANNER_TMAS_BINARY)
+
+
+def _scanner_status_payload() -> dict:
+    binary = _scanner_binary_path()
+    live_ready = bool(
+        binary
+        and _SCANNER_RUNTIME["vision_one_api_key"]
+        and _SCANNER_RUNTIME["config_yaml"].strip()
+    )
+    return {
+        "tmasInstalled": bool(binary),
+        "tmasBinary": Path(binary).name if binary else None,
+        "visionOneKeyConfigured": bool(
+            _SCANNER_RUNTIME["vision_one_api_key"]
+        ),
+        "targetKeyConfigured": bool(
+            _SCANNER_RUNTIME["target_api_key"]
+        ),
+        "configConfigured": bool(
+            _SCANNER_RUNTIME["config_yaml"].strip()
+        ),
+        "region": _SCANNER_RUNTIME["region"],
+        "runtimeConfigurationAllowed": settings.allow_runtime_config,
+        "liveReady": live_ready,
+        "modeExplanation": {
+            "demo": "Local simulation. Nothing is sent to Vision One.",
+            "live": (
+                "Runs the TMAS CLI with the configured Vision One tenant key. "
+                "A successful Trend-hosted scan is expected to appear in "
+                "AI Security > AI Scanner in that same tenant."
+            ),
+        },
+    }
+
+
+async def _scanner_job_update(job_id: str, **updates) -> None:
+    async with _SCANNER_JOBS_LOCK:
+        job = _SCANNER_JOBS.get(job_id)
+        if job is not None:
+            job.update(updates)
+            job["updatedAt"] = time.time()
+
+
+async def _scanner_job_log(job_id: str, message: str) -> None:
+    clean = message.rstrip()
+    if not clean:
+        return
+    async with _SCANNER_JOBS_LOCK:
+        job = _SCANNER_JOBS.get(job_id)
+        if job is None:
+            return
+        job["logs"].append(clean[:3000])
+        job["logs"] = job["logs"][-300:]
+        job["updatedAt"] = time.time()
+
+
+def _scanner_normalise_result(value) -> str:
+    if value is None:
+        return "unknown"
+    text = str(value).strip().lower()
+    if text in {"blocked", "pass", "passed", "safe", "protected"}:
+        return "blocked"
+    if text in {
+        "successful",
+        "success",
+        "vulnerable",
+        "exposed",
+        "attack successful",
+    }:
+        return "successful"
+    if text in {"error", "failed_to_run", "timeout"}:
+        return "error"
+    return text or "unknown"
+
+
+def _scanner_extract_findings(payload) -> list[dict]:
+    findings: list[dict] = []
+    seen: set[str] = set()
+
+    def walk(node, path: str = "") -> None:
+        if isinstance(node, dict):
+            lowered = {
+                str(key).lower(): value for key, value in node.items()
+            }
+            objective = (
+                lowered.get("objective")
+                or lowered.get("category")
+                or lowered.get("attack_objective")
+                or lowered.get("name")
+            )
+            result = (
+                lowered.get("result")
+                or lowered.get("status")
+                or lowered.get("outcome")
+            )
+            severity = (
+                lowered.get("severity")
+                or lowered.get("risk")
+                or lowered.get("cvss_severity")
+                or "unknown"
+            )
+
+            if objective is not None and result is not None:
+                dedupe = f"{objective}|{result}|{path}"
+                if dedupe not in seen:
+                    seen.add(dedupe)
+                    findings.append(
+                        {
+                            "id": f"TMAS-{len(findings) + 1:03d}",
+                            "objective": str(objective),
+                            "severity": str(severity),
+                            "result": _scanner_normalise_result(result),
+                            "framework": str(
+                                lowered.get("framework")
+                                or lowered.get("compliance")
+                                or "Vision One AI Scanner"
+                            ),
+                            "detail": str(
+                                lowered.get("detail")
+                                or lowered.get("description")
+                                or lowered.get("message")
+                                or ""
+                            ),
+                        }
+                    )
+
+            for key, child in node.items():
+                walk(child, f"{path}.{key}" if path else str(key))
+        elif isinstance(node, list):
+            for index, child in enumerate(node):
+                walk(child, f"{path}[{index}]")
+
+    walk(payload)
+    return findings[:500]
+
+
+def _scanner_result_summary(payload) -> dict:
+    findings = _scanner_extract_findings(payload)
+    successful = sum(
+        1 for item in findings if item["result"] == "successful"
+    )
+    blocked = sum(
+        1 for item in findings if item["result"] == "blocked"
+    )
+    errors = sum(
+        1 for item in findings if item["result"] == "error"
+    )
+    return {
+        "mode": "live",
+        "total": len(findings),
+        "successful": successful,
+        "blocked": blocked,
+        "errors": errors,
+        "findings": findings,
+        "rawAvailable": True,
+        "consoleExpected": True,
+    }
+
+
+async def _run_demo_scanner_job(
+    job_id: str,
+    payload: ScannerJobRequest,
+) -> None:
+    try:
+        await _scanner_job_update(
+            job_id,
+            status="running",
+            stage="preparing",
+        )
+        messages = [
+            "Initializing local presentation simulation...",
+            f"Target selected: {payload.target}",
+            f"Objectives selected: {len(payload.objectives)}",
+            "Building deterministic attack set...",
+            "Running simulated attack campaign...",
+        ]
+        for message in messages:
+            await _scanner_job_log(job_id, message)
+            await asyncio.sleep(0.28)
+
+        result = await scanner_simulate(
+            ScannerSimulationRequest(
+                target=payload.target,
+                objectives=payload.objectives,
+            )
+        )
+
+        for finding in result.get("findings", []):
+            await _scanner_job_log(
+                job_id,
+                (
+                    f"[{finding['result'].upper()}] "
+                    f"{finding['objective']} · {finding['severity']}"
+                ),
+            )
+            await asyncio.sleep(0.08)
+
+        await _scanner_job_log(
+            job_id,
+            "Demo completed. No data was sent to Vision One.",
+        )
+        await _scanner_job_update(
+            job_id,
+            status="completed",
+            stage="completed",
+            result=result,
+            finishedAt=time.time(),
+        )
+    except Exception as exc:
+        logger.exception("Demo scanner job failed")
+        await _scanner_job_log(job_id, f"ERROR: {exc}")
+        await _scanner_job_update(
+            job_id,
+            status="failed",
+            stage="failed",
+            error=str(exc),
+            finishedAt=time.time(),
+        )
+
+
+async def _run_live_scanner_job(
+    job_id: str,
+    payload: ScannerJobRequest,
+) -> None:
+    workspace = None
+    try:
+        binary = _scanner_binary_path()
+        if not binary:
+            raise RuntimeError(
+                "TMAS CLI is not installed or mounted in the container."
+            )
+        if not _SCANNER_RUNTIME["vision_one_api_key"]:
+            raise RuntimeError(
+                "Vision One AI Scanner API key is not configured."
+            )
+        if not _SCANNER_RUNTIME["config_yaml"].strip():
+            raise RuntimeError(
+                "TMAS YAML configuration is not configured."
+            )
+
+        await _scanner_job_update(
+            job_id,
+            status="running",
+            stage="preparing",
+        )
+        await _scanner_job_log(
+            job_id,
+            "Starting Trend-hosted TMAS AI Scanner...",
+        )
+        await _scanner_job_log(
+            job_id,
+            f"Vision One region: {_SCANNER_RUNTIME['region']}",
+        )
+        await _scanner_job_log(
+            job_id,
+            "Tenant and target API keys remain server-side.",
+        )
+
+        workspace = Path(
+            _scanner_tempfile.mkdtemp(
+                prefix=f"bam-aiscan-{job_id[:8]}-"
+            )
+        )
+        config_path = workspace / "config.yaml"
+        json_path = workspace / "results.json"
+        markdown_path = workspace / "report.md"
+
+        config_path.write_text(
+            _SCANNER_RUNTIME["config_yaml"],
+            encoding="utf-8",
+        )
+
+        command = [
+            binary,
+            "aiscan",
+            "llm",
+            "-c",
+            str(config_path),
+            "--region",
+            _SCANNER_RUNTIME["region"],
+            "--output",
+            f"json={json_path},markdown={markdown_path}",
+        ]
+
+        env = os.environ.copy()
+        env["TMAS_API_KEY"] = _SCANNER_RUNTIME["vision_one_api_key"]
+        if _SCANNER_RUNTIME["target_api_key"]:
+            env["TARGET_API_KEY"] = _SCANNER_RUNTIME["target_api_key"]
+
+        await _scanner_job_log(
+            job_id,
+            (
+                "Executing: tmas aiscan llm -c config.yaml "
+                f"--region {_SCANNER_RUNTIME['region']} --output ..."
+            ),
+        )
+        await _scanner_job_update(job_id, stage="scanning")
+
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            cwd=str(workspace),
+            env=env,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+
+        async def stream_output() -> None:
+            assert process.stdout is not None
+            while True:
+                line = await process.stdout.readline()
+                if not line:
+                    break
+                await _scanner_job_log(
+                    job_id,
+                    line.decode("utf-8", errors="replace"),
+                )
+
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(stream_output(), process.wait()),
+                timeout=_SCANNER_TIMEOUT_SECONDS,
+            )
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.wait()
+            raise RuntimeError(
+                f"TMAS scan exceeded {_SCANNER_TIMEOUT_SECONDS} seconds."
+            )
+
+        if not json_path.is_file():
+            raise RuntimeError(
+                "TMAS finished without creating results.json "
+                f"(exit status {process.returncode})."
+            )
+
+        if process.returncode:
+            await _scanner_job_log(
+                job_id,
+                (
+                    f"TMAS returned status {process.returncode}, "
+                    "but a report was produced and will be displayed."
+                ),
+            )
+
+        raw_result = json.loads(
+            json_path.read_text(encoding="utf-8")
+        )
+        summary = _scanner_result_summary(raw_result)
+        summary.update(
+            {
+                "target": payload.target,
+                "region": _SCANNER_RUNTIME["region"],
+                "reportMarkdownAvailable": markdown_path.is_file(),
+            }
+        )
+
+        await _scanner_job_log(
+            job_id,
+            "TMAS completed and produced a local report.",
+        )
+        await _scanner_job_log(
+            job_id,
+            (
+                "Open Vision One > AI Security > AI Scanner in the tenant "
+                "associated with this API key for the full report."
+            ),
+        )
+        await _scanner_job_update(
+            job_id,
+            status="completed",
+            stage="completed",
+            result=summary,
+            rawResult=raw_result,
+            markdownReport=(
+                markdown_path.read_text(encoding="utf-8")
+                if markdown_path.is_file()
+                else None
+            ),
+            finishedAt=time.time(),
+        )
+    except Exception as exc:
+        logger.exception("Live TMAS scanner job failed")
+        await _scanner_job_log(job_id, f"ERROR: {exc}")
+        await _scanner_job_update(
+            job_id,
+            status="failed",
+            stage="failed",
+            error=str(exc),
+            finishedAt=time.time(),
+        )
+    finally:
+        if workspace is not None:
+            _scanner_shutil.rmtree(workspace, ignore_errors=True)
+
+
+@app.get("/api/scanner/tmas/status")
+async def scanner_tmas_status() -> dict:
+    return _scanner_status_payload()
+
+
+@app.post("/api/scanner/tmas/config")
+async def scanner_tmas_config(
+    payload: ScannerRuntimeConfigRequest,
+) -> dict:
+    if not settings.allow_runtime_config:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Runtime scanner configuration is disabled. "
+                "Use AI_SCANNER_TMAS_API_KEY, TARGET_API_KEY, "
+                "AI_SCANNER_REGION, and AI_SCANNER_CONFIG_PATH."
+            ),
+        )
+
+    if payload.region is not None:
+        normalised = _SCANNER_REGION_ALIASES.get(
+            payload.region.strip().lower()
+        )
+        if not normalised:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported AI Scanner region: {payload.region}",
+            )
+        _SCANNER_RUNTIME["region"] = normalised
+
+    if payload.vision_one_api_key is not None:
+        value = payload.vision_one_api_key.strip()
+        if value:
+            _SCANNER_RUNTIME["vision_one_api_key"] = value
+
+    if payload.target_api_key is not None:
+        _SCANNER_RUNTIME["target_api_key"] = (
+            payload.target_api_key.strip()
+        )
+
+    if payload.config_yaml is not None:
+        value = payload.config_yaml.strip()
+        if value:
+            _SCANNER_RUNTIME["config_yaml"] = value
+
+    return {
+        "saved": True,
+        **_scanner_status_payload(),
+    }
+
+
+@app.post("/api/scanner/jobs")
+async def scanner_start_job(payload: ScannerJobRequest) -> dict:
+    objectives = payload.objectives or [
+        "sensitive-data",
+        "system-prompt",
+        "indirect-prompt-injection",
+    ]
+    payload = ScannerJobRequest(
+        mode=payload.mode,
+        target=payload.target,
+        objectives=objectives,
+    )
+
+    if payload.mode == "live":
+        status = _scanner_status_payload()
+        missing = []
+        if not status["tmasInstalled"]:
+            missing.append("TMAS CLI")
+        if not status["visionOneKeyConfigured"]:
+            missing.append("Vision One API key")
+        if not status["configConfigured"]:
+            missing.append("TMAS YAML config")
+        if missing:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Live AI Scanner is not ready.",
+                    "missing": missing,
+                    "status": status,
+                },
+            )
+
+    job_id = _scanner_uuid.uuid4().hex
+    job = {
+        "id": job_id,
+        "mode": payload.mode,
+        "target": payload.target,
+        "objectives": payload.objectives,
+        "status": "queued",
+        "stage": "queued",
+        "logs": [],
+        "result": None,
+        "error": None,
+        "createdAt": time.time(),
+        "updatedAt": time.time(),
+        "finishedAt": None,
+    }
+
+    async with _SCANNER_JOBS_LOCK:
+        if len(_SCANNER_JOBS) >= 30:
+            oldest = sorted(
+                _SCANNER_JOBS.values(),
+                key=lambda item: item["createdAt"],
+            )[:10]
+            for item in oldest:
+                _SCANNER_JOBS.pop(item["id"], None)
+        _SCANNER_JOBS[job_id] = job
+
+    if payload.mode == "live":
+        asyncio.create_task(
+            _run_live_scanner_job(job_id, payload)
+        )
+    else:
+        asyncio.create_task(
+            _run_demo_scanner_job(job_id, payload)
+        )
+
+    return {
+        "jobId": job_id,
+        "status": "queued",
+        "mode": payload.mode,
+    }
+
+
+@app.get("/api/scanner/jobs/{job_id}")
+async def scanner_get_job(job_id: str) -> dict:
+    async with _SCANNER_JOBS_LOCK:
+        job = _SCANNER_JOBS.get(job_id)
+        if job is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Scanner job not found",
+            )
+        public_job = _scanner_deepcopy(job)
+        public_job.pop("rawResult", None)
+        public_job.pop("markdownReport", None)
+        return public_job
+
+
+@app.get("/api/scanner/jobs/{job_id}/report")
+async def scanner_get_job_report(job_id: str) -> dict:
+    async with _SCANNER_JOBS_LOCK:
+        job = _SCANNER_JOBS.get(job_id)
+        if job is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Scanner job not found",
+            )
+        if job.get("status") != "completed":
+            raise HTTPException(
+                status_code=409,
+                detail="Scanner job is not complete",
+            )
+        return {
+            "id": job_id,
+            "rawResult": job.get("rawResult"),
+            "markdownReport": job.get("markdownReport"),
+        }
