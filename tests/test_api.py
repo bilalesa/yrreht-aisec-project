@@ -116,3 +116,19 @@ def test_settings_report_trend_hosted_mode():
     payload = response.json()
     assert payload["aiGuard"]["deploymentMode"] == "trend-hosted"
     assert payload["aiGuard"]["baseUrl"].startswith("https://api.")
+
+
+
+def test_live_scanner_executes_guard_path() -> None:
+    response = client.post(
+        "/api/scanner/live",
+        json={
+            "target": "protected",
+            "objectives": ["prompt-injection"],
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["simulated"] is False
+    assert body["mode"] == "live"
+    assert body["blocked"] == 1

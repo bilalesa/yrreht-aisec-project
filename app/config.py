@@ -96,6 +96,10 @@ class RuntimeConfig:
         self._region = settings.tmv1_region
         self._application_name = settings.tmv1_application_name
         self._force_demo_mode = settings.force_demo_mode
+        self._prompt_injection_detection = True
+        self._jailbreak_detection = True
+        self._harmful_content_detection = True
+        self._pii_detection = settings.ai_guard_mask_pii
 
     def update(
         self,
@@ -104,6 +108,10 @@ class RuntimeConfig:
         region: Optional[str] = None,
         application_name: Optional[str] = None,
         force_demo_mode: Optional[bool] = None,
+        prompt_injection_detection: Optional[bool] = None,
+        jailbreak_detection: Optional[bool] = None,
+        harmful_content_detection: Optional[bool] = None,
+        pii_detection: Optional[bool] = None,
     ) -> None:
         with self._lock:
             if api_key is not None and api_key.strip():
@@ -114,6 +122,14 @@ class RuntimeConfig:
                 self._application_name = application_name.strip()
             if force_demo_mode is not None:
                 self._force_demo_mode = force_demo_mode
+            if prompt_injection_detection is not None:
+                self._prompt_injection_detection = prompt_injection_detection
+            if jailbreak_detection is not None:
+                self._jailbreak_detection = jailbreak_detection
+            if harmful_content_detection is not None:
+                self._harmful_content_detection = harmful_content_detection
+            if pii_detection is not None:
+                self._pii_detection = pii_detection
 
     def snapshot(self) -> dict:
         with self._lock:
@@ -125,4 +141,10 @@ class RuntimeConfig:
                 "application_name": self._application_name,
                 "base_url": base_url.rstrip("/"),
                 "force_demo_mode": self._force_demo_mode,
+                "policies": {
+                    "promptInjection": self._prompt_injection_detection,
+                    "jailbreak": self._jailbreak_detection,
+                    "harmfulContent": self._harmful_content_detection,
+                    "pii": self._pii_detection,
+                },
             }
