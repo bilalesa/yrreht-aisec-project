@@ -41,7 +41,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.8.0",
+    version="1.8.1",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -90,7 +90,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.0"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.1"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -790,8 +790,19 @@ if _SCANNER_CONFIG_PATH:
 _SCANNER_JOBS: dict[str, dict] = {}
 _SCANNER_JOBS_LOCK = asyncio.Lock()
 _SCANNER_TMAS_BINARY = os.getenv("TMAS_BINARY", "tmas")
-_SCANNER_TIMEOUT_SECONDS = int(
-    os.getenv("AI_SCANNER_TIMEOUT_SECONDS", "1800")
+_SCANNER_PREFLIGHT_TIMEOUT_SECONDS = max(
+    5,
+    int(os.getenv(
+        "AI_SCANNER_PREFLIGHT_TIMEOUT_SECONDS",
+        "20",
+    )),
+)
+_SCANNER_TIMEOUT_SECONDS = max(
+    60,
+    int(os.getenv(
+        "AI_SCANNER_TIMEOUT_SECONDS",
+        "600",
+    )),
 )
 
 
@@ -1289,6 +1300,135 @@ def _scanner_target_endpoint(payload: ScannerJobRequest) -> str:
     )
 
 
+
+async def _scanner_probe_target(
+    payload: ScannerJobRequest,
+) -> None:
+    endpoint = _scanner_target_endpoint(payload)
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    target_key = (
+        _SCANNER_RUNTIME["target_api_key"] or ""
+    ).strip()
+    if target_key:
+        headers["Authorization"] = f"Bearer {target_key}"
+
+    request_body = {
+        "model": (
+            payload.model_id.strip()
+            or "visionone-bank-demo"
+        ),
+        "messages": [
+            {
+                "role": "user",
+                "content": (
+                    "BAM Bank AI Scanner connectivity check. "
+                    "Reply with OK only."
+                ),
+            }
+        ],
+        "stream": False,
+    }
+
+    timeout = httpx.Timeout(
+        timeout=float(_SCANNER_PREFLIGHT_TIMEOUT_SECONDS),
+        connect=min(
+            5.0,
+            float(_SCANNER_PREFLIGHT_TIMEOUT_SECONDS),
+        ),
+    )
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=True,
+        ) as client:
+            response = await client.post(
+                endpoint,
+                headers=headers,
+                json=request_body,
+            )
+    except httpx.TimeoutException as exc:
+        raise RuntimeError(
+            "Target endpoint preflight exceeded "
+            f"{_SCANNER_PREFLIGHT_TIMEOUT_SECONDS} seconds. "
+            "Verify the target LLM connection and retry."
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise RuntimeError(
+            f"Target endpoint preflight failed: {exc}"
+        ) from exc
+
+    if response.status_code >= 400:
+        detail = response.text.strip().replace("\n", " ")
+        if len(detail) > 500:
+            detail = detail[:500] + "…"
+        raise RuntimeError(
+            "Target endpoint preflight returned HTTP "
+            f"{response.status_code}"
+            + (f": {detail}" if detail else ".")
+        )
+
+    try:
+        body = response.json()
+    except ValueError as exc:
+        raise RuntimeError(
+            "Target endpoint preflight returned a non-JSON response."
+        ) from exc
+
+    choices = body.get("choices") if isinstance(body, dict) else None
+    if not isinstance(choices, list) or not choices:
+        raise RuntimeError(
+            "Target endpoint preflight did not return an "
+            "OpenAI-compatible choices array."
+        )
+
+
+def _scanner_failure_payload(
+    message: str,
+    output_tail: str = "",
+) -> dict:
+    normalised = message.lower()
+
+    if "preflight" in normalised or "target endpoint" in normalised:
+        title = "Target endpoint check failed"
+        remediation = [
+            "Verify the configured LLM endpoint is reachable from the container.",
+            "Confirm the model ID and target API key are correct.",
+            "Retry after the target responds successfully.",
+        ]
+    elif "exceeded" in normalised or "timeout" in normalised:
+        title = "Assessment timed out"
+        remediation = [
+            "Reduce the selected objectives, techniques, or modifiers.",
+            "Confirm the target model responds without excessive delay.",
+            "Increase AI_SCANNER_TIMEOUT_SECONDS only when a longer live assessment is intentional.",
+        ]
+    elif "results.json" in normalised:
+        title = "TMAS did not produce a report"
+        remediation = [
+            "Review the TMAS process output below.",
+            "Verify the Vision One API key, region, and outbound connectivity.",
+            "Confirm the installed TMAS version supports AI Scanner.",
+        ]
+    else:
+        title = "Vision One assessment failed"
+        remediation = [
+            "Review the TMAS process output below.",
+            "Verify the Vision One API key and selected region.",
+            "Confirm the EC2 host can reach the required TrendAI services.",
+        ]
+
+    return {
+        "title": title,
+        "message": message,
+        "remediation": remediation,
+        "outputTail": output_tail,
+    }
+
+
 def _scanner_build_app_config(
     payload: ScannerJobRequest,
 ) -> str:
@@ -1505,7 +1645,12 @@ async def _run_live_scanner_job(
             "Checking the selected BAM Bank target endpoint...",
         )
 
-        await _scanner_probe_target(payload)
+        await asyncio.wait_for(
+            _scanner_probe_target(payload),
+            timeout=(
+                _SCANNER_PREFLIGHT_TIMEOUT_SECONDS + 2
+            ),
+        )
 
         await _scanner_job_log(
             job_id,
@@ -1563,6 +1708,14 @@ async def _run_live_scanner_job(
         await _scanner_job_update(
             job_id,
             stage="scanning",
+        )
+        await _scanner_job_log(
+            job_id,
+            (
+                "The live job is bounded to "
+                f"{_SCANNER_TIMEOUT_SECONDS} seconds. "
+                "Progress appears here as TMAS reports it."
+            ),
         )
 
         process = await asyncio.create_subprocess_exec(

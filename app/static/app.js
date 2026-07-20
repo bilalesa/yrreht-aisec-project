@@ -6964,6 +6964,10 @@ exposePresenterLabFromUrl();
     jobAccepted: false,
     running: false,
     pollTimer: null,
+    pollFailures: 0,
+    startedAt: 0,
+    lastStage: 'queued',
+    elapsedTimer: null,
     logs: [],
     bound: false
   };
@@ -7435,9 +7439,13 @@ exposePresenterLabFromUrl();
 
   function resetScanner(returnToFirst = true) {
     window.clearTimeout(scanner.pollTimer);
+    stopElapsedClockV39();
     scanner.jobId = null;
     scanner.jobAccepted = false;
     scanner.running = false;
+    scanner.pollFailures = 0;
+    scanner.startedAt = 0;
+    scanner.lastStage = 'queued';
     scanner.logs = [];
 
     q('#scan-progress')?.classList.add('hidden');
@@ -7681,6 +7689,169 @@ exposePresenterLabFromUrl();
     )?.value || '';
   }
 
+
+  function liveProgressCopyV39() {
+    return language() === 'id'
+      ? {
+          preflight: 'Memeriksa target',
+          queued: 'Menyiapkan job',
+          scanning: 'TMAS sedang memindai',
+          elapsed: 'Berjalan',
+          pollFailed:
+            'Koneksi ke status job terputus setelah beberapa percobaan.',
+          pollTitle: 'Status assessment tidak dapat dibaca',
+          manageCards: 'Kelola Kartu',
+          manageCardsSub: 'Lihat, blokir, atau ganti kartu'
+        }
+      : {
+          preflight: 'Checking target',
+          queued: 'Preparing job',
+          scanning: 'TMAS assessment in progress',
+          elapsed: 'Elapsed',
+          pollFailed:
+            'The job status connection was lost after several retries.',
+          pollTitle: 'Unable to read assessment status',
+          manageCards: 'Manage Cards',
+          manageCardsSub: 'View, freeze, or replace cards'
+        };
+  }
+
+  function formatElapsedV39(milliseconds) {
+    const seconds = Math.max(
+      0,
+      Math.floor(milliseconds / 1000)
+    );
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:` +
+      `${String(remainder).padStart(2, '0')}`;
+  }
+
+  function stopElapsedClockV39() {
+    window.clearInterval(scanner.elapsedTimer);
+    scanner.elapsedTimer = null;
+  }
+
+  function updateElapsedClockV39(stage = '') {
+    const node = q('#bam-scan-elapsed-v39');
+    if (!node || !scanner.startedAt) return;
+
+    const words = liveProgressCopyV39();
+    const stageLabel = stage === 'preflight'
+      ? words.preflight
+      : stage === 'queued'
+        ? words.queued
+        : words.scanning;
+    node.textContent =
+      `${stageLabel} · ${words.elapsed} ` +
+      formatElapsedV39(Date.now() - scanner.startedAt);
+  }
+
+  function startElapsedClockV39() {
+    stopElapsedClockV39();
+    updateElapsedClockV39('queued');
+    scanner.elapsedTimer = window.setInterval(
+      () => updateElapsedClockV39(scanner.lastStage),
+      1000
+    );
+  }
+
+  function installManageCardsActionV39() {
+    const actions = qa(
+      '#dashboard-page .quick-actions button'
+    );
+    const candidate = actions.find(button => {
+      const value = button.textContent.toLowerCase();
+      return value.includes('new account') ||
+        value.includes('open a demo account') ||
+        value.includes('akun baru') ||
+        button.id === 'action-manage-cards-v39';
+    });
+    if (!candidate) return false;
+
+    const words = liveProgressCopyV39();
+    candidate.id = 'action-manage-cards-v39';
+    candidate.classList.add('bam-manage-cards-v39');
+
+    const icon = q(':scope > span', candidate);
+    const title = q('strong', candidate);
+    const subtitle = q('small', candidate);
+
+    if (icon) {
+      icon.innerHTML = `
+        <svg viewBox="0 0 24 24"
+             aria-hidden="true"
+             focusable="false">
+          <rect x="3.5" y="5" width="17" height="14"
+                rx="3"></rect>
+          <path d="M3.5 9.5h17"></path>
+          <path d="M7 15h4"></path>
+        </svg>`;
+    }
+    if (title) title.textContent = words.manageCards;
+    if (subtitle) subtitle.textContent = words.manageCardsSub;
+
+    if (candidate.dataset.v39Bound !== 'true') {
+      candidate.dataset.v39Bound = 'true';
+      candidate.addEventListener('click', () => {
+        if (typeof showPage === 'function') {
+          showPage('accounts');
+        }
+      });
+    }
+    return true;
+  }
+
+  function removeLegacyFileFooterV39() {
+    const phrases = [
+      'Uploaded bills are inspected by File Security before processing',
+      'Tagihan yang diunggah diperiksa oleh File Security sebelum diproses'
+    ];
+
+    const normalise = value => value
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/[.!]$/, '');
+
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT
+    );
+    const textNodes = [];
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(node => {
+      const value = normalise(node.nodeValue || '');
+      if (!value) return;
+      if (!phrases.some(phrase => value.includes(phrase))) {
+        return;
+      }
+
+      const parent = node.parentElement;
+      node.nodeValue = '';
+      if (
+        parent &&
+        !parent.textContent.trim() &&
+        !parent.children.length
+      ) {
+        parent.remove();
+      }
+    });
+
+    qa(
+      '.file-security-footer, ' +
+      '.bam-file-security-footer, ' +
+      '[data-file-security-footer]'
+    ).forEach(node => node.remove());
+  }
+
+  function installV39DashboardFixes() {
+    installManageCardsActionV39();
+    removeLegacyFileFooterV39();
+  }
+
   function renderProgress() {
     const progress = q('#scan-progress');
     if (!progress) return;
@@ -7699,7 +7870,10 @@ exposePresenterLabFromUrl();
             <strong id="bam-scan-progress-title-v34"></strong>
             <small id="bam-scan-progress-mode-v34"></small>
           </div>
-          <span class="bam-running-pill-v37">Running</span>
+          <span class="bam-running-status-v39">
+            <span class="bam-running-pill-v37">Running</span>
+            <small id="bam-scan-elapsed-v39"></small>
+          </span>
         </header>
         <div class="bam-running-track-v37"
              aria-hidden="true">
@@ -7750,6 +7924,9 @@ exposePresenterLabFromUrl();
     clearScannerNotice();
     scanner.jobAccepted = false;
     scanner.running = true;
+    scanner.pollFailures = 0;
+    scanner.startedAt = Date.now();
+    scanner.lastStage = 'queued';
     scanner.logs = [];
     syncScannerUi();
 
@@ -7781,6 +7958,7 @@ exposePresenterLabFromUrl();
         clearOneTimeTenantKey();
       }
       renderProgress();
+      startElapsedClockV39();
       q('#scan-progress')?.classList.remove('hidden');
       q('#scan-results')?.classList.add('hidden');
       showStep(3);
@@ -7807,6 +7985,9 @@ exposePresenterLabFromUrl();
         `/api/scanner/jobs/${scanner.jobId}`
       );
 
+      scanner.pollFailures = 0;
+      scanner.lastStage = job.stage || 'scanning';
+      updateElapsedClockV39(scanner.lastStage);
       renderLiveLogs(job.logs || []);
 
       const title = q('#bam-scan-progress-title-v34');
@@ -7827,6 +8008,7 @@ exposePresenterLabFromUrl();
 
       if (job.status === 'completed') {
         scanner.running = false;
+        stopElapsedClockV39();
         renderScannerResults(job);
         syncScannerUi();
         return;
@@ -7834,6 +8016,7 @@ exposePresenterLabFromUrl();
 
       if (job.status === 'failed') {
         scanner.running = false;
+        stopElapsedClockV39();
         scanner.jobAccepted = true;
         scanner.logs = Array.isArray(job.logs)
           ? job.logs.slice()
@@ -7848,9 +8031,36 @@ exposePresenterLabFromUrl();
         550
       );
     } catch (error) {
+      scanner.pollFailures += 1;
+      const elapsed = scanner.startedAt
+        ? Date.now() - scanner.startedAt
+        : 0;
+      if (
+        scanner.pollFailures >= 5 ||
+        elapsed > 660000
+      ) {
+        scanner.running = false;
+        scanner.jobAccepted = true;
+        stopElapsedClockV39();
+        const words = liveProgressCopyV39();
+        renderScannerFailure({
+          error: words.pollFailed,
+          failure: {
+            title: words.pollTitle,
+            message: words.pollFailed,
+            remediation: [
+              'Confirm the application container is reachable.',
+              'Retry the assessment after connectivity is restored.'
+            ]
+          },
+          logs: scanner.logs
+        });
+        syncScannerUi();
+        return;
+      }
       scanner.pollTimer = window.setTimeout(
         pollScannerJob,
-        1100
+        1400
       );
     }
   }
@@ -8396,6 +8606,7 @@ exposePresenterLabFromUrl();
 
   function syncLanguage() {
     installAdvancedAttackControls();
+    installV39DashboardFixes();
     syncScannerUi();
     syncFileButton();
   }
@@ -8404,6 +8615,7 @@ exposePresenterLabFromUrl();
     const install = () => {
       bindScannerControls();
       installAdvancedAttackControls();
+      installV39DashboardFixes();
       installGuardTest();
       installFileControls();
       syncScannerUi();
@@ -9006,3 +9218,13 @@ exposePresenterLabFromUrl();
 /* BAM_BANK_UI_REVISION_V37 */
 
 /* BAM_BANK_UI_REVISION_V38 */
+
+/* BAM_BANK_UI_REVISION_V39 */
+(() => {
+  const repair = () => {
+    const event = new Event('change');
+    document.querySelector('#language')?.dispatchEvent(event);
+  };
+  window.setTimeout(repair, 120);
+  window.setTimeout(repair, 700);
+})();

@@ -419,3 +419,24 @@ def test_generated_tmas_config_includes_attack_options() -> None:
     assert 'model: "bamsky-model-v2"' in config
     assert '"DAN (Do anything now)"' in config
     assert '"Base64 Encoding"' in config
+
+
+# BAM_BANK_UI_REVISION_V39
+
+
+def test_scanner_failure_payload_for_preflight() -> None:
+    import app.main as main_module
+
+    payload = main_module._scanner_failure_payload(
+        "Target endpoint preflight exceeded 20 seconds."
+    )
+
+    assert payload["title"] == "Target endpoint check failed"
+    assert payload["remediation"]
+
+
+def test_scanner_timeout_defaults_are_bounded() -> None:
+    import app.main as main_module
+
+    assert main_module._SCANNER_PREFLIGHT_TIMEOUT_SECONDS >= 5
+    assert main_module._SCANNER_TIMEOUT_SECONDS >= 60

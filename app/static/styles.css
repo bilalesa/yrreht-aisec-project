@@ -8725,3 +8725,46 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
     width:100%!important;
   }
 }
+
+
+/* BAM_BANK_UI_REVISION_V39 */
+
+.bam-running-head-v37 .bam-running-status-v39{
+  margin-left:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:5px!important;
+}
+
+#bam-scan-elapsed-v39{
+  color:#71829A!important;
+  font-size:8.5px!important;
+  font-weight:650!important;
+  letter-spacing:.01em!important;
+  white-space:nowrap!important;
+}
+
+.bam-manage-cards-v39>span:first-child svg{
+  width:19px!important;
+  height:19px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.8!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+
+.file-security-footer,
+.bam-file-security-footer,
+[data-file-security-footer]{
+  display:none!important;
+}
+
+@media(max-width:760px){
+  .bam-running-head-v37 .bam-running-status-v39{
+    align-items:flex-start!important;
+    margin-left:0!important;
+    width:100%!important;
+  }
+}
