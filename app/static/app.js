@@ -2128,3 +2128,487 @@ exposePresenterLabFromUrl();
   updateSecurityLanguage();
   window.setInterval(() => updateSimpleHeader(uiState.activePage), 60000);
 })();
+
+
+/* BAM_BANK_UI_REVISION_V11 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  const actionIcons = [
+    {
+      className: 'action-pay-bills',
+      svg: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h8.5L19 7v13.5H7z"></path><path d="M15.5 3.5V7H19M10 11h6M10 14h6"></path><path d="m10 17 1.35 1.35L14 15.7"></path></svg>`
+    },
+    {
+      className: 'action-send-money',
+      svg: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 20 4l-5.3 16-3.15-6.05L4 12.5Z"></path><path d="m11.55 13.95 4.2-4.15"></path></svg>`
+    },
+    {
+      className: 'action-top-up',
+      svg: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h14.5A1.5 1.5 0 0 1 20 9v9.5H5.5A1.5 1.5 0 0 1 4 17V7.5Z"></path><path d="M4 7.5 15.5 4v3.5M15.5 12v5M13 14.5h5"></path></svg>`
+    },
+    {
+      className: 'action-invest',
+      svg: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M6 16l4.1-4.1 3 2.7L19 8.5"></path><path d="M15.5 8.5H19V12"></path><circle cx="6" cy="16" r="1"></circle><circle cx="10.1" cy="11.9" r="1"></circle><circle cx="13.1" cy="14.6" r="1"></circle></svg>`
+    },
+    {
+      className: 'action-new-account',
+      svg: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"></rect><circle cx="9" cy="11" r="2.1"></circle><path d="M5.8 16c.8-1.7 1.9-2.5 3.2-2.5s2.4.8 3.2 2.5M15 10.5h3.5M16.75 8.75v3.5"></path></svg>`
+    }
+  ];
+
+  qa('#dashboard-page .quick-actions button')
+    .slice(0, actionIcons.length)
+    .forEach((button, index) => {
+      const iconHost = q(':scope > span', button);
+      if (!iconHost) return;
+      button.classList.add('bam-product-action', actionIcons[index].className);
+      iconHost.classList.add('bam-product-action-icon');
+      iconHost.innerHTML = actionIcons[index].svg;
+    });
+
+  const trustRow = q('#bam-experience-hero .bam-trust-row');
+  if (trustRow && !q('#bam-demo-credit')) {
+    const credit = document.createElement('div');
+    credit.id = 'bam-demo-credit';
+    credit.className = 'bam-demo-credit';
+    credit.innerHTML = `<span class="bam-credit-monogram">TF</span><span class="bam-credit-copy"><small>A concept demo by</small><strong>Therry Fohan</strong></span>`;
+    trustRow.insertAdjacentElement('afterend', credit);
+  }
+})();
+
+
+/* BAM_BANK_UI_REVISION_V12 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  const coverage = [
+    {
+      value: 'sensitive-data',
+      title: 'Sensitive Data Disclosure',
+      detail: 'Tests whether protected or confidential data can be extracted.',
+      checked: true
+    },
+    {
+      value: 'system-prompt',
+      title: 'System Prompt Leakage',
+      detail: 'Attempts to reveal hidden instructions and system context.',
+      checked: true
+    },
+    {
+      value: 'malicious-code',
+      title: 'Malicious Code Generation',
+      detail: 'Evaluates whether the model produces harmful executable guidance.'
+    },
+    {
+      value: 'model-discovery',
+      title: 'Discover ML Model Family',
+      detail: 'Attempts to identify model family and deployment details.'
+    },
+    {
+      value: 'hallucinated-software',
+      title: 'Hallucinated Software Entities',
+      detail: 'Checks for invented packages, libraries, or dependencies.'
+    },
+    {
+      value: 'agent-tools',
+      title: 'Agent Tool Definition Leakage',
+      detail: 'Tests whether private tools, parameters, or schemas are exposed.'
+    },
+    {
+      value: 'indirect-prompt-injection',
+      title: 'Indirect Prompt Injection',
+      detail: 'Tests malicious instructions embedded in retrieved content.',
+      checked: true
+    },
+    {
+      value: 'resource-exhaustion',
+      title: 'Resource Exhaustion via Prompt',
+      detail: 'Checks resistance to excessive token or recursive output requests.'
+    },
+    {
+      value: 'harmful-output',
+      title: 'Harmful Content Generation',
+      detail: 'Evaluates generation of unsafe or abusive content.'
+    }
+  ];
+
+  function removeRedundantActions() {
+    qa('.top-actions > button:not(#settings-button)').forEach(button => {
+      button.remove();
+    });
+
+    q('#bam-hero-security')?.remove();
+
+    const heroActions = q('#bam-experience-hero .bam-hero-actions');
+    heroActions?.classList.add('single-action');
+  }
+
+  function flagEmoji(countryCode) {
+    if (!countryCode || !/^[A-Z]{2}$/i.test(countryCode)) return '🌐';
+    return countryCode
+      .toUpperCase()
+      .split('')
+      .map(character => String.fromCodePoint(127397 + character.charCodeAt(0)))
+      .join('');
+  }
+
+  function countryName(countryCode, providedName) {
+    if (providedName) return providedName;
+    if (!countryCode) return null;
+    try {
+      return new Intl.DisplayNames(
+        [document.documentElement.lang === 'id' ? 'id' : 'en'],
+        { type: 'region' }
+      ).of(countryCode.toUpperCase());
+    } catch (_) {
+      return countryCode.toUpperCase();
+    }
+  }
+
+  function installAccessContext() {
+    const title = q('#page-title');
+    const host = title?.parentElement;
+    if (!host || q('#bam-access-context')) return;
+
+    const context = document.createElement('div');
+    context.id = 'bam-access-context';
+    context.className = 'bam-access-context';
+    context.innerHTML = `
+      <span class="bam-access-chip">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="5.5" width="16" height="14" rx="2.5"></rect>
+          <path d="M8 3.5v4M16 3.5v4M4 9.5h16"></path>
+        </svg>
+        <span id="bam-access-date">Loading local date…</span>
+      </span>
+      <span class="bam-access-chip">
+        <span class="bam-country-flag" id="bam-country-flag">🌐</span>
+        <span id="bam-access-network">Resolving visitor network…</span>
+      </span>`;
+
+    const subtitle = q('#page-subtitle');
+    if (subtitle) subtitle.replaceWith(context);
+    else title.insertAdjacentElement('afterend', context);
+
+    updateLocalAccessDate();
+    loadClientContext();
+  }
+
+  function updateLocalAccessDate() {
+    const target = q('#bam-access-date');
+    if (!target) return;
+
+    const now = new Date();
+    const indonesia =
+      localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id';
+    const locale = indonesia ? 'id-ID' : 'en-GB';
+
+    const date = new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }).format(now);
+
+    const time = new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    }).format(now);
+
+    target.textContent = `${date} · ${time}`;
+  }
+
+  async function loadClientContext() {
+    const network = q('#bam-access-network');
+    const flag = q('#bam-country-flag');
+    if (!network || !flag) return;
+
+    try {
+      const result = await api('/api/client-context');
+      const name = countryName(result.countryCode, result.country);
+      flag.textContent = flagEmoji(result.countryCode);
+
+      const ip = result.ip || 'IP unavailable';
+      network.textContent = name ? `${ip} · ${name}` : ip;
+      network.title = `Display source: ${result.source || 'unknown'}`;
+    } catch (_) {
+      flag.textContent = '🌐';
+      network.textContent = 'Network context unavailable';
+    }
+  }
+
+  function installCurrentScannerCoverage() {
+    const grid = q('#scanner-step-2 .attack-grid');
+    if (!grid) return;
+
+    grid.innerHTML = coverage.map(item => `
+      <label class="attack-option updated-coverage">
+        <input type="checkbox" value="${item.value}" ${item.checked ? 'checked' : ''} />
+        <span>
+          <strong>${item.title}</strong>
+          <small>${item.detail}</small>
+        </span>
+      </label>`).join('');
+
+    let reference = q('#scanner-coverage-reference');
+    if (!reference) {
+      reference = document.createElement('section');
+      reference.id = 'scanner-coverage-reference';
+      reference.className = 'scanner-coverage-reference';
+      grid.insertAdjacentElement('afterend', reference);
+    }
+
+    reference.innerHTML = `
+      <div>
+        <strong>Current AI Scanner coverage reference</strong>
+        <span>9 built-in categories aligned with the current public documentation.</span>
+      </div>
+      <div class="scanner-capability-tags">
+        <span>Custom prompts</span>
+        <span>Multi-turn conversations</span>
+        <span>CVSS tags</span>
+        <span>OWASP mapping</span>
+        <span>MITRE ATLAS mapping</span>
+      </div>
+      <p>This interface runs representative demo or live endpoint checks. Use the generated TMAS configuration for the full judge-based assessment and custom-prompt workflow.</p>`;
+  }
+
+  function installGuardCoverageReference() {
+    const status = q('#guard-content .status-hero');
+    if (!status || q('#guard-official-coverage')) return;
+
+    const coverageCard = document.createElement('section');
+    coverageCard.id = 'guard-official-coverage';
+    coverageCard.className = 'guard-official-coverage';
+    coverageCard.innerHTML = `
+      <div>
+        <span class="guard-coverage-kicker">LIVE POLICY REFERENCE</span>
+        <strong>Moderate security level recommended</strong>
+        <p>AI Guard evaluates prompt attacks, harmful content, and sensitive information. Local demo checkboxes below only tune the offline fallback behavior.</p>
+      </div>
+      <div class="guard-coverage-tags">
+        <span>Prompt attacks</span>
+        <span>Harmful content</span>
+        <span>Sensitive information</span>
+      </div>`;
+
+    status.insertAdjacentElement('afterend', coverageCard);
+
+    const replacements = [
+      ['#guard-policy-prompt-injection', 'Prompt attacks'],
+      ['#guard-policy-jailbreak', 'Jailbreak patterns'],
+      ['#guard-policy-harmful', 'Harmful content'],
+      ['#guard-policy-pii', 'Sensitive information / PII']
+    ];
+
+    replacements.forEach(([selector, label]) => {
+      const input = q(selector);
+      const host = input?.closest('label');
+      if (!host) return;
+      const textNodes = [...host.childNodes].filter(node => node.nodeType === Node.TEXT_NODE);
+      if (textNodes.length) textNodes[textNodes.length - 1].textContent = ` ${label}`;
+    });
+  }
+
+  function syncAccessLanguage() {
+    updateLocalAccessDate();
+    loadClientContext();
+  }
+
+  removeRedundantActions();
+  installAccessContext();
+  installCurrentScannerCoverage();
+  installGuardCoverageReference();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncAccessLanguage, 0);
+  });
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncAccessLanguage, 0);
+  });
+
+  window.setInterval(updateLocalAccessDate, 60000);
+})();
+
+
+/* BAM_BANK_UI_REVISION_V13 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      eyebrow: 'AI SECURITY LAB',
+      title: 'Validate the AI experience',
+      body: 'Run an assessment or compare protected responses without covering the dashboard.',
+      scannerTitle: 'AI Scanner',
+      scannerBody: 'Assess exposure',
+      guardTitle: 'AI Guard',
+      guardBody: 'Test protection'
+    },
+    id: {
+      eyebrow: 'LAB KEAMANAN AI',
+      title: 'Validasi pengalaman AI',
+      body: 'Jalankan assessment atau bandingkan respons terlindungi tanpa menutupi dashboard.',
+      scannerTitle: 'AI Scanner',
+      scannerBody: 'Uji paparan',
+      guardTitle: 'AI Guard',
+      guardBody: 'Uji perlindungan'
+    }
+  };
+
+  function removeSmartBalance() {
+    q('.bam-balance-card')?.remove();
+  }
+
+  function openScanner() {
+    const scannerNav = q('#open-ai-scanner');
+    if (scannerNav) {
+      scannerNav.click();
+      return;
+    }
+
+    q('#security-modal')?.classList.add('open');
+    q('[data-security-tab="scanner"]')?.click();
+  }
+
+  function openGuardTest() {
+    const chatPanel = q('#chat-panel');
+    chatPanel?.classList.add('open');
+    q('[data-prompt-tab="malicious"]')?.click();
+  }
+
+  function syncSecurityLabCopy() {
+    const text = copy[currentLanguage()];
+    const values = {
+      '#bam-lab-eyebrow': text.eyebrow,
+      '#bam-lab-title': text.title,
+      '#bam-lab-body': text.body,
+      '#bam-lab-scanner-title': text.scannerTitle,
+      '#bam-lab-scanner-body': text.scannerBody,
+      '#bam-lab-guard-title': text.guardTitle,
+      '#bam-lab-guard-body': text.guardBody
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+  }
+
+  function installSecurityLabCard() {
+    const promos = q('#demo-promos');
+    const rightColumn = q('#dashboard-page .right-column');
+    const bankCard = q('#dashboard-page .right-column .bank-card');
+
+    if (!promos || !rightColumn) return false;
+
+    if (!promos.classList.contains('bam-security-lab-card')) {
+      promos.className = 'demo-promos bam-security-lab-card';
+      promos.innerHTML = `
+        <div class="bam-security-lab-heading">
+          <span class="bam-security-lab-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5-4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+              <path d="M8.3 12h2.2l1.2-3 1.8 6 1.2-3h1.2"></path>
+            </svg>
+          </span>
+          <span class="bam-security-lab-copy">
+            <small id="bam-lab-eyebrow"></small>
+            <strong id="bam-lab-title"></strong>
+            <span id="bam-lab-body"></span>
+          </span>
+        </div>
+
+        <div class="bam-security-lab-actions">
+          <button type="button" class="bam-lab-action scanner" id="scanner-promo">
+            <span class="bam-lab-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="7.5"></circle>
+                <circle cx="12" cy="12" r="2.2"></circle>
+                <path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3"></path>
+              </svg>
+            </span>
+            <span>
+              <strong id="bam-lab-scanner-title"></strong>
+              <small id="bam-lab-scanner-body"></small>
+            </span>
+            <svg class="bam-lab-arrow" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 12h8M13 8l4 4-4 4"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="bam-lab-action guard" id="guard-promo">
+            <span class="bam-lab-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5-4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+                <path d="m8.8 12 2 2 4.5-4.5"></path>
+              </svg>
+            </span>
+            <span>
+              <strong id="bam-lab-guard-title"></strong>
+              <small id="bam-lab-guard-body"></small>
+            </span>
+            <svg class="bam-lab-arrow" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 12h8M13 8l4 4-4 4"></path>
+            </svg>
+          </button>
+        </div>`;
+
+      q('#scanner-promo')?.addEventListener('click', event => {
+        event.preventDefault();
+        openScanner();
+      });
+
+      q('#guard-promo')?.addEventListener('click', event => {
+        event.preventDefault();
+        openGuardTest();
+      });
+    }
+
+    if (bankCard?.nextSibling) {
+      rightColumn.insertBefore(promos, bankCard.nextSibling);
+    } else {
+      rightColumn.appendChild(promos);
+    }
+
+    syncSecurityLabCopy();
+    return true;
+  }
+
+  function initialise() {
+    removeSmartBalance();
+
+    if (!installSecurityLabCard()) {
+      window.setTimeout(installSecurityLabCard, 180);
+      window.setTimeout(installSecurityLabCard, 700);
+    }
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncSecurityLabCopy, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncSecurityLabCopy, 0);
+  });
+
+  new MutationObserver(syncSecurityLabCopy).observe(
+    document.documentElement,
+    {
+      attributes: true,
+      attributeFilter: ['lang']
+    }
+  );
+})();

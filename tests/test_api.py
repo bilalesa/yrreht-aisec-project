@@ -132,3 +132,27 @@ def test_live_scanner_executes_guard_path() -> None:
     assert body["simulated"] is False
     assert body["mode"] == "live"
     assert body["blocked"] == 1
+
+
+
+def test_client_context_shape() -> None:
+    response = client.get("/api/client-context")
+    assert response.status_code == 200
+    body = response.json()
+    assert "ip" in body
+    assert "countryCode" in body
+    assert "source" in body
+
+
+def test_expanded_scanner_objective() -> None:
+    response = client.post(
+        "/api/scanner/simulate",
+        json={
+            "target": "protected",
+            "objectives": ["indirect-prompt-injection", "malicious-code"],
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 2
+    assert body["blocked"] == 2
