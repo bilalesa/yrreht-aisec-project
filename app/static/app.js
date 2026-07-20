@@ -2983,3 +2983,2210 @@ exposePresenterLabFromUrl();
     }
   );
 })();
+
+
+/* BAM_BANK_UI_REVISION_V16 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      visualEyebrow: 'PROTECTED FINANCIAL FLOW',
+      visualTitle: 'Every movement, clearly protected.',
+      visualBody: 'A live view of portfolio momentum and AI security enforcement.',
+      guardLabel: 'AI Guard',
+      guardValue: 'Active',
+      momentumLabel: 'Portfolio momentum',
+      labTooltip: 'Open AI security demo tools',
+      labEyebrow: 'DEMO CONTROLS',
+      labTitle: 'AI security toolkit',
+      labBody: 'Test the synthetic assistant without mixing demo controls into banking.',
+      scannerTitle: 'AI Scanner',
+      scannerBody: 'Assess model exposure',
+      guardTitle: 'AI Guard',
+      guardBody: 'Compare protected responses',
+      close: 'Close demo controls'
+    },
+    id: {
+      visualEyebrow: 'ARUS KEUANGAN TERLINDUNGI',
+      visualTitle: 'Setiap pergerakan, terlindungi dengan jelas.',
+      visualBody: 'Tampilan langsung momentum portofolio dan penerapan keamanan AI.',
+      guardLabel: 'AI Guard',
+      guardValue: 'Aktif',
+      momentumLabel: 'Momentum portofolio',
+      labTooltip: 'Buka alat demo keamanan AI',
+      labEyebrow: 'KONTROL DEMO',
+      labTitle: 'Perangkat keamanan AI',
+      labBody: 'Uji asisten sintetis tanpa mencampurkan kontrol demo ke area perbankan.',
+      scannerTitle: 'AI Scanner',
+      scannerBody: 'Uji paparan model',
+      guardTitle: 'AI Guard',
+      guardBody: 'Bandingkan respons terlindungi',
+      close: 'Tutup kontrol demo'
+    }
+  };
+
+  function installPurposefulHeroVisual() {
+    const visual = q('#bam-experience-hero .bam-hero-visual');
+    if (!visual || visual.dataset.v16 === 'true') return false;
+
+    visual.dataset.v16 = 'true';
+    visual.innerHTML = `
+      <div class="bam-pulse-mesh" aria-hidden="true"></div>
+
+      <div class="bam-pulse-copy">
+        <small id="bam-v16-visual-eyebrow"></small>
+        <strong id="bam-v16-visual-title"></strong>
+        <span id="bam-v16-visual-body"></span>
+      </div>
+
+      <svg class="bam-pulse-art" viewBox="0 0 660 330" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="bamV16Line" x1="76" y1="254" x2="592" y2="82" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7DE8C8"></stop>
+            <stop offset=".55" stop-color="#7BB9FF"></stop>
+            <stop offset="1" stop-color="#A997FF"></stop>
+          </linearGradient>
+          <linearGradient id="bamV16Core" x1="302" y1="108" x2="438" y2="230" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8DEBD2" stop-opacity=".34"></stop>
+            <stop offset="1" stop-color="#8FA7FF" stop-opacity=".09"></stop>
+          </linearGradient>
+          <filter id="bamV16Glow" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="8"></feGaussianBlur>
+          </filter>
+        </defs>
+
+        <path d="M78 254C145 245 189 211 240 218c58 8 85-34 139-43 61-10 102-66 211-93"
+              fill="none" stroke="#7DE8C8" stroke-opacity=".13" stroke-width="17"
+              stroke-linecap="round" filter="url(#bamV16Glow)"></path>
+        <path d="M78 254C145 245 189 211 240 218c58 8 85-34 139-43 61-10 102-66 211-93"
+              fill="none" stroke="url(#bamV16Line)" stroke-width="6.5"
+              stroke-linecap="round"></path>
+
+        <circle cx="78" cy="254" r="7" fill="#7DE8C8"></circle>
+        <circle cx="240" cy="218" r="6" fill="#82B9FF"></circle>
+        <circle cx="379" cy="175" r="6" fill="#A39BFF"></circle>
+        <circle cx="590" cy="82" r="8" fill="#FFFFFF"></circle>
+
+        <g transform="translate(402 169)">
+          <circle r="78" fill="url(#bamV16Core)" stroke="#B6CBFF" stroke-opacity=".20"></circle>
+          <circle r="57" fill="#10254B" fill-opacity=".58" stroke="#8DEBD2" stroke-opacity=".23"></circle>
+          <circle r="34" fill="#122A53" stroke="#FFFFFF" stroke-opacity=".15"></circle>
+
+          <g fill="none" stroke="#A7C5FF" stroke-opacity=".42" stroke-width="5" stroke-linecap="round">
+            <path d="M0-25 21-12"></path>
+            <path d="m21-12 0 24"></path>
+            <path d="M21 12 0 25"></path>
+            <path d="M0 25-21 12"></path>
+            <path d="m-21 12 0-24"></path>
+            <path d="M-21-12 0-25"></path>
+          </g>
+
+          <circle r="8" fill="#7DE8C8"></circle>
+          <circle r="3" fill="#FFFFFF"></circle>
+        </g>
+
+        <ellipse cx="402" cy="169" rx="134" ry="78"
+                 fill="none" stroke="#A7C7FF" stroke-opacity=".20"
+                 stroke-width="1.2" transform="rotate(-17 402 169)"></ellipse>
+        <ellipse cx="402" cy="169" rx="105" ry="61"
+                 fill="none" stroke="#83E4CE" stroke-opacity=".20"
+                 stroke-width="1.1" transform="rotate(24 402 169)"></ellipse>
+      </svg>
+
+      <div class="bam-pulse-status bam-pulse-guard">
+        <span class="bam-pulse-dot"></span>
+        <span>
+          <small id="bam-v16-guard-label"></small>
+          <strong id="bam-v16-guard-value"></strong>
+        </span>
+      </div>
+
+      <div class="bam-pulse-status bam-pulse-momentum">
+        <small id="bam-v16-momentum-label"></small>
+        <strong>+12.4%</strong>
+      </div>`;
+
+    syncV16Copy();
+    return true;
+  }
+
+  function openScanner() {
+    closeLab();
+
+    const nav = q('#open-ai-scanner');
+    if (nav) {
+      nav.click();
+      return;
+    }
+
+    q('#security-modal')?.classList.add('open');
+    q('[data-security-tab="scanner"]')?.click();
+  }
+
+  function openGuardTest() {
+    closeLab();
+    q('#chat-panel')?.classList.add('open');
+    q('[data-prompt-tab="malicious"]')?.click();
+  }
+
+  function closeLab() {
+    const popover = q('#demo-promos');
+    const launcher = q('#bam-lab-launcher');
+    popover?.classList.remove('is-open');
+    launcher?.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleLab() {
+    const popover = q('#demo-promos');
+    const launcher = q('#bam-lab-launcher');
+    if (!popover || !launcher) return;
+
+    const willOpen = !popover.classList.contains('is-open');
+    q('#chat-panel')?.classList.remove('open');
+    popover.classList.toggle('is-open', willOpen);
+    launcher.setAttribute('aria-expanded', String(willOpen));
+  }
+
+  function installUtilityDock() {
+    const chatLauncher = q('.chat-launcher');
+    const promos = q('#demo-promos');
+    if (!chatLauncher || !promos) return false;
+
+    let dock = q('#bam-utility-dock');
+    if (!dock) {
+      dock = document.createElement('div');
+      dock.id = 'bam-utility-dock';
+      dock.className = 'bam-utility-dock';
+      document.body.appendChild(dock);
+    }
+
+    if (chatLauncher.parentElement !== dock) {
+      dock.appendChild(chatLauncher);
+    }
+
+    let labLauncher = q('#bam-lab-launcher');
+    if (!labLauncher) {
+      labLauncher = document.createElement('button');
+      labLauncher.type = 'button';
+      labLauncher.id = 'bam-lab-launcher';
+      labLauncher.className = 'bam-lab-launcher';
+      labLauncher.setAttribute('aria-expanded', 'false');
+      labLauncher.setAttribute('aria-controls', 'demo-promos');
+      labLauncher.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5-4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+          <path d="M8.2 12h2.1l1.3-3 1.8 6 1.2-3h1.2"></path>
+        </svg>
+        <span class="bam-dock-tooltip" id="bam-v16-lab-tooltip"></span>`;
+      dock.appendChild(labLauncher);
+      labLauncher.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleLab();
+      });
+    }
+
+    promos.className = 'bam-security-popover';
+    promos.setAttribute('role', 'dialog');
+    promos.setAttribute('aria-modal', 'false');
+    promos.innerHTML = `
+      <div class="bam-security-popover-head">
+        <span class="bam-security-popover-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5-4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+            <path d="M8.2 12h2.1l1.3-3 1.8 6 1.2-3h1.2"></path>
+          </svg>
+        </span>
+        <span class="bam-security-popover-copy">
+          <small id="bam-v16-lab-eyebrow"></small>
+          <strong id="bam-v16-lab-title"></strong>
+          <span id="bam-v16-lab-body"></span>
+        </span>
+        <button type="button" class="bam-security-popover-close" id="bam-lab-close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"></path></svg>
+        </button>
+      </div>
+
+      <div class="bam-security-popover-actions">
+        <button type="button" class="bam-popover-action scanner" id="bam-popover-scanner">
+          <span class="bam-popover-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="12" r="7.5"></circle>
+              <circle cx="12" cy="12" r="2.2"></circle>
+              <path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3"></path>
+            </svg>
+          </span>
+          <span>
+            <strong id="bam-v16-scanner-title"></strong>
+            <small id="bam-v16-scanner-body"></small>
+          </span>
+          <svg class="bam-popover-arrow" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 12h8M13 8l4 4-4 4"></path>
+          </svg>
+        </button>
+
+        <button type="button" class="bam-popover-action guard" id="bam-popover-guard">
+          <span class="bam-popover-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5-4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+              <path d="m8.8 12 2 2 4.5-4.5"></path>
+            </svg>
+          </span>
+          <span>
+            <strong id="bam-v16-guard-title"></strong>
+            <small id="bam-v16-guard-body"></small>
+          </span>
+          <svg class="bam-popover-arrow" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 12h8M13 8l4 4-4 4"></path>
+          </svg>
+        </button>
+      </div>`;
+
+    document.body.appendChild(promos);
+
+    q('#bam-lab-close')?.addEventListener('click', closeLab);
+    q('#bam-popover-scanner')?.addEventListener('click', openScanner);
+    q('#bam-popover-guard')?.addEventListener('click', openGuardTest);
+
+    if (chatLauncher.dataset.v16Bound !== 'true') {
+      chatLauncher.dataset.v16Bound = 'true';
+      chatLauncher.addEventListener('click', () => {
+        window.setTimeout(closeLab, 0);
+      });
+    }
+
+    if (document.body.dataset.v16UtilityBound !== 'true') {
+      document.body.dataset.v16UtilityBound = 'true';
+
+      document.addEventListener('click', event => {
+        const popover = q('#demo-promos');
+        const utilityDock = q('#bam-utility-dock');
+        if (!popover?.classList.contains('is-open')) return;
+        if (popover.contains(event.target) || utilityDock?.contains(event.target)) return;
+        closeLab();
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeLab();
+      });
+
+      ['#settings-button', '#menu-toggle', '#open-ai-scanner'].forEach(selector => {
+        q(selector)?.addEventListener('click', closeLab);
+      });
+    }
+
+    syncV16Copy();
+    return true;
+  }
+
+  function syncV16Copy() {
+    const text = copy[currentLanguage()];
+    const values = {
+      '#bam-v16-visual-eyebrow': text.visualEyebrow,
+      '#bam-v16-visual-title': text.visualTitle,
+      '#bam-v16-visual-body': text.visualBody,
+      '#bam-v16-guard-label': text.guardLabel,
+      '#bam-v16-guard-value': text.guardValue,
+      '#bam-v16-momentum-label': text.momentumLabel,
+      '#bam-v16-lab-tooltip': text.labTooltip,
+      '#bam-v16-lab-eyebrow': text.labEyebrow,
+      '#bam-v16-lab-title': text.labTitle,
+      '#bam-v16-lab-body': text.labBody,
+      '#bam-v16-scanner-title': text.scannerTitle,
+      '#bam-v16-scanner-body': text.scannerBody,
+      '#bam-v16-guard-title': text.guardTitle,
+      '#bam-v16-guard-body': text.guardBody
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+
+    q('#bam-lab-launcher')?.setAttribute('aria-label', text.labTooltip);
+    q('#bam-lab-close')?.setAttribute('aria-label', text.close);
+  }
+
+  function initialise() {
+    installPurposefulHeroVisual();
+
+    if (!installUtilityDock()) {
+      window.setTimeout(installUtilityDock, 160);
+      window.setTimeout(installUtilityDock, 650);
+    }
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncV16Copy, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncV16Copy, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V17 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  function normalizeUtilityDock() {
+    const dock = q('#bam-utility-dock');
+    const chat = q('.chat-launcher');
+    const lab = q('#bam-lab-launcher');
+
+    if (!dock || !chat || !lab) return false;
+
+    dock.classList.add('bam-utility-dock-v17');
+
+    if (chat.parentElement !== dock) dock.appendChild(chat);
+    if (lab.parentElement !== dock) dock.appendChild(lab);
+
+    // Keep a predictable order and remove inherited layout side effects.
+    dock.insertBefore(chat, dock.firstChild);
+    dock.appendChild(lab);
+
+    chat.classList.add('bam-dock-control', 'bam-dock-chat');
+    lab.classList.add('bam-dock-control', 'bam-dock-security');
+
+    chat.removeAttribute('style');
+    lab.removeAttribute('style');
+
+    const chatLabel = currentLanguage() === 'id'
+      ? 'Buka Bamsky'
+      : 'Open Bamsky';
+    chat.setAttribute('aria-label', chatLabel);
+    chat.setAttribute('title', chatLabel);
+
+    chat.innerHTML = `
+      <span class="bam-dock-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M5.2 5.5h13.6A2.2 2.2 0 0 1 21 7.7v7.5a2.2 2.2 0 0 1-2.2 2.2H11l-4.8 3v-3H5.2A2.2 2.2 0 0 1 3 15.2V7.7a2.2 2.2 0 0 1 2.2-2.2Z"></path>
+        </svg>
+      </span>
+      <span id="launcher-status" class="bam-dock-presence" aria-hidden="true"></span>`;
+
+    const labLabel = currentLanguage() === 'id'
+      ? 'Buka kontrol demo keamanan AI'
+      : 'Open AI security demo controls';
+    lab.setAttribute('aria-label', labLabel);
+    lab.setAttribute('title', labLabel);
+
+    lab.innerHTML = `
+      <span class="bam-dock-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5-4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+          <path d="M8.2 12h2.1l1.3-3 1.8 6 1.2-3h1.2"></path>
+        </svg>
+      </span>
+      <span class="bam-dock-tooltip" id="bam-v16-lab-tooltip">${labLabel}</span>`;
+
+    return true;
+  }
+
+  function syncDockLanguage() {
+    const chat = q('.chat-launcher');
+    const lab = q('#bam-lab-launcher');
+    const tooltip = q('#bam-v16-lab-tooltip');
+
+    const isId = currentLanguage() === 'id';
+    const chatLabel = isId ? 'Buka Bamsky' : 'Open Bamsky';
+    const labLabel = isId
+      ? 'Buka kontrol demo keamanan AI'
+      : 'Open AI security demo controls';
+
+    chat?.setAttribute('aria-label', chatLabel);
+    chat?.setAttribute('title', chatLabel);
+    lab?.setAttribute('aria-label', labLabel);
+    lab?.setAttribute('title', labLabel);
+    if (tooltip) tooltip.textContent = labLabel;
+  }
+
+  if (!normalizeUtilityDock()) {
+    window.setTimeout(normalizeUtilityDock, 120);
+    window.setTimeout(normalizeUtilityDock, 500);
+  }
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncDockLanguage, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncDockLanguage, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V18 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  function normalizeActionRail() {
+    const rail = q('#dashboard-page .quick-actions');
+    if (!rail) return false;
+
+    rail.classList.add('bam-action-rail-v18');
+
+    const cards = qa('button', rail);
+    cards.forEach((card, index) => {
+      card.classList.add('bam-action-card-v18');
+      card.dataset.actionIndex = String(index + 1);
+
+      const icon = card.querySelector('.action-icon, .quick-action-icon, span:first-child');
+      if (icon) icon.classList.add('bam-action-icon-v18');
+
+      const directStrong = [...card.children].find(
+        node => node.tagName === 'STRONG'
+      );
+      const directSmall = [...card.children].find(
+        node => node.tagName === 'SMALL'
+      );
+
+      directStrong?.classList.add('bam-action-title-v18');
+      directSmall?.classList.add('bam-action-copy-v18');
+
+      const status = card.querySelector(
+        '.file-security-badge, .bam-file-protection-status'
+      );
+      status?.classList.add('bam-action-status-v18');
+    });
+
+    return true;
+  }
+
+  function normalizeDashboardProportions() {
+    q('#dashboard-page .metrics-grid, #dashboard-page .metric-grid')
+      ?.classList.add('bam-metrics-v18');
+
+    q('#dashboard-page .dashboard-grid')
+      ?.classList.add('bam-dashboard-grid-v18');
+
+    q('#dashboard-page .recent-card, #dashboard-page .recent-transactions')
+      ?.classList.add('bam-recent-v18');
+
+    q('#dashboard-page .right-column')
+      ?.classList.add('bam-right-column-v18');
+  }
+
+  function initialise() {
+    normalizeActionRail();
+    normalizeDashboardProportions();
+
+    window.setTimeout(() => {
+      normalizeActionRail();
+      normalizeDashboardProportions();
+    }, 250);
+  }
+
+  initialise();
+})();
+
+
+/* BAM_BANK_UI_REVISION_V19 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      launcherTitle: 'BAM Assist',
+      launcherMeta: 'Help & security',
+      hubEyebrow: 'ASSISTANCE HUB',
+      hubTitle: 'What would you like to do?',
+      hubBody: 'Banking help and AI security testing, available from one place.',
+      chatTitle: 'Chat with Bamsky',
+      chatBody: 'Ask about balances, transfers, and banking.',
+      labLabel: 'AI SECURITY LAB',
+      scannerTitle: 'AI Scanner',
+      scannerBody: 'Assess model exposure',
+      guardTitle: 'AI Guard',
+      guardBody: 'Compare protected responses',
+      close: 'Close BAM Assist',
+      open: 'Open BAM Assist'
+    },
+    id: {
+      launcherTitle: 'BAM Assist',
+      launcherMeta: 'Bantuan & keamanan',
+      hubEyebrow: 'PUSAT BANTUAN',
+      hubTitle: 'Apa yang ingin dilakukan?',
+      hubBody: 'Bantuan perbankan dan pengujian keamanan AI dari satu tempat.',
+      chatTitle: 'Chat dengan Bamsky',
+      chatBody: 'Tanyakan saldo, transfer, dan layanan perbankan.',
+      labLabel: 'LAB KEAMANAN AI',
+      scannerTitle: 'AI Scanner',
+      scannerBody: 'Uji paparan model',
+      guardTitle: 'AI Guard',
+      guardBody: 'Bandingkan respons terlindungi',
+      close: 'Tutup BAM Assist',
+      open: 'Buka BAM Assist'
+    }
+  };
+
+  const orbitMark = `
+    <svg viewBox="0 0 42 42" aria-hidden="true" focusable="false">
+      <circle cx="21" cy="21" r="18" fill="#203A6A"></circle>
+      <path d="M9 28.5C16.5 16 28 11.5 35 17" fill="none"
+            stroke="#7FE6C8" stroke-width="2.5" stroke-linecap="round"></path>
+      <circle cx="9.5" cy="28" r="2.5" fill="#7FE6C8"></circle>
+      <circle cx="34.5" cy="17.1" r="2.8" fill="#FFFFFF"></circle>
+      <path d="M16 12.5h7.1c4.1 0 6.4 1.9 6.4 4.8 0 2-1 3.4-2.9 4.1
+               2.5.7 3.8 2.5 3.8 4.9 0 3.9-2.9 6.1-7.7 6.1H16V12.5Zm6.8
+               7.4c1.8 0 2.7-.7 2.7-2s-.9-1.9-2.7-1.9h-3v3.9h3Zm.4
+               9.1c2.1 0 3.1-.8 3.1-2.4s-1-2.3-3.1-2.3h-3.4V29h3.4Z"
+            fill="#FFFFFF"></path>
+    </svg>`;
+
+  function findDashboardColumns() {
+    const grid = q('#dashboard-page .dashboard-grid');
+    if (!grid) return null;
+
+    const children = [...grid.children];
+
+    const portfolio = children.find(node =>
+      node.matches('.right-column, .bam-right-column-v18') ||
+      (
+        node.querySelector('.bank-card') &&
+        (
+          node.querySelector('.spending-card') ||
+          /Spending|Pengeluaran/i.test(node.textContent)
+        )
+      )
+    );
+
+    const activity = children.find(node =>
+      node !== portfolio &&
+      (
+        node.matches(
+          '.recent-card, .recent-transactions, .bam-recent-v18'
+        ) ||
+        /Recent Transactions|Transaksi Terbaru/i.test(node.textContent)
+      )
+    );
+
+    if (!portfolio || !activity) return null;
+    return { grid, portfolio, activity };
+  }
+
+  function swapDashboardColumns() {
+    const result = findDashboardColumns();
+    if (!result) return false;
+
+    const { grid, portfolio, activity } = result;
+
+    grid.classList.add('bam-dashboard-grid-v19');
+    portfolio.classList.add('bam-portfolio-column-v19');
+    activity.classList.add('bam-activity-column-v19');
+
+    if (grid.firstElementChild !== portfolio) {
+      grid.insertBefore(portfolio, activity);
+    }
+
+    return true;
+  }
+
+  function closeHub() {
+    const shell = q('#bam-assist-shell');
+    const launcher = q('#bam-assist-launcher');
+    shell?.classList.remove('is-open');
+    launcher?.setAttribute('aria-expanded', 'false');
+  }
+
+  function openHub() {
+    const shell = q('#bam-assist-shell');
+    const launcher = q('#bam-assist-launcher');
+
+    q('#chat-panel')?.classList.remove('open');
+    q('#demo-promos')?.classList.remove('is-open');
+
+    shell?.classList.add('is-open');
+    launcher?.setAttribute('aria-expanded', 'true');
+  }
+
+  function toggleHub() {
+    const shell = q('#bam-assist-shell');
+    if (!shell) return;
+
+    if (shell.classList.contains('is-open')) closeHub();
+    else openHub();
+  }
+
+  function openChat(mode = 'banking') {
+    closeHub();
+
+    const panel = q('#chat-panel');
+    panel?.classList.add('open');
+
+    if (mode === 'guard') {
+      q('[data-prompt-tab="malicious"]')?.click();
+    } else {
+      q('[data-prompt-tab="banking"]')?.click();
+    }
+  }
+
+  function openScanner() {
+    closeHub();
+
+    const nav = q('#open-ai-scanner');
+    if (nav) {
+      nav.click();
+      return;
+    }
+
+    q('#security-modal')?.classList.add('open');
+    q('[data-security-tab="scanner"]')?.click();
+  }
+
+  function removeLegacyLaunchers() {
+    q('#bam-utility-dock')?.remove();
+    q('#demo-promos')?.remove();
+    qa('.chat-launcher').forEach(node => node.remove());
+  }
+
+  function installAssistHub() {
+    if (q('#bam-assist-shell')) return true;
+
+    removeLegacyLaunchers();
+
+    const shell = document.createElement('div');
+    shell.id = 'bam-assist-shell';
+    shell.className = 'bam-assist-shell';
+    shell.innerHTML = `
+      <div class="bam-assist-panel" id="bam-assist-panel"
+           role="dialog" aria-modal="false" aria-labelledby="bam-assist-title">
+        <div class="bam-assist-panel-head">
+          <span class="bam-assist-panel-mark">${orbitMark}</span>
+          <span class="bam-assist-panel-copy">
+            <small id="bam-assist-eyebrow"></small>
+            <strong id="bam-assist-title"></strong>
+            <span id="bam-assist-body"></span>
+          </span>
+          <button type="button" id="bam-assist-close"
+                  class="bam-assist-close">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m7 7 10 10M17 7 7 17"></path>
+            </svg>
+          </button>
+        </div>
+
+        <button type="button" class="bam-assist-primary" id="bam-assist-chat">
+          <span class="bam-assist-action-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5.2 5.5h13.6A2.2 2.2 0 0 1 21 7.7v7.5
+                       a2.2 2.2 0 0 1-2.2 2.2H11l-4.8 3v-3H5.2
+                       A2.2 2.2 0 0 1 3 15.2V7.7a2.2 2.2 0 0 1
+                       2.2-2.2Z"></path>
+            </svg>
+          </span>
+          <span>
+            <strong id="bam-assist-chat-title"></strong>
+            <small id="bam-assist-chat-body"></small>
+          </span>
+          <svg class="bam-assist-arrow" viewBox="0 0 24 24"
+               aria-hidden="true">
+            <path d="M8 12h8M13 8l4 4-4 4"></path>
+          </svg>
+        </button>
+
+        <div class="bam-assist-divider">
+          <span id="bam-assist-lab-label"></span>
+        </div>
+
+        <div class="bam-assist-security-grid">
+          <button type="button" class="bam-assist-security scanner"
+                  id="bam-assist-scanner">
+            <span class="bam-assist-action-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="7.5"></circle>
+                <circle cx="12" cy="12" r="2.2"></circle>
+                <path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3"></path>
+              </svg>
+            </span>
+            <span>
+              <strong id="bam-assist-scanner-title"></strong>
+              <small id="bam-assist-scanner-body"></small>
+            </span>
+          </button>
+
+          <button type="button" class="bam-assist-security guard"
+                  id="bam-assist-guard">
+            <span class="bam-assist-action-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3.2 19 6v5.5c0 4.3-2.8 7.9-7 9.5
+                         -4.2-1.6-7-5.2-7-9.5V6l7-2.8Z"></path>
+                <path d="m8.8 12 2 2 4.5-4.5"></path>
+              </svg>
+            </span>
+            <span>
+              <strong id="bam-assist-guard-title"></strong>
+              <small id="bam-assist-guard-body"></small>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="bam-assist-launcher"
+              id="bam-assist-launcher" aria-expanded="false"
+              aria-controls="bam-assist-panel">
+        <span class="bam-assist-launcher-mark">${orbitMark}</span>
+        <span class="bam-assist-launcher-copy">
+          <strong id="bam-assist-launcher-title"></strong>
+          <small id="bam-assist-launcher-meta"></small>
+        </span>
+        <span class="bam-assist-online" aria-hidden="true"></span>
+        <svg class="bam-assist-chevron" viewBox="0 0 24 24"
+             aria-hidden="true">
+          <path d="m8 10 4 4 4-4"></path>
+        </svg>
+      </button>`;
+
+    document.body.appendChild(shell);
+
+    q('#bam-assist-launcher')?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleHub();
+    });
+
+    q('#bam-assist-close')?.addEventListener('click', closeHub);
+    q('#bam-assist-chat')?.addEventListener('click', () => openChat());
+    q('#bam-assist-scanner')?.addEventListener('click', openScanner);
+    q('#bam-assist-guard')?.addEventListener('click', () => openChat('guard'));
+
+    document.addEventListener('click', event => {
+      const currentShell = q('#bam-assist-shell');
+      if (
+        currentShell?.classList.contains('is-open') &&
+        !currentShell.contains(event.target)
+      ) {
+        closeHub();
+      }
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeHub();
+    });
+
+    ['#settings-button', '#menu-toggle', '#open-ai-scanner'].forEach(selector => {
+      q(selector)?.addEventListener('click', closeHub);
+    });
+
+    syncAssistCopy();
+    return true;
+  }
+
+  function syncAssistCopy() {
+    const text = copy[currentLanguage()];
+    const values = {
+      '#bam-assist-launcher-title': text.launcherTitle,
+      '#bam-assist-launcher-meta': text.launcherMeta,
+      '#bam-assist-eyebrow': text.hubEyebrow,
+      '#bam-assist-title': text.hubTitle,
+      '#bam-assist-body': text.hubBody,
+      '#bam-assist-chat-title': text.chatTitle,
+      '#bam-assist-chat-body': text.chatBody,
+      '#bam-assist-lab-label': text.labLabel,
+      '#bam-assist-scanner-title': text.scannerTitle,
+      '#bam-assist-scanner-body': text.scannerBody,
+      '#bam-assist-guard-title': text.guardTitle,
+      '#bam-assist-guard-body': text.guardBody
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+
+    q('#bam-assist-launcher')?.setAttribute('aria-label', text.open);
+    q('#bam-assist-close')?.setAttribute('aria-label', text.close);
+  }
+
+  function initialise() {
+    if (!swapDashboardColumns()) {
+      window.setTimeout(swapDashboardColumns, 180);
+      window.setTimeout(swapDashboardColumns, 700);
+    }
+
+    if (!installAssistHub()) {
+      window.setTimeout(installAssistHub, 180);
+      window.setTimeout(installAssistHub, 700);
+    }
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncAssistCopy, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncAssistCopy, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V20 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      back: 'Back',
+      backLabel: 'Back to BAM Assist',
+      open: 'Open BAM Assist',
+      meta: 'Help & security'
+    },
+    id: {
+      back: 'Kembali',
+      backLabel: 'Kembali ke BAM Assist',
+      open: 'Buka BAM Assist',
+      meta: 'Bantuan & keamanan'
+    }
+  };
+
+  function openAssistHomeFromChat() {
+    const panel = q('#chat-panel');
+    const shell = q('#bam-assist-shell');
+    const launcher = q('#bam-assist-launcher');
+
+    panel?.classList.remove('open');
+    shell?.classList.add('is-open');
+    launcher?.setAttribute('aria-expanded', 'true');
+
+    window.setTimeout(() => {
+      q('#bam-assist-chat')?.focus();
+    }, 90);
+  }
+
+  function installChatBackButton() {
+    const panel = q('#chat-panel');
+    const header = q('#chat-panel > header');
+    if (!panel || !header) return false;
+
+    header.classList.add('bam-chat-header-v20');
+
+    let back = q('#bam-chat-back');
+    if (!back) {
+      back = document.createElement('button');
+      back.type = 'button';
+      back.id = 'bam-chat-back';
+      back.className = 'bam-chat-back';
+      back.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M15.5 5.5 9 12l6.5 6.5"></path>
+          <path d="M9.5 12H20"></path>
+        </svg>
+        <span id="bam-chat-back-text"></span>`;
+
+      header.insertBefore(back, header.firstChild);
+      back.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        openAssistHomeFromChat();
+      });
+    }
+
+    syncV20Copy();
+    return true;
+  }
+
+  function refineAssistLauncher() {
+    const launcher = q('#bam-assist-launcher');
+    const shell = q('#bam-assist-shell');
+    if (!launcher || !shell) return false;
+
+    launcher.classList.add('bam-assist-launcher-v20');
+    shell.classList.add('bam-assist-shell-v20');
+
+    const title = q('#bam-assist-launcher-title');
+    const meta = q('#bam-assist-launcher-meta');
+
+    title?.classList.add('bam-assist-title-v20');
+    meta?.classList.add('bam-assist-meta-v20');
+
+    syncV20Copy();
+    return true;
+  }
+
+  function syncV20Copy() {
+    const text = copy[currentLanguage()];
+    const back = q('#bam-chat-back');
+    const backText = q('#bam-chat-back-text');
+    const launcher = q('#bam-assist-launcher');
+    const meta = q('#bam-assist-launcher-meta');
+
+    if (backText) backText.textContent = text.back;
+    back?.setAttribute('aria-label', text.backLabel);
+    back?.setAttribute('title', text.backLabel);
+    launcher?.setAttribute('aria-label', text.open);
+    if (meta) meta.textContent = text.meta;
+  }
+
+  function initialise() {
+    if (!refineAssistLauncher()) {
+      window.setTimeout(refineAssistLauncher, 120);
+      window.setTimeout(refineAssistLauncher, 500);
+    }
+
+    if (!installChatBackButton()) {
+      window.setTimeout(installChatBackButton, 120);
+      window.setTimeout(installChatBackButton, 500);
+    }
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncV20Copy, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncV20Copy, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V21 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  let activeSpendPeriod = '30';
+
+  const spendData = {
+    '30': {
+      total: 12840000,
+      average: 428000,
+      delta: -8.4,
+      peak: 'Friday',
+      trend: [0.34, 0.46, 0.41, 0.62, 0.55, 0.83, 0.69, 0.98, 0.79, 1.11, 0.92, 1.24],
+      categories: [
+        ['housing', 42],
+        ['groceries', 22],
+        ['dining', 15],
+        ['transport', 12],
+        ['other', 9]
+      ]
+    },
+    '90': {
+      total: 36920000,
+      average: 410222,
+      delta: 3.1,
+      peak: 'Saturday',
+      trend: [0.71, 0.64, 0.82, 0.96, 0.88, 1.08, 0.94, 1.21, 1.17, 1.09, 1.35, 1.29],
+      categories: [
+        ['housing', 39],
+        ['groceries', 24],
+        ['dining', 17],
+        ['transport', 11],
+        ['other', 9]
+      ]
+    }
+  };
+
+  const copy = {
+    en: {
+      cards: 'Your cards',
+      cardsMeta: '2 active',
+      primaryType: 'Primary debit',
+      secondaryType: 'Travel Visa',
+      analytics: 'ANALYTICS',
+      title: 'Spending Pulse',
+      subtitle: 'A clearer view of spending velocity across all active cards.',
+      total: 'Total spend',
+      average: 'Daily average',
+      change: 'Period change',
+      chartTitle: 'Spend velocity',
+      chartSubtitle: 'Card activity over the selected period',
+      ago30: '30 days ago',
+      ago90: '90 days ago',
+      today: 'Today',
+      categoryTitle: 'Category mix',
+      insightTitle: 'Smart insight',
+      lower: 'lower than the previous period',
+      higher: 'higher than the previous period',
+      peakPrefix: 'Highest spending activity occurs on',
+      housing: 'Housing',
+      groceries: 'Groceries',
+      dining: 'Dining',
+      transport: 'Transport',
+      other: 'Other'
+    },
+    id: {
+      cards: 'Kartu Anda',
+      cardsMeta: '2 aktif',
+      primaryType: 'Debit utama',
+      secondaryType: 'Visa perjalanan',
+      analytics: 'ANALISIS',
+      title: 'Spending Pulse',
+      subtitle: 'Gambaran lebih jelas atas pergerakan pengeluaran dari seluruh kartu aktif.',
+      total: 'Total pengeluaran',
+      average: 'Rata-rata harian',
+      change: 'Perubahan periode',
+      chartTitle: 'Kecepatan pengeluaran',
+      chartSubtitle: 'Aktivitas kartu pada periode terpilih',
+      ago30: '30 hari lalu',
+      ago90: '90 hari lalu',
+      today: 'Hari ini',
+      categoryTitle: 'Komposisi kategori',
+      insightTitle: 'Insight pintar',
+      lower: 'lebih rendah dari periode sebelumnya',
+      higher: 'lebih tinggi dari periode sebelumnya',
+      peakPrefix: 'Aktivitas pengeluaran tertinggi terjadi pada',
+      housing: 'Perumahan',
+      groceries: 'Belanja bahan pokok',
+      dining: 'Makan',
+      transport: 'Transportasi',
+      other: 'Lainnya'
+    }
+  };
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  function formatRupiah(value) {
+    return 'Rp' + new Intl.NumberFormat('id-ID').format(Math.round(value));
+  }
+
+  function findPortfolioColumn() {
+    return q('#dashboard-page .bam-portfolio-column-v19') ||
+      q('#dashboard-page .right-column');
+  }
+
+  function findDashboardGrid() {
+    return q('#dashboard-page .bam-dashboard-grid-v19') ||
+      q('#dashboard-page .dashboard-grid');
+  }
+
+  function setCardExpiry(card, expiry) {
+    if (!card) return;
+
+    const blocks = qa('.bank-card-bottom > div', card);
+    const validBlock = blocks.find(block =>
+      /VALID THRU|BERLAKU/i.test(block.textContent)
+    ) || blocks[blocks.length - 1];
+
+    const value = validBlock?.querySelector('span');
+    if (value) value.textContent = expiry;
+  }
+
+  function addCardType(card, id, type) {
+    if (!card) return;
+
+    let label = q('.bam-card-type-v21', card);
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'bam-card-type-v21';
+      label.id = id;
+      card.appendChild(label);
+    }
+    label.textContent = type;
+  }
+
+  function createVisaCard() {
+    const article = document.createElement('article');
+    article.className = 'bank-card bam-secondary-card-v21';
+    article.innerHTML = `
+      <div class="bank-card-top">
+        <span>BAM Bank</span>
+        <span class="bam-visa-wordmark" aria-label="Visa">VISA</span>
+      </div>
+      <span class="bam-card-type-v21" id="bam-secondary-card-type"></span>
+      <div class="chip"></div>
+      <strong>4987 •••• •••• 2030</strong>
+      <div class="bank-card-bottom">
+        <div>
+          <small>CARD HOLDER</small>
+          <span>Fatih Bilal Al-Karim</span>
+        </div>
+        <div>
+          <small>VALID THRU</small>
+          <span>01/30</span>
+        </div>
+      </div>`;
+    return article;
+  }
+
+  function installCardWallet() {
+    const portfolio = findPortfolioColumn();
+    if (!portfolio) return false;
+
+    portfolio.classList.add('bam-card-column-v21');
+
+    const spending = q(
+      '.spending-panel, .spending-card, .bam-spending-intelligence-v21',
+      portfolio
+    );
+
+    if (spending) moveSpendingBelowDashboard(spending);
+
+    let wallet = q('.bam-card-wallet-v21', portfolio);
+    if (!wallet) {
+      wallet = document.createElement('section');
+      wallet.className = 'bam-card-wallet-v21';
+      wallet.innerHTML = `
+        <div class="bam-card-wallet-heading-v21">
+          <strong id="bam-card-wallet-title"></strong>
+          <small id="bam-card-wallet-meta"></small>
+        </div>
+        <div class="bam-card-wallet-list-v21"></div>`;
+
+      portfolio.insertBefore(wallet, portfolio.firstChild);
+    }
+
+    const list = q('.bam-card-wallet-list-v21', wallet);
+    let primary = q(
+      '.bank-card:not(.bam-secondary-card-v21)',
+      portfolio
+    ) || q('.bank-card:not(.bam-secondary-card-v21)', wallet);
+
+    if (primary && primary.parentElement !== list) {
+      list.appendChild(primary);
+    }
+
+    if (primary) {
+      primary.classList.add('bam-primary-card-v21');
+      setCardExpiry(primary, '11/31');
+      addCardType(
+        primary,
+        'bam-primary-card-type',
+        copy[currentLanguage()].primaryType
+      );
+    }
+
+    let visa = q('.bam-secondary-card-v21', wallet);
+    if (!visa) {
+      visa = createVisaCard();
+      list.appendChild(visa);
+    }
+
+    syncV21Copy();
+    return true;
+  }
+
+  function createSpendingMarkup(panel) {
+    panel.className =
+      'panel spending-panel bam-spending-intelligence-v21';
+
+    panel.innerHTML = `
+      <div class="bam-spend-head-v21">
+        <div>
+          <p class="eyebrow" id="bam-spend-eyebrow"></p>
+          <h2 id="bam-spend-title"></h2>
+          <span id="bam-spend-subtitle"></span>
+        </div>
+        <div class="bam-spend-period-v21" role="group"
+             aria-label="Spending period">
+          <button type="button" class="active" data-spend-period="30">30D</button>
+          <button type="button" data-spend-period="90">90D</button>
+        </div>
+      </div>
+
+      <div class="bam-spend-summary-v21">
+        <div>
+          <small id="bam-spend-total-label"></small>
+          <strong id="bam-spend-total"></strong>
+        </div>
+        <div>
+          <small id="bam-spend-average-label"></small>
+          <strong id="bam-spend-average"></strong>
+        </div>
+        <div>
+          <small id="bam-spend-change-label"></small>
+          <strong id="bam-spend-change"></strong>
+        </div>
+      </div>
+
+      <div class="bam-spend-layout-v21">
+        <section class="bam-spend-chart-card-v21">
+          <div class="bam-spend-chart-head-v21">
+            <div>
+              <strong id="bam-spend-chart-title"></strong>
+              <small id="bam-spend-chart-subtitle"></small>
+            </div>
+            <span class="bam-spend-live-v21">
+              <i></i>Live cards
+            </span>
+          </div>
+
+          <svg id="bam-spend-chart" class="bam-spend-chart-v21"
+               viewBox="0 0 720 230" role="img"
+               aria-label="Spending trend chart"></svg>
+
+          <div class="bam-spend-axis-v21">
+            <span id="bam-spend-axis-start"></span>
+            <span id="bam-spend-axis-end"></span>
+          </div>
+        </section>
+
+        <aside class="bam-spend-breakdown-v21">
+          <div class="bam-spend-breakdown-head-v21">
+            <strong id="bam-spend-category-title"></strong>
+            <small id="bam-spend-category-total"></small>
+          </div>
+          <div id="bam-spend-categories"
+               class="bam-spend-categories-v21"></div>
+
+          <div class="bam-spend-insight-v21">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3a7 7 0 0 0-4.6 12.3c.9.8 1.6 1.7 1.8 2.7h5.6c.2-1 .9-1.9 1.8-2.7A7 7 0 0 0 12 3Z"></path>
+                <path d="M9.5 21h5M9.2 18h5.6"></path>
+              </svg>
+            </span>
+            <div>
+              <strong id="bam-spend-insight-title"></strong>
+              <small id="bam-spend-insight-copy"></small>
+            </div>
+          </div>
+        </aside>
+      </div>`;
+
+    qa('[data-spend-period]', panel).forEach(button => {
+      button.addEventListener('click', () => {
+        activeSpendPeriod = button.dataset.spendPeriod;
+        qa('[data-spend-period]', panel).forEach(item => {
+          item.classList.toggle(
+            'active',
+            item.dataset.spendPeriod === activeSpendPeriod
+          );
+        });
+        renderSpending();
+      });
+    });
+  }
+
+  function moveSpendingBelowDashboard(spendingCandidate) {
+    const grid = findDashboardGrid();
+    if (!grid) return false;
+
+    let panel = spendingCandidate ||
+      q('#dashboard-page .bam-spending-intelligence-v21') ||
+      q('#dashboard-page .spending-panel');
+
+    if (!panel) return false;
+
+    if (!panel.classList.contains('bam-spending-intelligence-v21')) {
+      createSpendingMarkup(panel);
+    }
+
+    if (panel.previousElementSibling !== grid) {
+      grid.insertAdjacentElement('afterend', panel);
+    }
+
+    renderSpending();
+    return true;
+  }
+
+  function renderSpendingChart(values) {
+    const svg = q('#bam-spend-chart');
+    if (!svg) return;
+
+    const width = 720;
+    const height = 230;
+    const left = 18;
+    const right = 18;
+    const top = 24;
+    const bottom = 26;
+    const chartWidth = width - left - right;
+    const chartHeight = height - top - bottom;
+    const max = Math.max(...values) * 1.12;
+    const min = Math.min(...values) * 0.72;
+
+    const points = values.map((value, index) => {
+      const x = left + (index / (values.length - 1)) * chartWidth;
+      const y = top + ((max - value) / (max - min)) * chartHeight;
+      return [x, y];
+    });
+
+    const line = points
+      .map(([x, y], index) => `${index ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`)
+      .join(' ');
+
+    const area = `${line} L${points[points.length - 1][0].toFixed(1)} ${height - bottom}
+      L${points[0][0].toFixed(1)} ${height - bottom} Z`;
+
+    const gridLines = [0, 1, 2, 3].map(index => {
+      const y = top + (index / 3) * chartHeight;
+      return `<line x1="${left}" y1="${y.toFixed(1)}"
+        x2="${width - right}" y2="${y.toFixed(1)}"></line>`;
+    }).join('');
+
+    const markers = points.map(([x, y], index) => {
+      const major = index === points.length - 1 || index % 3 === 0;
+      if (!major) return '';
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"
+        r="${index === points.length - 1 ? 5.5 : 3.7}"
+        class="${index === points.length - 1 ? 'latest' : ''}"></circle>`;
+    }).join('');
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="bamSpendFillV21" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4E7BFF" stop-opacity=".27"></stop>
+          <stop offset="1" stop-color="#4E7BFF" stop-opacity="0"></stop>
+        </linearGradient>
+        <linearGradient id="bamSpendLineV21" x1="0" y1="0" x2="1" y2="0">
+          <stop stop-color="#6D9BFF"></stop>
+          <stop offset=".55" stop-color="#4E79F2"></stop>
+          <stop offset="1" stop-color="#815EF1"></stop>
+        </linearGradient>
+      </defs>
+      <g class="bam-spend-grid-lines-v21">${gridLines}</g>
+      <path class="bam-spend-area-v21" d="${area}"></path>
+      <path class="bam-spend-line-v21" d="${line}"></path>
+      <g class="bam-spend-markers-v21">${markers}</g>`;
+  }
+
+  function renderSpendingCategories(categories) {
+    const container = q('#bam-spend-categories');
+    if (!container) return;
+
+    const labels = copy[currentLanguage()];
+    const colors = {
+      housing: '#456FF2',
+      groceries: '#4CC7E9',
+      dining: '#7C68EE',
+      transport: '#F0A04B',
+      other: '#BFC9D9'
+    };
+
+    container.innerHTML = categories.map(([key, value]) => `
+      <div class="bam-spend-category-v21">
+        <div>
+          <span>
+            <i style="background:${colors[key]}"></i>
+            ${labels[key]}
+          </span>
+          <strong>${value}%</strong>
+        </div>
+        <span class="bam-spend-category-track-v21">
+          <i style="width:${value}%;background:${colors[key]}"></i>
+        </span>
+      </div>`).join('');
+  }
+
+  function renderSpending() {
+    const data = spendData[activeSpendPeriod];
+    const labels = copy[currentLanguage()];
+    if (!data) return;
+
+    const change = q('#bam-spend-change');
+    const isLower = data.delta < 0;
+
+    const total = q('#bam-spend-total');
+    const average = q('#bam-spend-average');
+    const categoryTotal = q('#bam-spend-category-total');
+    const insight = q('#bam-spend-insight-copy');
+
+    if (total) total.textContent = formatRupiah(data.total);
+    if (average) average.textContent = formatRupiah(data.average);
+    if (categoryTotal) categoryTotal.textContent = formatRupiah(data.total);
+
+    if (change) {
+      change.textContent =
+        `${data.delta > 0 ? '+' : ''}${data.delta.toFixed(1)}%`;
+      change.classList.toggle('is-positive', isLower);
+      change.classList.toggle('is-warning', !isLower);
+      change.title = `${Math.abs(data.delta).toFixed(1)}% ${
+        isLower ? labels.lower : labels.higher
+      }`;
+    }
+
+    if (insight) {
+      insight.textContent =
+        `${Math.abs(data.delta).toFixed(1)}% ${
+          isLower ? labels.lower : labels.higher
+        }. ${labels.peakPrefix} ${data.peak}.`;
+    }
+
+    const start = q('#bam-spend-axis-start');
+    const end = q('#bam-spend-axis-end');
+    if (start) {
+      start.textContent =
+        activeSpendPeriod === '30' ? labels.ago30 : labels.ago90;
+    }
+    if (end) end.textContent = labels.today;
+
+    renderSpendingChart(data.trend);
+    renderSpendingCategories(data.categories);
+    syncV21Copy();
+  }
+
+  function syncV21Copy() {
+    const labels = copy[currentLanguage()];
+    const values = {
+      '#bam-card-wallet-title': labels.cards,
+      '#bam-card-wallet-meta': labels.cardsMeta,
+      '#bam-primary-card-type': labels.primaryType,
+      '#bam-secondary-card-type': labels.secondaryType,
+      '#bam-spend-eyebrow': labels.analytics,
+      '#bam-spend-title': labels.title,
+      '#bam-spend-subtitle': labels.subtitle,
+      '#bam-spend-total-label': labels.total,
+      '#bam-spend-average-label': labels.average,
+      '#bam-spend-change-label': labels.change,
+      '#bam-spend-chart-title': labels.chartTitle,
+      '#bam-spend-chart-subtitle': labels.chartSubtitle,
+      '#bam-spend-category-title': labels.categoryTitle,
+      '#bam-spend-insight-title': labels.insightTitle
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+  }
+
+  function initialise() {
+    if (!installCardWallet()) {
+      window.setTimeout(installCardWallet, 160);
+      window.setTimeout(installCardWallet, 650);
+    }
+
+    const existingSpending =
+      q('#dashboard-page .bam-spending-intelligence-v21') ||
+      q('#dashboard-page .spending-panel');
+
+    if (existingSpending) {
+      moveSpendingBelowDashboard(existingSpending);
+    } else {
+      window.setTimeout(() => {
+        const panel =
+          q('#dashboard-page .bam-spending-intelligence-v21') ||
+          q('#dashboard-page .spending-panel');
+        if (panel) moveSpendingBelowDashboard(panel);
+      }, 500);
+    }
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(() => {
+      syncV21Copy();
+      renderSpending();
+    }, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(() => {
+      syncV21Copy();
+      renderSpending();
+    }, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V22 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+
+  const OFFICIAL_AI_GUARD_GUIDE =
+    'https://docs.trendmicro.com/en-us/documentation/article/trend-vision-one-integrate-ai-guard';
+  const OFFICIAL_API_KEY_GUIDE =
+    'https://docs.trendmicro.com/en-us/documentation/article/trend-vision-one-automation-center-first-steps-toward-u';
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      guideButton: 'Setup guidance',
+      guideEyebrow: 'SETUP GUIDANCE',
+      guideTitle: 'Connect AI Security with confidence',
+      guideBody:
+        'Only three values normally need attention. Endpoint and API version are generated automatically.',
+      close: 'Close guidance',
+      step1Title: 'Create an API key',
+      step1Body:
+        'In Vision One, open Administration → API Keys → Add API key. Use a role with the required AI security permissions, set an expiry, then copy the key.',
+      step2Title: 'Match the region',
+      step2Body:
+        'Select the same region used by the Vision One tenant and API key. The Trend-hosted endpoint updates automatically.',
+      step3Title: 'Name the application',
+      step3Body:
+        'Use a stable identifier such as bam-bank-demo. Letters, numbers, hyphens, and underscores are supported.',
+      step4Title: 'Test, then enable',
+      step4Body:
+        'Run Test Connection first. Save only after the connection succeeds.',
+      sourcesTitle: 'Where each value comes from',
+      apiKey: 'API Key',
+      apiKeySource: 'Vision One → Administration → API Keys',
+      region: 'Region',
+      regionSource: 'Your Vision One tenant / API key region',
+      appName: 'App Name',
+      appNameSource: 'Defined by you; keep it stable',
+      generated: 'Generated fields',
+      generatedSource: 'Endpoint and API version are automatic',
+      scanner: 'AI Scanner Judge',
+      scannerSource: 'Trend-hosted TMAS by default',
+      serverNote:
+        'When the server already has a secret configured, leave the API Key field blank.',
+      officialGuard: 'Open AI Guard guide',
+      officialApi: 'Open API key guide',
+      settingsTitle: 'AI Security Connection',
+      settingsDescription:
+        'Connect this demo to Trend-hosted AI Guard.',
+      connection: 'CONNECTION',
+      advancedTitle: 'Advanced & local demo controls',
+      advancedBody:
+        'Endpoints, local fallback policies, and diagnostic details',
+      apiKeyHelp: 'Leave blank to use the API key stored on the server.',
+      appNameHelp: 'Stable identifier used in Vision One.',
+      connected: 'AI Guard connected',
+      connectedBody: 'Trend-hosted enforcement',
+      notVerified: 'Connection not verified',
+      notVerifiedBody: 'Add credentials, then test the connection'
+    },
+    id: {
+      guideButton: 'Panduan konfigurasi',
+      guideEyebrow: 'PANDUAN KONFIGURASI',
+      guideTitle: 'Hubungkan AI Security dengan lebih mudah',
+      guideBody:
+        'Biasanya hanya tiga nilai yang perlu diperhatikan. Endpoint dan versi API dibuat otomatis.',
+      close: 'Tutup panduan',
+      step1Title: 'Buat API key',
+      step1Body:
+        'Di Vision One, buka Administration → API Keys → Add API key. Gunakan role dengan izin AI security yang diperlukan, tentukan masa berlaku, lalu salin key.',
+      step2Title: 'Samakan region',
+      step2Body:
+        'Pilih region yang sama dengan tenant Vision One dan API key. Endpoint Trend-hosted akan berubah otomatis.',
+      step3Title: 'Tentukan nama aplikasi',
+      step3Body:
+        'Gunakan identifier yang stabil seperti bam-bank-demo. Huruf, angka, tanda hubung, dan underscore didukung.',
+      step4Title: 'Tes lalu aktifkan',
+      step4Body:
+        'Jalankan Test Connection terlebih dahulu. Simpan setelah koneksi berhasil.',
+      sourcesTitle: 'Asal setiap informasi',
+      apiKey: 'API Key',
+      apiKeySource: 'Vision One → Administration → API Keys',
+      region: 'Region',
+      regionSource: 'Region tenant Vision One / API key',
+      appName: 'App Name',
+      appNameSource: 'Ditentukan sendiri dan dibuat tetap',
+      generated: 'Field otomatis',
+      generatedSource: 'Endpoint dan versi API dibuat otomatis',
+      scanner: 'AI Scanner Judge',
+      scannerSource: 'Default menggunakan Trend-hosted TMAS',
+      serverNote:
+        'Bila server sudah memiliki secret, biarkan field API Key kosong.',
+      officialGuard: 'Buka panduan AI Guard',
+      officialApi: 'Buka panduan API key',
+      settingsTitle: 'Koneksi AI Security',
+      settingsDescription:
+        'Hubungkan demo ini ke Trend-hosted AI Guard.',
+      connection: 'KONEKSI',
+      advancedTitle: 'Advanced & kontrol demo lokal',
+      advancedBody:
+        'Endpoint, kebijakan fallback lokal, dan detail diagnostik',
+      apiKeyHelp: 'Biarkan kosong untuk memakai API key pada server.',
+      appNameHelp: 'Identifier stabil yang digunakan di Vision One.',
+      connected: 'AI Guard terhubung',
+      connectedBody: 'Penerapan Trend-hosted',
+      notVerified: 'Koneksi belum diverifikasi',
+      notVerifiedBody: 'Isi kredensial lalu jalankan pengujian'
+    }
+  };
+
+  const text = () => copy[currentLanguage()];
+
+  function labelContaining(root, selector) {
+    const node = q(selector, root);
+    return node?.closest('label') || null;
+  }
+
+  function closeGuide() {
+    const backdrop = q('#bam-guide-backdrop');
+    const button = q('#bam-guide-button');
+    backdrop?.classList.remove('open');
+    backdrop?.setAttribute('aria-hidden', 'true');
+    button?.setAttribute('aria-expanded', 'false');
+  }
+
+  function openGuide() {
+    const backdrop = q('#bam-guide-backdrop');
+    const button = q('#bam-guide-button');
+
+    q('[data-close="security-modal"]')?.click();
+    q('#bam-assist-shell')?.classList.remove('is-open');
+    q('#chat-panel')?.classList.remove('open');
+
+    backdrop?.classList.add('open');
+    backdrop?.setAttribute('aria-hidden', 'false');
+    button?.setAttribute('aria-expanded', 'true');
+
+    window.setTimeout(() => q('#bam-guide-close')?.focus(), 80);
+  }
+
+  function installGuideButton() {
+    const actions = q('.top-actions');
+    const settingsButton = q('#settings-button');
+    if (!actions || !settingsButton) return false;
+
+    let button = q('#bam-guide-button');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'bam-guide-button';
+      button.className = 'icon-button bam-guide-button';
+      button.setAttribute('aria-expanded', 'false');
+      button.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M5 4.5h8.2A2.8 2.8 0 0 1 16 7.3v12.2H7.8A2.8 2.8 0 0 0 5 22.3V4.5Z"></path>
+          <path d="M16 7.3A2.8 2.8 0 0 1 18.8 4.5H20v15h-1.2A2.8 2.8 0 0 0 16 22.3"></path>
+          <path d="M8.7 9.2h3.6M8.7 12.5h3.6"></path>
+        </svg>`;
+      actions.insertBefore(button, settingsButton);
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const backdrop = q('#bam-guide-backdrop');
+        backdrop?.classList.contains('open') ? closeGuide() : openGuide();
+      });
+    }
+
+    syncCopy();
+    return true;
+  }
+
+  function installGuideDrawer() {
+    if (q('#bam-guide-backdrop')) return true;
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'bam-guide-backdrop';
+    backdrop.className = 'bam-guide-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    backdrop.innerHTML = `
+      <aside class="bam-guide-drawer" role="dialog"
+        aria-modal="true" aria-labelledby="bam-guide-title">
+        <header class="bam-guide-header">
+          <span class="bam-guide-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 4.5h8.2A2.8 2.8 0 0 1 16 7.3v12.2H7.8A2.8 2.8 0 0 0 5 22.3V4.5Z"></path>
+              <path d="M16 7.3A2.8 2.8 0 0 1 18.8 4.5H20v15h-1.2A2.8 2.8 0 0 0 16 22.3"></path>
+            </svg>
+          </span>
+          <span class="bam-guide-heading">
+            <small id="bam-guide-eyebrow"></small>
+            <strong id="bam-guide-title"></strong>
+            <span id="bam-guide-body"></span>
+          </span>
+          <button type="button" id="bam-guide-close"
+            class="bam-guide-close">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m7 7 10 10M17 7 7 17"></path>
+            </svg>
+          </button>
+        </header>
+
+        <div class="bam-guide-scroll">
+          <ol class="bam-guide-steps">
+            <li><span>1</span><div><strong id="bam-guide-step1-title"></strong><p id="bam-guide-step1-body"></p></div></li>
+            <li><span>2</span><div><strong id="bam-guide-step2-title"></strong><p id="bam-guide-step2-body"></p></div></li>
+            <li><span>3</span><div><strong id="bam-guide-step3-title"></strong><p id="bam-guide-step3-body"></p></div></li>
+            <li><span>4</span><div><strong id="bam-guide-step4-title"></strong><p id="bam-guide-step4-body"></p></div></li>
+          </ol>
+
+          <section class="bam-guide-sources">
+            <strong id="bam-guide-sources-title"></strong>
+            <dl>
+              <div><dt id="bam-guide-api-key"></dt><dd id="bam-guide-api-key-source"></dd></div>
+              <div><dt id="bam-guide-region"></dt><dd id="bam-guide-region-source"></dd></div>
+              <div><dt id="bam-guide-app-name"></dt><dd id="bam-guide-app-name-source"></dd></div>
+              <div><dt id="bam-guide-generated"></dt><dd id="bam-guide-generated-source"></dd></div>
+              <div><dt id="bam-guide-scanner"></dt><dd id="bam-guide-scanner-source"></dd></div>
+            </dl>
+          </section>
+
+          <p class="bam-guide-server-note">
+            <span aria-hidden="true">i</span>
+            <span id="bam-guide-server-note"></span>
+          </p>
+        </div>
+
+        <footer class="bam-guide-footer">
+          <a id="bam-guide-official-guard"
+            href="${OFFICIAL_AI_GUARD_GUIDE}"
+            target="_blank" rel="noopener noreferrer"></a>
+          <a id="bam-guide-official-api"
+            href="${OFFICIAL_API_KEY_GUIDE}"
+            target="_blank" rel="noopener noreferrer"></a>
+        </footer>
+      </aside>`;
+
+    document.body.appendChild(backdrop);
+    q('#bam-guide-close')?.addEventListener('click', closeGuide);
+    backdrop.addEventListener('click', event => {
+      if (event.target === backdrop) closeGuide();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && backdrop.classList.contains('open')) {
+        closeGuide();
+      }
+    });
+    q('#settings-button')?.addEventListener('click', closeGuide);
+    syncCopy();
+    return true;
+  }
+
+  function createAdvancedSection(guardContent) {
+    let details = q('#bam-settings-advanced', guardContent);
+    if (details) return details;
+
+    const form = q('.two-column-form', guardContent);
+    const actionRow = q('.action-row', guardContent);
+    if (!form || !actionRow) return null;
+
+    details = document.createElement('details');
+    details.id = 'bam-settings-advanced';
+    details.className = 'bam-settings-advanced';
+    details.innerHTML = `
+      <summary>
+        <span class="bam-settings-advanced-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path>
+            <circle cx="16" cy="7" r="2"></circle>
+            <circle cx="8" cy="17" r="2"></circle>
+          </svg>
+        </span>
+        <span>
+          <strong id="bam-settings-advanced-title"></strong>
+          <small id="bam-settings-advanced-body"></small>
+        </span>
+        <svg class="bam-settings-advanced-chevron"
+          viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m8 10 4 4 4-4"></path>
+        </svg>
+      </summary>
+      <div class="bam-settings-advanced-content"></div>`;
+
+    actionRow.before(details);
+    return details;
+  }
+
+  function refreshCompactStatus() {
+    const statusTitle = q('#guard-status-title');
+    const statusDescription = q('#guard-status-description');
+    const badge = q('#guard-status-badge');
+    const region = q('#guard-region');
+    const selected = text();
+    const connected =
+      badge?.classList.contains('success') ||
+      badge?.textContent.trim().toLowerCase() === 'live';
+    const regionName =
+      region?.selectedOptions?.[0]?.textContent?.trim() || 'Vision One';
+
+    if (statusTitle) {
+      statusTitle.textContent =
+        connected ? selected.connected : selected.notVerified;
+    }
+    if (statusDescription) {
+      statusDescription.textContent = connected
+        ? `${regionName} · ${selected.connectedBody}`
+        : selected.notVerifiedBody;
+    }
+  }
+
+  function simplifySettingsDrawer() {
+    const modal = q('#security-modal .security-modal');
+    const guardContent = q('#guard-content');
+    if (!modal || !guardContent) return false;
+
+    modal.classList.add('bam-simple-settings-v22');
+    guardContent.classList.add('bam-simple-settings-content-v22');
+
+    const form = q('.two-column-form', guardContent);
+    const actionRow = q('.action-row', guardContent);
+    if (!form || !actionRow) return false;
+
+    const apiKeyLabel = labelContaining(form, '#guard-api-key');
+    const regionLabel = labelContaining(form, '#guard-region');
+    const appLabel = labelContaining(form, '#guard-app-name');
+    const endpointLabel = labelContaining(form, '#guard-base-url');
+    const versionLabel = labelContaining(form, '#guard-api-version');
+    const scannerLabel = labelContaining(form, '#scanner-judge-endpoint');
+
+    [apiKeyLabel, regionLabel, appLabel].forEach(label => {
+      label?.classList.add('bam-essential-field-v22');
+    });
+
+    q('#guard-official-coverage')?.classList.add(
+      'bam-settings-coverage-hidden-v22'
+    );
+    q('.guard-region-documentation-note', form)?.classList.add(
+      'bam-settings-note-hidden-v22'
+    );
+
+    const details = createAdvancedSection(guardContent);
+    const advancedContent = q(
+      '.bam-settings-advanced-content',
+      details || guardContent
+    );
+
+    [
+      versionLabel,
+      endpointLabel,
+      scannerLabel,
+      q('#guard-drawer-policy-label'),
+      q('.policy-grid', guardContent),
+      q('#guard-drawer-runtime-label'),
+      q('.toggle-line', guardContent),
+      q('.code-note', guardContent)
+    ].forEach(node => {
+      if (node && advancedContent && node.parentElement !== advancedContent) {
+        advancedContent.appendChild(node);
+      }
+    });
+
+    const apiHelp = q('.drawer-help', apiKeyLabel || form);
+    if (apiHelp) apiHelp.id = 'bam-settings-api-help';
+    const appHelp = q('.drawer-help', appLabel || form);
+    if (appHelp) appHelp.id = 'bam-settings-app-help';
+
+    const statusHero = q('.status-hero', guardContent);
+    statusHero?.classList.add('bam-compact-status-v22');
+    actionRow.classList.add('bam-settings-actions-v22');
+
+    syncCopy();
+    refreshCompactStatus();
+    return true;
+  }
+
+  function syncCopy() {
+    const selected = text();
+    const values = {
+      '#bam-guide-eyebrow': selected.guideEyebrow,
+      '#bam-guide-title': selected.guideTitle,
+      '#bam-guide-body': selected.guideBody,
+      '#bam-guide-step1-title': selected.step1Title,
+      '#bam-guide-step1-body': selected.step1Body,
+      '#bam-guide-step2-title': selected.step2Title,
+      '#bam-guide-step2-body': selected.step2Body,
+      '#bam-guide-step3-title': selected.step3Title,
+      '#bam-guide-step3-body': selected.step3Body,
+      '#bam-guide-step4-title': selected.step4Title,
+      '#bam-guide-step4-body': selected.step4Body,
+      '#bam-guide-sources-title': selected.sourcesTitle,
+      '#bam-guide-api-key': selected.apiKey,
+      '#bam-guide-api-key-source': selected.apiKeySource,
+      '#bam-guide-region': selected.region,
+      '#bam-guide-region-source': selected.regionSource,
+      '#bam-guide-app-name': selected.appName,
+      '#bam-guide-app-name-source': selected.appNameSource,
+      '#bam-guide-generated': selected.generated,
+      '#bam-guide-generated-source': selected.generatedSource,
+      '#bam-guide-scanner': selected.scanner,
+      '#bam-guide-scanner-source': selected.scannerSource,
+      '#bam-guide-server-note': selected.serverNote,
+      '#bam-guide-official-guard': selected.officialGuard,
+      '#bam-guide-official-api': selected.officialApi,
+      '#bam-settings-advanced-title': selected.advancedTitle,
+      '#bam-settings-advanced-body': selected.advancedBody,
+      '#bam-settings-api-help': selected.apiKeyHelp,
+      '#bam-settings-app-help': selected.appNameHelp
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+
+    const guideButton = q('#bam-guide-button');
+    guideButton?.setAttribute('aria-label', selected.guideButton);
+    guideButton?.setAttribute('title', selected.guideButton);
+    q('#bam-guide-close')?.setAttribute('aria-label', selected.close);
+    q('#bam-guide-close')?.setAttribute('title', selected.close);
+
+    const modal = q('#security-modal .security-modal');
+    if (modal?.classList.contains('settings-drawer-mode')) {
+      const title = q('#security-title');
+      const description = q('#security-description');
+      const credentials = q('#guard-drawer-credentials-label');
+      if (title) title.textContent = selected.settingsTitle;
+      if (description) description.textContent = selected.settingsDescription;
+      if (credentials) credentials.textContent = selected.connection;
+      refreshCompactStatus();
+    }
+  }
+
+  const install = () => {
+    installGuideButton();
+    installGuideDrawer();
+    simplifySettingsDrawer();
+  };
+
+  install();
+  window.setTimeout(install, 180);
+  window.setTimeout(install, 850);
+
+  q('#settings-button')?.addEventListener('click', () => {
+    window.setTimeout(() => {
+      simplifySettingsDrawer();
+      refreshCompactStatus();
+    }, 40);
+  });
+
+  q('#guard-region')?.addEventListener('change', refreshCompactStatus);
+  q('#test-guard')?.addEventListener('click', () => {
+    window.setTimeout(refreshCompactStatus, 500);
+    window.setTimeout(refreshCompactStatus, 1500);
+  });
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncCopy, 0);
+  });
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncCopy, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V25 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      assistantTitle: 'Bamsky',
+      assistantMeta: 'AI Banking Assistant · Always available',
+      libraryTitle: 'Sample prompt library',
+      libraryMeta: 'Choose a scenario or write your own prompt',
+      expand: 'Show sample prompts',
+      collapse: 'Hide sample prompts',
+      banking: 'Banking',
+      attacks: 'Security tests',
+      input: 'Ask Bamsky or enter a custom security test…',
+      send: 'Send'
+    },
+    id: {
+      assistantTitle: 'Bamsky',
+      assistantMeta: 'Asisten Perbankan AI · Selalu tersedia',
+      libraryTitle: 'Kumpulan contoh prompt',
+      libraryMeta: 'Pilih skenario atau tulis prompt sendiri',
+      expand: 'Tampilkan contoh prompt',
+      collapse: 'Sembunyikan contoh prompt',
+      banking: 'Perbankan',
+      attacks: 'Uji keamanan',
+      input: 'Tanyakan ke Bamsky atau masukkan pengujian keamanan…',
+      send: 'Kirim'
+    }
+  };
+
+  function text() {
+    return copy[currentLanguage()];
+  }
+
+  function updateChatActiveState() {
+    const panel = q('#chat-panel');
+    const active = panel?.classList.contains('open');
+    document.body.classList.toggle('bam-chat-active-v25', Boolean(active));
+  }
+
+  function installChatObserver() {
+    const panel = q('#chat-panel');
+    if (!panel || panel.dataset.v25Observed === 'true') return false;
+
+    panel.dataset.v25Observed = 'true';
+    const observer = new MutationObserver(updateChatActiveState);
+    observer.observe(panel, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    updateChatActiveState();
+    return true;
+  }
+
+  function installPromptLibrary() {
+    const panel = q('#chat-panel');
+    const tabs = q('.prompt-tabs', panel);
+    const banking = q('#banking-prompts', panel);
+    const malicious = q('#malicious-prompts', panel);
+
+    if (!panel || !tabs || !banking || !malicious) return false;
+    if (q('#bam-prompt-library-v25', panel)) return true;
+
+    const library = document.createElement('section');
+    library.id = 'bam-prompt-library-v25';
+    library.className = 'bam-prompt-library-v25';
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.id = 'bam-prompt-library-toggle-v25';
+    toggle.className = 'bam-prompt-library-toggle-v25';
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.innerHTML = `
+      <span class="bam-prompt-library-copy-v25">
+        <strong id="bam-prompt-library-title-v25"></strong>
+        <small id="bam-prompt-library-meta-v25"></small>
+      </span>
+      <span class="bam-prompt-library-chevron-v25" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="m8 10 4 4 4-4"></path>
+        </svg>
+      </span>`;
+
+    const content = document.createElement('div');
+    content.className = 'bam-prompt-library-content-v25';
+
+    tabs.before(library);
+    library.append(toggle, content);
+    content.append(tabs, banking, malicious);
+
+    toggle.addEventListener('click', () => {
+      const collapsed = library.classList.toggle('is-collapsed');
+      toggle.setAttribute('aria-expanded', String(!collapsed));
+      syncCopy();
+    });
+
+    qa('.prompt-chips button', library).forEach(button => {
+      button.addEventListener('click', () => {
+        window.setTimeout(() => {
+          library.classList.add('is-collapsed');
+          toggle.setAttribute('aria-expanded', 'false');
+          syncCopy();
+          q('#chat-input')?.focus();
+        }, 100);
+      });
+    });
+
+    qa('.prompt-tabs button', library).forEach(button => {
+      button.addEventListener('click', () => {
+        library.classList.remove('is-collapsed');
+        toggle.setAttribute('aria-expanded', 'true');
+        syncCopy();
+      });
+    });
+
+    syncCopy();
+    return true;
+  }
+
+  function refineChatHeader() {
+    const panel = q('#chat-panel');
+    const header = q('#chat-panel > header');
+    if (!panel || !header) return false;
+
+    panel.classList.add('bam-chat-panel-v25');
+    header.classList.add('bam-chat-header-v25');
+
+    const copyBlock = q('.assistant-avatar + div', header);
+    const title = q('strong', copyBlock);
+    const meta = q('small', copyBlock);
+
+    if (title) {
+      title.id = 'bam-chat-title-v25';
+      title.textContent = text().assistantTitle;
+    }
+    if (meta) {
+      meta.id = 'bam-chat-meta-v25';
+      meta.textContent = text().assistantMeta;
+    }
+
+    const avatar = q('.assistant-avatar', header);
+    avatar?.classList.add('bam-chat-avatar-v25');
+
+    q('.guard-banner', panel)?.classList.add('bam-guard-banner-v25');
+    q('.chat-messages', panel)?.classList.add('bam-chat-messages-v25');
+    q('.chat-form', panel)?.classList.add('bam-chat-form-v25');
+
+    const input = q('#chat-input');
+    if (input) input.placeholder = text().input;
+
+    const send = q('#chat-form button[type="submit"]');
+    if (send) send.textContent = text().send;
+
+    return true;
+  }
+
+  function syncCopy() {
+    const selected = text();
+
+    const values = {
+      '#bam-chat-title-v25': selected.assistantTitle,
+      '#bam-chat-meta-v25': selected.assistantMeta,
+      '#bam-prompt-library-title-v25': selected.libraryTitle,
+      '#bam-prompt-library-meta-v25': selected.libraryMeta
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+
+    const library = q('#bam-prompt-library-v25');
+    const toggle = q('#bam-prompt-library-toggle-v25');
+    if (toggle) {
+      const label = library?.classList.contains('is-collapsed')
+        ? selected.expand
+        : selected.collapse;
+      toggle.setAttribute('aria-label', label);
+      toggle.setAttribute('title', label);
+    }
+
+    const tabs = qa('.prompt-tabs button', library || document);
+    if (tabs[0]) tabs[0].textContent = selected.banking;
+    if (tabs[1]) tabs[1].textContent = selected.attacks;
+
+    const input = q('#chat-input');
+    if (input) input.placeholder = selected.input;
+
+    const send = q('#chat-form button[type="submit"]');
+    if (send) send.textContent = selected.send;
+  }
+
+  function initialise() {
+    const install = () => {
+      refineChatHeader();
+      installPromptLibrary();
+      installChatObserver();
+      syncCopy();
+    };
+
+    install();
+    window.setTimeout(install, 160);
+    window.setTimeout(install, 700);
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncCopy, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncCopy, 0);
+  });
+})();
