@@ -8528,3 +8528,200 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
 #scanner-content .bam-scanner-live-status-v31 small{
   display:none!important;
 }
+
+
+/* BAM_BANK_UI_REVISION_V38 */
+
+#scanner-step-1 .bam-model-field-v38 input{
+  background:#FFFFFF!important;
+  cursor:text!important;
+}
+
+.bam-model-hint-v38{
+  display:block!important;
+  margin-top:6px!important;
+  color:#8290A5!important;
+  font-size:8.5px!important;
+  font-weight:500!important;
+  line-height:1.4!important;
+}
+
+#bam-scanner-custom-panel-v35
+.bam-custom-tenant-grid-v35{
+  grid-template-columns:minmax(190px,.78fr)
+                        minmax(280px,1.22fr)!important;
+  align-items:end!important;
+  gap:14px!important;
+}
+
+#bam-scanner-custom-panel-v35
+.bam-custom-tenant-grid-v35 select,
+#bam-scanner-custom-panel-v35
+.bam-custom-tenant-grid-v35 input{
+  width:100%!important;
+  min-width:0!important;
+  height:46px!important;
+}
+
+.bam-scanner-attack-options-v38{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:12px!important;
+  margin:15px 0 4px!important;
+}
+
+.bam-option-group-v38{
+  min-width:0!important;
+  padding:15px!important;
+  border:1px solid #DDE5EF!important;
+  border-radius:16px!important;
+  background:#FBFCFE!important;
+}
+
+.bam-option-group-v38 header{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  margin-bottom:11px!important;
+}
+
+.bam-option-group-v38 header strong{
+  color:#25344D!important;
+  font-size:11px!important;
+  font-weight:740!important;
+}
+
+.bam-option-group-v38 header small{
+  color:#7C899D!important;
+  font-size:8.5px!important;
+  line-height:1.4!important;
+}
+
+.bam-option-chips-v38{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:7px!important;
+}
+
+.bam-attack-option-chip-v38{
+  position:relative!important;
+  display:inline-flex!important;
+  cursor:pointer!important;
+}
+
+.bam-attack-option-chip-v38 input{
+  position:absolute!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+.bam-attack-option-chip-v38 span{
+  min-height:34px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  padding:0 11px!important;
+  border:1px solid #D8E1EC!important;
+  border-radius:999px!important;
+  color:#50617A!important;
+  background:#FFFFFF!important;
+  font-size:8.8px!important;
+  font-weight:650!important;
+}
+
+.bam-attack-option-chip-v38 input:checked+span{
+  border-color:#7399DC!important;
+  color:#2756A7!important;
+  background:#EEF4FF!important;
+  box-shadow:0 0 0 3px rgba(68,111,194,.08)!important;
+}
+
+.bam-option-reference-v38{
+  grid-column:1/-1!important;
+  margin:0!important;
+  padding:0 2px!important;
+  color:#7E8B9F!important;
+  font-size:8.5px!important;
+  line-height:1.45!important;
+}
+
+.bam-findings-table-v38
+.bam-finding-row-v38{
+  grid-template-columns:minmax(220px,1.45fr)
+                        minmax(170px,1fr)
+                        minmax(150px,.9fr)
+                        minmax(130px,.72fr)!important;
+}
+
+.bam-findings-table-v38
+.status.resisted{
+  color:#168166!important;
+  font-weight:720!important;
+}
+
+.bam-result-footer-v38{
+  align-items:center!important;
+  gap:18px!important;
+  margin-top:14px!important;
+  padding-top:14px!important;
+  border-top:1px solid #E4EAF2!important;
+}
+
+.bam-run-again-v38{
+  flex:0 0 auto!important;
+  min-height:40px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  padding:0 14px!important;
+  border:1px solid #CDD9E8!important;
+  border-radius:12px!important;
+  color:#31598F!important;
+  background:#F7F9FC!important;
+  box-shadow:none!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+}
+
+.bam-run-again-v38:hover{
+  transform:translateY(-1px)!important;
+  border-color:#AFC2DD!important;
+  background:#EEF3FA!important;
+}
+
+.bam-run-again-v38>strong{
+  font:inherit!important;
+}
+
+@media(max-width:760px){
+  .bam-scanner-attack-options-v38{
+    grid-template-columns:1fr!important;
+  }
+
+  .bam-option-reference-v38{
+    grid-column:auto!important;
+  }
+
+  #bam-scanner-custom-panel-v35
+  .bam-custom-tenant-grid-v35{
+    grid-template-columns:1fr!important;
+  }
+
+  .bam-findings-table-v38{
+    overflow-x:auto!important;
+  }
+
+  .bam-findings-table-v38
+  .bam-finding-row-v38{
+    min-width:760px!important;
+  }
+
+  .bam-result-footer-v38{
+    align-items:stretch!important;
+    flex-direction:column!important;
+  }
+
+  .bam-run-again-v38{
+    width:100%!important;
+  }
+}

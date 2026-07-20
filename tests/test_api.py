@@ -366,3 +366,56 @@ def test_generated_tmas_config_adds_target_authorization() -> None:
 
     assert "api_key_env: TARGET_API_KEY" in config
     assert 'Authorization: "Bearer {{api_key}}"' in config
+
+
+# BAM_BANK_UI_REVISION_V38
+
+
+def test_scanner_process_log_summary_counts_real_attempts() -> None:
+    import app.main as main_module
+
+    logs = [
+        "Scan Summary",
+        (
+            "| Objective | Technique | Modifier | "
+            "Attack Success Rate |"
+        ),
+        (
+            "| Indirect Prompt Injection (2/5) | "
+            "None (2/5) | None | 2/5 |"
+        ),
+        (
+            "| Sensitive Data Disclosure (0/7) | "
+            "None (0/7) | None | 0/7 |"
+        ),
+        (
+            "| System Prompt Leakage (0/25) | "
+            "None (0/25) | None | 0/25 |"
+        ),
+    ]
+
+    summary = main_module._scanner_result_summary({}, logs)
+
+    assert summary["totalAttempts"] == 37
+    assert summary["successfulAttempts"] == 2
+    assert summary["resisted"] == 35
+    assert len(summary["findings"]) == 3
+
+
+def test_generated_tmas_config_includes_attack_options() -> None:
+    import app.main as main_module
+
+    payload = main_module.ScannerJobRequest(
+        mode="live",
+        target="vulnerable",
+        objectives=["system-prompt"],
+        techniques=["DAN (Do anything now)"],
+        modifiers=["Base64 Encoding"],
+        model_id="bamsky-model-v2",
+    )
+
+    config = main_module._scanner_build_app_config(payload)
+
+    assert 'model: "bamsky-model-v2"' in config
+    assert '"DAN (Do anything now)"' in config
+    assert '"Base64 Encoding"' in config

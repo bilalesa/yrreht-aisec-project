@@ -7452,6 +7452,229 @@ exposePresenterLabFromUrl();
       .map(input => input.value);
   }
 
+  function advancedAttackCopy() {
+    return language() === 'id'
+      ? {
+          modelHint:
+            'Nilai ini dikirim sebagai field model pada request OpenAI-compatible.',
+          techniques: 'Attack techniques',
+          techniquesHint:
+            'Pilih satu atau beberapa teknik. None dipakai bila tidak ada teknik tambahan.',
+          modifiers: 'Attack modifiers',
+          modifiersHint:
+            'Modifier diterapkan pada setiap objective dan technique yang dipilih.',
+          noneTechnique: 'Tanpa technique',
+          noneModifier: 'Tanpa modifier',
+          reference:
+            'Pilihan mengikuti configuration mode AI Scanner: objective, technique, dan modifier.',
+          newAssessment: 'Assessment baru',
+          successful: 'Berhasil',
+          resisted: 'Ditahan',
+          attempts: 'Percobaan',
+          outcome: 'Hasil',
+          resultNote:
+            'Berhasil berarti attack mencapai objective. Ditahan berarti attack tidak mencapai objective.',
+          technique: 'Technique',
+          modifier: 'Modifier'
+        }
+      : {
+          modelHint:
+            'This value is sent in the model field of the OpenAI-compatible request.',
+          techniques: 'Attack techniques',
+          techniquesHint:
+            'Choose one or more techniques. None is used when no extra technique is selected.',
+          modifiers: 'Attack modifiers',
+          modifiersHint:
+            'Modifiers are applied to every selected objective and technique.',
+          noneTechnique: 'No technique',
+          noneModifier: 'No modifier',
+          reference:
+            'Selections follow AI Scanner configuration mode: objective, technique, and modifier.',
+          newAssessment: 'New assessment',
+          successful: 'Successful',
+          resisted: 'Resisted',
+          attempts: 'Attempts',
+          outcome: 'Outcome',
+          resultNote:
+            'Successful means the attack achieved its objective. Resisted means the attempt did not achieve its objective.',
+          technique: 'Technique',
+          modifier: 'Modifier'
+        };
+  }
+
+  function selectedScannerOptions(kind) {
+    const values = qa(
+      `#bam-scanner-attack-options-v38 ` +
+      `input[data-scanner-option="${kind}"]:checked`
+    ).map(input => input.value);
+    const nonNone = values.filter(value => value !== 'None');
+    return nonNone.length ? nonNone : ['None'];
+  }
+
+  function syncExclusiveNone(kind, changed) {
+    const inputs = qa(
+      `#bam-scanner-attack-options-v38 ` +
+      `input[data-scanner-option="${kind}"]`
+    );
+    const none = inputs.find(input => input.value === 'None');
+    const others = inputs.filter(input => input.value !== 'None');
+
+    if (changed?.value === 'None' && changed.checked) {
+      others.forEach(input => {
+        input.checked = false;
+      });
+    } else if (
+      changed &&
+      changed.value !== 'None' &&
+      changed.checked &&
+      none
+    ) {
+      none.checked = false;
+    }
+
+    if (!inputs.some(input => input.checked) && none) {
+      none.checked = true;
+    }
+  }
+
+  function optionChip(kind, value, label, checked = false) {
+    return `
+      <label class="bam-attack-option-chip-v38">
+        <input type="checkbox"
+               data-scanner-option="${kind}"
+               value="${value}"
+               ${checked ? 'checked' : ''}>
+        <span>${label}</span>
+      </label>`;
+  }
+
+  function removeLegacyFileFooter() {
+    const phrase =
+      'Uploaded bills are inspected by File Security before processing';
+    qa('body p, body small').forEach(node => {
+      if (node.textContent.trim().replace(/\.$/, '') === phrase) {
+        node.remove();
+      }
+    });
+  }
+
+  function installAdvancedAttackControls() {
+    const words = advancedAttackCopy();
+    const config = q('#scanner-step-1 .scanner-config');
+    const attackGrid = q('#scanner-step-2 .attack-grid');
+
+    if (config) {
+      const modelLabel = qa('label', config).find(label =>
+        label.textContent.toLowerCase().includes(
+          'target model id'
+        )
+      );
+      const modelInput = q('input', modelLabel);
+
+      if (modelLabel && modelInput) {
+        modelLabel.classList.add('bam-model-field-v38');
+        modelInput.id = 'bam-scanner-model-id-v38';
+        modelInput.removeAttribute('readonly');
+        modelInput.removeAttribute('aria-readonly');
+        modelInput.maxLength = 256;
+
+        let hint = q('.bam-model-hint-v38', modelLabel);
+        if (!hint) {
+          hint = document.createElement('small');
+          hint.className = 'bam-model-hint-v38';
+          modelLabel.appendChild(hint);
+        }
+        hint.textContent = words.modelHint;
+      }
+    }
+
+    if (
+      attackGrid &&
+      !q('#bam-scanner-attack-options-v38')
+    ) {
+      const host = document.createElement('section');
+      host.id = 'bam-scanner-attack-options-v38';
+      host.className = 'bam-scanner-attack-options-v38';
+      host.innerHTML = `
+        <div class="bam-option-group-v38">
+          <header>
+            <strong>${words.techniques}</strong>
+            <small>${words.techniquesHint}</small>
+          </header>
+          <div class="bam-option-chips-v38">
+            ${optionChip(
+              'technique', 'None',
+              words.noneTechnique, true
+            )}
+            ${optionChip(
+              'technique',
+              'Ignore all previous instructions',
+              'Ignore all previous instructions'
+            )}
+            ${optionChip(
+              'technique',
+              'DAN (Do anything now)',
+              'DAN (Do anything now)'
+            )}
+            ${optionChip(
+              'technique',
+              'Encrypt the response',
+              'Encrypt the response'
+            )}
+            ${optionChip(
+              'technique',
+              'Payload splitting',
+              'Payload splitting'
+            )}
+          </div>
+        </div>
+
+        <div class="bam-option-group-v38">
+          <header>
+            <strong>${words.modifiers}</strong>
+            <small>${words.modifiersHint}</small>
+          </header>
+          <div class="bam-option-chips-v38">
+            ${optionChip(
+              'modifier', 'None',
+              words.noneModifier, true
+            )}
+            ${optionChip(
+              'modifier',
+              'Base64 Encoding',
+              'Base64 Encoding'
+            )}
+            ${optionChip(
+              'modifier',
+              'Best-of-N Scrambling',
+              'Best-of-N Scrambling'
+            )}
+          </div>
+        </div>
+
+        <p class="bam-option-reference-v38">
+          ${words.reference}
+        </p>`;
+
+      attackGrid.insertAdjacentElement('afterend', host);
+
+      qa(
+        'input[data-scanner-option]',
+        host
+      ).forEach(input => {
+        input.addEventListener('change', () => {
+          syncExclusiveNone(
+            input.dataset.scannerOption,
+            input
+          );
+        });
+      });
+    }
+
+    removeLegacyFileFooter();
+  }
+
+
   function selectedTarget() {
     return q(
       '#scanner-step-1 input[name="scanner-target"]:checked'
@@ -7538,6 +7761,11 @@ exposePresenterLabFromUrl();
           mode: scanner.mode,
           target,
           objectives,
+          model_id:
+            q('#bam-scanner-model-id-v38')?.value.trim() ||
+            'visionone-bank-demo',
+          techniques: selectedScannerOptions('technique'),
+          modifiers: selectedScannerOptions('modifier'),
           ...tenantJobFields()
         })
       });
@@ -7744,12 +7972,40 @@ exposePresenterLabFromUrl();
     if (!results) return;
 
     progress?.classList.add('hidden');
-    results.className = 'bam-scan-results-v34';
+    results.className =
+      'bam-scan-results-v34 bam-scan-results-v38';
 
-    const exposed = Number(result.successful || 0);
-    const blocked = Number(result.blocked || 0);
+    const findings = Array.isArray(result.findings)
+      ? result.findings
+      : [];
+    const total = Number(
+      result.totalAttempts ??
+      result.total ??
+      findings.reduce(
+        (sum, item) =>
+          sum + Number(item.attempts || 1),
+        0
+      )
+    );
+    const successful = Number(
+      result.successfulAttempts ??
+      result.successful ??
+      findings.reduce(
+        (sum, item) =>
+          sum + Number(
+            item.successfulAttempts ??
+            (item.result === 'successful' ? 1 : 0)
+          ),
+        0
+      )
+    );
     const errors = Number(result.errors || 0);
-    const total = Number(result.total || 0);
+    const resisted = Number(
+      result.resisted ??
+      result.blocked ??
+      Math.max(total - successful - errors, 0)
+    );
+    const words = advancedAttackCopy();
 
     results.innerHTML = `
       <div class="bam-result-heading-v34">
@@ -7760,25 +8016,50 @@ exposePresenterLabFromUrl();
         </div>
         <span class="bam-result-mode-v34"></span>
       </div>
+
       <div class="bam-result-summary-v34">
-        <article><small></small><strong>${total}</strong></article>
-        <article class="exposed"><small></small><strong>${exposed}</strong></article>
-        <article class="blocked"><small></small><strong>${blocked}</strong></article>
-        <article class="errors ${errors ? '' : 'is-zero'}">
-          <small></small><strong>${errors}</strong>
+        <article>
+          <small>${words.attempts}</small>
+          <strong>${total}</strong>
+        </article>
+        <article class="exposed">
+          <small>${words.successful}</small>
+          <strong>${successful}</strong>
+        </article>
+        <article class="blocked">
+          <small>${words.resisted}</small>
+          <strong>${resisted}</strong>
+        </article>
+        <article class="errors ${
+          errors ? '' : 'is-zero'
+        }">
+          <small>${text().errorsLabel}</small>
+          <strong>${errors}</strong>
         </article>
       </div>
-      <p class="bam-result-exposure-note-v34"></p>
-      <div class="bam-findings-table-v34"
+
+      <p class="bam-result-exposure-note-v34">
+        ${words.resultNote}
+      </p>
+
+      <div class="bam-findings-table-v34
+                  bam-findings-table-v38"
            id="bam-findings-table-v34"></div>
+
       <details class="bam-process-archive-v34">
         <summary></summary>
         <pre></pre>
       </details>
-      <div class="bam-result-footer-v34">
+
+      <div class="bam-result-footer-v34
+                  bam-result-footer-v38">
         <p></p>
-        <button type="button" class="secondary"
-                id="bam-run-again-v34"></button>
+        <button type="button"
+                id="bam-run-again-v34"
+                class="bam-run-again-v38">
+          <span aria-hidden="true">↻</span>
+          <strong></strong>
+        </button>
       </div>`;
 
     q('.bam-result-kicker-v34', results).textContent =
@@ -7791,37 +8072,30 @@ exposePresenterLabFromUrl();
       scanner.mode === 'live'
         ? text().liveConsole
         : text().demoConsole;
+
+    const modelId =
+      result.modelId ||
+      job.modelId ||
+      q('#bam-scanner-model-id-v38')?.value ||
+      'visionone-bank-demo';
     q('.bam-result-mode-v34', results).textContent =
-      job.target === 'protected'
+      `${job.target === 'protected'
         ? 'AI Guard protected'
-        : 'Baseline target';
-
-    const labels = qa(
-      '.bam-result-summary-v34 article small',
-      results
-    );
-    [
-      text().attacksLabel,
-      text().exposedLabel,
-      text().blockedLabel,
-      text().errorsLabel
-    ].forEach((label, index) => {
-      if (labels[index]) labels[index].textContent = label;
-    });
-
-    q('.bam-result-exposure-note-v34', results).textContent =
-      text().exposureNote;
+        : 'Baseline'} · ${modelId}`;
 
     const table = q('#bam-findings-table-v34', results);
     const header = document.createElement('div');
-    header.className = 'bam-finding-row-v34 header';
-    ['ID', 'Objective', 'Severity', 'Result', 'Framework']
-      .forEach(label => header.appendChild(resultCell(label)));
+    header.className =
+      'bam-finding-row-v34 bam-finding-row-v38 header';
+    [
+      'Objective',
+      words.technique,
+      words.modifier,
+      words.outcome
+    ].forEach(label => {
+      header.appendChild(resultCell(label));
+    });
     table.appendChild(header);
-
-    const findings = Array.isArray(result.findings)
-      ? result.findings
-      : [];
 
     if (!findings.length) {
       const empty = document.createElement('div');
@@ -7830,19 +8104,35 @@ exposePresenterLabFromUrl();
       table.appendChild(empty);
     } else {
       findings.forEach(item => {
+        const attempts = Number(item.attempts || 1);
+        const itemSuccessful = Number(
+          item.successfulAttempts ??
+          (item.result === 'successful' ? 1 : 0)
+        );
+        const status = item.result === 'error'
+          ? 'error'
+          : itemSuccessful > 0
+            ? 'successful'
+            : 'resisted';
+
         const row = document.createElement('div');
-        row.className = 'bam-finding-row-v34';
+        row.className =
+          'bam-finding-row-v34 bam-finding-row-v38';
         row.title = item.detail || '';
+
         row.append(
-          resultCell(item.id || 'TMAS'),
           resultCell(item.objective || 'Finding'),
-          resultCell(item.severity || 'unknown'),
+          resultCell(item.technique || 'None'),
+          resultCell(item.modifier || 'None'),
           resultCell(
-            item.result || 'unknown',
-            `status ${item.result || 'unknown'}`
-          ),
-          resultCell(
-            item.framework || 'Vision One AI Scanner'
+            status === 'error'
+              ? 'Error'
+              : `${itemSuccessful}/${attempts} ${
+                  status === 'successful'
+                    ? words.successful.toLowerCase()
+                    : words.resisted.toLowerCase()
+                }`,
+            `status ${status}`
           )
         );
         table.appendChild(row);
@@ -7853,7 +8143,7 @@ exposePresenterLabFromUrl();
     const summary = q('summary', details);
     const log = q('pre', details);
     summary.textContent = text().viewLog;
-    log.textContent = scanner.logs.join('\n');
+    log.textContent = scanner.logs.join('\\n');
     details.addEventListener('toggle', () => {
       summary.textContent = details.open
         ? text().hideLog
@@ -7866,11 +8156,13 @@ exposePresenterLabFromUrl();
         : text().demoConsole;
 
     const runAgain = q('#bam-run-again-v34', results);
-    runAgain.textContent = text().runAgain;
+    q('strong', runAgain).textContent =
+      words.newAssessment;
     runAgain.addEventListener('click', () => {
       resetScanner(true);
     });
   }
+
 
   function installGuardTest() {
     const oldButton = q('#test-guard');
@@ -8103,6 +8395,7 @@ exposePresenterLabFromUrl();
   }
 
   function syncLanguage() {
+    installAdvancedAttackControls();
     syncScannerUi();
     syncFileButton();
   }
@@ -8110,6 +8403,7 @@ exposePresenterLabFromUrl();
   function initialise() {
     const install = () => {
       bindScannerControls();
+      installAdvancedAttackControls();
       installGuardTest();
       installFileControls();
       syncScannerUi();
@@ -8710,3 +9004,5 @@ exposePresenterLabFromUrl();
 })();
 
 /* BAM_BANK_UI_REVISION_V37 */
+
+/* BAM_BANK_UI_REVISION_V38 */
