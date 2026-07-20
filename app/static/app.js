@@ -5773,3 +5773,365 @@ exposePresenterLabFromUrl();
     window.setTimeout(syncLanguage, 0);
   });
 })();
+
+
+/* BAM_BANK_UI_REVISION_V30 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  const ZTSA_STORAGE_KEY = 'bam-ztsa-mock-enabled';
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      payTooltip:
+        'Protected by File Security. Uploaded bills are inspected before processing.',
+      labLabel: 'AI SECURITY CONTROLS',
+      ztsaTitle: 'ZTSA',
+      ztsaBody: 'Private LLM access',
+      ztsaControlTitle: 'ZTSA',
+      ztsaControlBody: 'Private LLM gateway · Mock',
+      fileTitle: 'File Security',
+      fileBody: 'Inspect uploads',
+      runtimeTitle: 'Runtime controls',
+      mockBadge: 'Mock',
+      baseline: 'Baseline',
+      guardOnly: 'AI Guard only',
+      ztsaOnly: 'ZTSA mock only',
+      layered: 'Layered mock',
+      noRuntime: 'No runtime control enabled',
+      guardActive: 'Application inspection enabled',
+      ztsaActive: 'Private LLM route preview enabled',
+      bothActive: 'AI Guard + ZTSA preview enabled',
+      ztsaNote:
+        'ZTSA is a UI mock until the private gateway and policy are configured.'
+    },
+    id: {
+      payTooltip:
+        'Dilindungi File Security. Tagihan diperiksa sebelum diproses.',
+      labLabel: 'KONTROL KEAMANAN AI',
+      ztsaTitle: 'ZTSA',
+      ztsaBody: 'Akses Private LLM',
+      ztsaControlTitle: 'ZTSA',
+      ztsaControlBody: 'Gateway Private LLM · Mock',
+      fileTitle: 'File Security',
+      fileBody: 'Periksa unggahan',
+      runtimeTitle: 'Kontrol runtime',
+      mockBadge: 'Mock',
+      baseline: 'Baseline',
+      guardOnly: 'Hanya AI Guard',
+      ztsaOnly: 'Hanya mock ZTSA',
+      layered: 'Mock berlapis',
+      noRuntime: 'Tidak ada kontrol runtime aktif',
+      guardActive: 'Inspeksi aplikasi aktif',
+      ztsaActive: 'Preview jalur Private LLM aktif',
+      bothActive: 'AI Guard + preview ZTSA aktif',
+      ztsaNote:
+        'ZTSA masih berupa mock UI sampai gateway private dan policy dikonfigurasi.'
+    }
+  };
+
+  function text() {
+    return copy[currentLanguage()];
+  }
+
+  function closeAssistHub() {
+    q('#bam-assist-shell')?.classList.remove('is-open');
+    q('#bam-assist-launcher')?.setAttribute('aria-expanded', 'false');
+  }
+
+  function openChatPanel() {
+    closeAssistHub();
+    const panel = q('#chat-panel');
+    panel?.classList.add('open');
+    panel?.setAttribute('aria-hidden', 'false');
+  }
+
+  function findPayBillsButton() {
+    return qa('#dashboard-page .quick-actions > button').find(button => {
+      const value = button.textContent.toLowerCase();
+      return value.includes('pay bills') ||
+        value.includes('bayar tagihan');
+    });
+  }
+
+  function refinePayBillsTooltip() {
+    const button = findPayBillsButton();
+    if (!button) return false;
+
+    button.classList.add('bam-file-security-action-v30');
+    button.dataset.tooltip = text().payTooltip;
+    return true;
+  }
+
+  function featureIcon(type) {
+    if (type === 'ztsa') {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 8.5 12 4l7 4.5v7L12 20l-7-4.5v-7Z"></path>
+          <path d="M8.2 12h7.6M12 8.2v7.6"></path>
+        </svg>`;
+    }
+
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3.4 19 6v5.3c0 4.5-2.8 7.5-7 9.3
+                 -4.2-1.8-7-4.8-7-9.3V6l7-2.6Z"></path>
+        <path d="m8.8 12.1 2 2 4.5-4.6"></path>
+      </svg>`;
+  }
+
+  function buildHubFeature(id, type) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = id;
+    button.className = `bam-assist-security ${type} bam-assist-feature-v30`;
+    button.innerHTML = `
+      <span class="bam-assist-action-icon">
+        ${featureIcon(type)}
+      </span>
+      <span>
+        <strong></strong>
+        <small></small>
+      </span>
+      ${type === 'ztsa'
+        ? '<em class="bam-assist-mock-badge-v30"></em>'
+        : ''}`;
+    return button;
+  }
+
+  function installHubFeatures() {
+    const grid = q('#bam-assist-shell .bam-assist-security-grid');
+    if (!grid) return false;
+
+    grid.classList.add('bam-assist-security-grid-v30');
+
+    let ztsa = q('#bam-assist-ztsa');
+    if (!ztsa) {
+      ztsa = buildHubFeature('bam-assist-ztsa', 'ztsa');
+      grid.appendChild(ztsa);
+
+      ztsa.addEventListener('click', () => {
+        openChatPanel();
+        window.setTimeout(() => {
+          const toggle = q('#ztsa-toggle-v30');
+          toggle?.focus();
+          q('#bam-ztsa-control-v30')?.classList.add('is-highlighted');
+          window.setTimeout(() => {
+            q('#bam-ztsa-control-v30')?.classList.remove('is-highlighted');
+          }, 1100);
+        }, 120);
+      });
+    }
+
+    let file = q('#bam-assist-file');
+    if (!file) {
+      file = buildHubFeature('bam-assist-file', 'file');
+      grid.appendChild(file);
+
+      file.addEventListener('click', () => {
+        closeAssistHub();
+        findPayBillsButton()?.click();
+      });
+    }
+
+    syncHubCopy();
+    return true;
+  }
+
+  function installRuntimeControls() {
+    const panel = q('#chat-panel');
+    const guardBanner = q('.guard-banner, .bam-guard-banner-v25', panel);
+
+    if (!panel || !guardBanner) return false;
+
+    let controls = q('#bam-runtime-controls-v30', panel);
+    if (!controls) {
+      controls = document.createElement('section');
+      controls.id = 'bam-runtime-controls-v30';
+      controls.className = 'bam-runtime-controls-v30';
+
+      const heading = document.createElement('div');
+      heading.className = 'bam-runtime-heading-v30';
+      heading.innerHTML = `
+        <strong id="bam-runtime-title-v30"></strong>
+        <span id="bam-runtime-mode-v30"></span>`;
+
+      guardBanner.before(controls);
+      controls.appendChild(heading);
+      controls.appendChild(guardBanner);
+
+      guardBanner.classList.add(
+        'bam-runtime-control-row-v30',
+        'bam-ai-guard-control-v30'
+      );
+
+      const ztsaRow = document.createElement('div');
+      ztsaRow.id = 'bam-ztsa-control-v30';
+      ztsaRow.className =
+        'bam-runtime-control-row-v30 bam-ztsa-control-v30';
+      ztsaRow.innerHTML = `
+        <div class="bam-runtime-control-copy-v30">
+          <span class="bam-runtime-control-icon-v30">
+            ${featureIcon('ztsa')}
+          </span>
+          <span>
+            <strong id="bam-ztsa-title-v30"></strong>
+            <small id="bam-ztsa-body-v30"></small>
+          </span>
+        </div>
+        <div class="bam-runtime-control-actions-v30">
+          <span class="bam-runtime-mock-v30"
+                id="bam-runtime-mock-v30"></span>
+          <label class="bam-ztsa-switch-v30">
+            <input type="checkbox" id="ztsa-toggle-v30">
+            <span aria-hidden="true"></span>
+          </label>
+        </div>`;
+
+      const summary = document.createElement('div');
+      summary.id = 'bam-runtime-summary-v30';
+      summary.className = 'bam-runtime-summary-v30';
+      summary.innerHTML = `
+        <span class="bam-runtime-summary-dot-v30"></span>
+        <strong id="bam-runtime-summary-title-v30"></strong>
+        <small id="bam-runtime-summary-body-v30"></small>`;
+
+      const note = document.createElement('p');
+      note.id = 'bam-ztsa-note-v30';
+      note.className = 'bam-ztsa-note-v30';
+
+      controls.append(ztsaRow, summary, note);
+
+      const ztsaToggle = q('#ztsa-toggle-v30');
+      const saved = localStorage.getItem(ZTSA_STORAGE_KEY);
+      ztsaToggle.checked = saved === 'true';
+
+      ztsaToggle.addEventListener('change', () => {
+        localStorage.setItem(
+          ZTSA_STORAGE_KEY,
+          String(ztsaToggle.checked)
+        );
+        updateRuntimeMode();
+      });
+
+      q('#guard-toggle')?.addEventListener('change', updateRuntimeMode);
+    }
+
+    syncRuntimeCopy();
+    updateRuntimeMode();
+    return true;
+  }
+
+  function updateRuntimeMode() {
+    const selected = text();
+    const guardEnabled = Boolean(q('#guard-toggle')?.checked);
+    const ztsaEnabled = Boolean(q('#ztsa-toggle-v30')?.checked);
+
+    let mode = selected.baseline;
+    let body = selected.noRuntime;
+
+    if (guardEnabled && ztsaEnabled) {
+      mode = selected.layered;
+      body = selected.bothActive;
+    } else if (guardEnabled) {
+      mode = selected.guardOnly;
+      body = selected.guardActive;
+    } else if (ztsaEnabled) {
+      mode = selected.ztsaOnly;
+      body = selected.ztsaActive;
+    }
+
+    const modeNode = q('#bam-runtime-mode-v30');
+    const titleNode = q('#bam-runtime-summary-title-v30');
+    const bodyNode = q('#bam-runtime-summary-body-v30');
+    const summary = q('#bam-runtime-summary-v30');
+
+    if (modeNode) modeNode.textContent = mode;
+    if (titleNode) titleNode.textContent = mode;
+    if (bodyNode) bodyNode.textContent = body;
+
+    summary?.classList.toggle(
+      'is-layered',
+      guardEnabled && ztsaEnabled
+    );
+    summary?.classList.toggle(
+      'is-active',
+      guardEnabled || ztsaEnabled
+    );
+
+    document.body.dataset.bamRuntimeMode =
+      guardEnabled && ztsaEnabled ? 'layered' :
+      guardEnabled ? 'guard' :
+      ztsaEnabled ? 'ztsa' : 'baseline';
+  }
+
+  function syncHubCopy() {
+    const selected = text();
+    const values = {
+      '#bam-assist-lab-label': selected.labLabel,
+      '#bam-assist-ztsa strong': selected.ztsaTitle,
+      '#bam-assist-ztsa small': selected.ztsaBody,
+      '#bam-assist-file strong': selected.fileTitle,
+      '#bam-assist-file small': selected.fileBody,
+      '#bam-assist-ztsa .bam-assist-mock-badge-v30':
+        selected.mockBadge
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+  }
+
+  function syncRuntimeCopy() {
+    const selected = text();
+    const values = {
+      '#bam-runtime-title-v30': selected.runtimeTitle,
+      '#bam-ztsa-title-v30': selected.ztsaControlTitle,
+      '#bam-ztsa-body-v30': selected.ztsaControlBody,
+      '#bam-runtime-mock-v30': selected.mockBadge,
+      '#bam-ztsa-note-v30': selected.ztsaNote
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+  }
+
+  function syncLanguage() {
+    refinePayBillsTooltip();
+    syncHubCopy();
+    syncRuntimeCopy();
+    updateRuntimeMode();
+  }
+
+  function initialise() {
+    const install = () => {
+      refinePayBillsTooltip();
+      installHubFeatures();
+      installRuntimeControls();
+    };
+
+    install();
+    window.setTimeout(install, 180);
+    window.setTimeout(install, 750);
+    window.setTimeout(install, 1400);
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncLanguage, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncLanguage, 0);
+  });
+})();

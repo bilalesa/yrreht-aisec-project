@@ -6397,3 +6397,422 @@ html body #chat-panel>header.bam-chat-header-v25 .bam-chat-avatar-v25{
     max-width:84px!important;
   }
 }
+
+
+/* BAM_BANK_UI_REVISION_V30 */
+
+/* ------------------------------------------------------------------------
+   Pay Bills: stronger discovery, clean shield-only treatment
+   ------------------------------------------------------------------------ */
+#dashboard-page .quick-actions{
+  overflow:visible!important;
+}
+
+#dashboard-page .quick-actions > button.bam-file-security-action-v30{
+  z-index:3!important;
+  overflow:visible!important;
+  border:2px solid transparent!important;
+  background:
+    linear-gradient(#FFFFFF,#FFFFFF) padding-box,
+    linear-gradient(135deg,#13A87B 0%,#3D7AD8 100%) border-box!important;
+  box-shadow:
+    0 12px 28px rgba(31,103,91,.13),
+    0 0 0 3px rgba(30,157,122,.045)!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:hover,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:focus-visible{
+  z-index:45!important;
+  background:
+    linear-gradient(135deg,#FFFFFF,#F3FBF8) padding-box,
+    linear-gradient(135deg,#008D68 0%,#315EC7 100%) border-box!important;
+  box-shadow:
+    0 17px 38px rgba(28,91,84,.19),
+    0 0 0 5px rgba(35,151,119,.08)!important;
+  transform:translateY(-2px)!important;
+}
+
+/* Tooltip opens upward so it does not collide with portfolio cards. */
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30::after{
+  content:attr(data-tooltip)!important;
+  position:absolute!important;
+  z-index:80!important;
+  right:10px!important;
+  left:auto!important;
+  bottom:calc(100% + 13px)!important;
+  top:auto!important;
+  width:min(292px,calc(100vw - 42px))!important;
+  padding:11px 13px!important;
+  border:1px solid #CFE2DC!important;
+  border-radius:13px!important;
+  color:#31564D!important;
+  background:rgba(255,255,255,.985)!important;
+  box-shadow:0 18px 42px rgba(23,58,50,.18)!important;
+  font-size:9.2px!important;
+  font-weight:570!important;
+  line-height:1.45!important;
+  text-align:left!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translateY(5px)!important;
+  transition:
+    opacity .14s ease,
+    transform .14s ease,
+    visibility .14s ease!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:81!important;
+  right:27px!important;
+  bottom:calc(100% + 7px)!important;
+  width:12px!important;
+  height:12px!important;
+  border-right:1px solid #CFE2DC!important;
+  border-bottom:1px solid #CFE2DC!important;
+  background:#FFFFFF!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  transform:rotate(45deg)!important;
+  transition:opacity .14s ease,visibility .14s ease!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:hover::after,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:focus-visible::after,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:hover::before,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:focus-visible::before{
+  opacity:1!important;
+  visibility:visible!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:hover::after,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v30:focus-visible::after{
+  transform:none!important;
+}
+
+/* ------------------------------------------------------------------------
+   BAM Assist Hub: four security capabilities
+   ------------------------------------------------------------------------ */
+html body .bam-assist-shell-v20 .bam-assist-panel{
+  width:min(430px,calc(100vw - 44px))!important;
+}
+
+.bam-assist-security-grid-v30{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+
+.bam-assist-feature-v30{
+  position:relative!important;
+}
+
+.bam-assist-security.ztsa:hover{
+  border-color:#8DB5E3!important;
+}
+
+.bam-assist-security.file:hover{
+  border-color:#87CFBA!important;
+}
+
+.bam-assist-security.ztsa .bam-assist-action-icon{
+  color:#335FA8!important;
+  background:#E7EFFC!important;
+}
+
+.bam-assist-security.file .bam-assist-action-icon{
+  color:#147C62!important;
+  background:#E1F6EF!important;
+}
+
+.bam-assist-mock-badge-v30{
+  position:absolute!important;
+  right:8px!important;
+  top:8px!important;
+  padding:3px 6px!important;
+  border:1px solid #D7E1EE!important;
+  border-radius:999px!important;
+  color:#687A94!important;
+  background:#F4F7FB!important;
+  font-size:6.8px!important;
+  font-style:normal!important;
+  font-weight:750!important;
+  line-height:1!important;
+  letter-spacing:.05em!important;
+  text-transform:uppercase!important;
+}
+
+/* ------------------------------------------------------------------------
+   Independent AI Guard and ZTSA runtime controls
+   ------------------------------------------------------------------------ */
+html body #chat-panel.bam-chat-panel-v28{
+  grid-template-rows:auto auto auto minmax(0,1fr) auto!important;
+}
+
+.bam-runtime-controls-v30{
+  border-bottom:1px solid #DEE6F0!important;
+  background:#F4F7FB!important;
+}
+
+.bam-runtime-heading-v30{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:10px 18px 6px!important;
+}
+
+.bam-runtime-heading-v30>strong{
+  color:#62728A!important;
+  font-size:8px!important;
+  font-weight:800!important;
+  letter-spacing:.11em!important;
+  text-transform:uppercase!important;
+}
+
+.bam-runtime-heading-v30>span{
+  padding:4px 8px!important;
+  border:1px solid #D9E2ED!important;
+  border-radius:999px!important;
+  color:#526681!important;
+  background:#FFFFFF!important;
+  font-size:8px!important;
+  font-weight:680!important;
+}
+
+html body #chat-panel
+.bam-runtime-control-row-v30{
+  min-height:62px!important;
+  padding:10px 18px!important;
+  border:0!important;
+  border-top:1px solid #E5EAF1!important;
+  background:transparent!important;
+}
+
+html body #chat-panel
+.bam-ai-guard-control-v30{
+  box-shadow:none!important;
+}
+
+.bam-ztsa-control-v30{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  transition:background .18s ease,box-shadow .18s ease!important;
+}
+
+.bam-ztsa-control-v30.is-highlighted{
+  background:#EAF2FC!important;
+  box-shadow:inset 3px 0 0 #4E79C7!important;
+}
+
+.bam-runtime-control-copy-v30{
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+}
+
+.bam-runtime-control-copy-v30>span:last-child{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+
+.bam-runtime-control-copy-v30 strong{
+  color:#1E2D47!important;
+  font-size:14px!important;
+  font-weight:710!important;
+}
+
+.bam-runtime-control-copy-v30 small{
+  margin-top:4px!important;
+  color:#78869B!important;
+  font-size:9.5px!important;
+}
+
+.bam-runtime-control-icon-v30{
+  width:36px!important;
+  height:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 auto!important;
+  border-radius:12px!important;
+  color:#315EAA!important;
+  background:#E6EEFA!important;
+}
+
+.bam-runtime-control-icon-v30 svg{
+  width:19px!important;
+  height:19px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.8!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+
+.bam-runtime-control-actions-v30{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  flex:0 0 auto!important;
+}
+
+.bam-runtime-mock-v30{
+  padding:4px 7px!important;
+  border:1px solid #D6E0EC!important;
+  border-radius:999px!important;
+  color:#65758D!important;
+  background:#FFFFFF!important;
+  font-size:7px!important;
+  font-weight:760!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+
+.bam-ztsa-switch-v30{
+  position:relative!important;
+  width:46px!important;
+  height:26px!important;
+  display:block!important;
+  flex:0 0 auto!important;
+}
+
+.bam-ztsa-switch-v30 input{
+  position:absolute!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+.bam-ztsa-switch-v30>span{
+  position:absolute!important;
+  inset:0!important;
+  border-radius:999px!important;
+  background:#AFBACD!important;
+  box-shadow:inset 0 0 0 1px rgba(36,52,78,.08)!important;
+  cursor:pointer!important;
+  transition:background .16s ease!important;
+}
+
+.bam-ztsa-switch-v30>span::after{
+  content:""!important;
+  position:absolute!important;
+  left:3px!important;
+  top:3px!important;
+  width:20px!important;
+  height:20px!important;
+  border-radius:50%!important;
+  background:#FFFFFF!important;
+  box-shadow:0 3px 8px rgba(30,47,73,.2)!important;
+  transition:transform .16s ease!important;
+}
+
+.bam-ztsa-switch-v30 input:checked+span{
+  background:#356FD8!important;
+}
+
+.bam-ztsa-switch-v30 input:checked+span::after{
+  transform:translateX(20px)!important;
+}
+
+.bam-ztsa-switch-v30 input:focus-visible+span{
+  outline:3px solid rgba(53,111,216,.18)!important;
+  outline-offset:2px!important;
+}
+
+.bam-runtime-summary-v30{
+  display:grid!important;
+  grid-template-columns:8px auto minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:8px 18px 0!important;
+  padding:9px 11px!important;
+  border:1px solid #DEE5EE!important;
+  border-radius:12px!important;
+  background:#FFFFFF!important;
+}
+
+.bam-runtime-summary-dot-v30{
+  width:8px!important;
+  height:8px!important;
+  border-radius:50%!important;
+  background:#AAB5C6!important;
+}
+
+.bam-runtime-summary-v30.is-active
+.bam-runtime-summary-dot-v30{
+  background:#35B98F!important;
+  box-shadow:0 0 0 4px rgba(53,185,143,.1)!important;
+}
+
+.bam-runtime-summary-v30.is-layered{
+  border-color:#BEDDD4!important;
+  background:#F2FAF7!important;
+}
+
+.bam-runtime-summary-v30 strong{
+  color:#283850!important;
+  font-size:9px!important;
+  font-weight:720!important;
+}
+
+.bam-runtime-summary-v30 small{
+  min-width:0!important;
+  color:#7C899C!important;
+  font-size:8.5px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.bam-ztsa-note-v30{
+  margin:7px 18px 10px!important;
+  color:#8793A4!important;
+  font-size:7.8px!important;
+  line-height:1.35!important;
+}
+
+@media(max-width:760px){
+  html body .bam-assist-shell-v20 .bam-assist-panel{
+    width:calc(100vw - 28px)!important;
+  }
+}
+
+@media(max-width:520px){
+  .bam-assist-security-grid-v30{
+    grid-template-columns:1fr 1fr!important;
+  }
+
+  .bam-runtime-heading-v30,
+  html body #chat-panel .bam-runtime-control-row-v30{
+    padding-left:13px!important;
+    padding-right:13px!important;
+  }
+
+  .bam-runtime-summary-v30{
+    margin-left:13px!important;
+    margin-right:13px!important;
+  }
+
+  .bam-ztsa-note-v30{
+    margin-left:13px!important;
+    margin-right:13px!important;
+  }
+
+  .bam-runtime-summary-v30 small{
+    white-space:normal!important;
+  }
+}
