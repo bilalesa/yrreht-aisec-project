@@ -9,6 +9,7 @@ import re
 import time
 from pathlib import Path
 from typing import Literal, Optional
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from fastapi import Body, FastAPI, File, Header, HTTPException, Request, UploadFile
@@ -41,7 +42,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.8.2",
+    version="1.8.4",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -90,7 +91,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.2"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.4"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -233,6 +234,194 @@ async def application_preflight(request: Request) -> dict:
             "scannerAuthenticationRequired": bool(settings.ai_scanner_target_token),
         },
     }
+
+
+
+# BAM_BANK_UI_REVISION_V41
+_MODEL_DISCOVERY_CACHE = {
+    "expires": 0.0,
+    "payload": None,
+}
+_MODEL_DISCOVERY_TTL_SECONDS = 300
+
+
+def _llm_models_url(chat_url: str) -> Optional[str]:
+    candidate = (chat_url or "").strip()
+    if not candidate:
+        return None
+
+    parsed = urlsplit(candidate)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+
+    path = parsed.path.rstrip("/")
+    lowered = path.lower()
+
+    # Azure OpenAI deployment URLs do not expose the standard /models route.
+    if "/openai/deployments/" in lowered:
+        return None
+
+    suffixes = (
+        "/chat/completions",
+        "/completions",
+    )
+    for suffix in suffixes:
+        if lowered.endswith(suffix):
+            path = path[: -len(suffix)] + "/models"
+            break
+    else:
+        if path.endswith("/v1"):
+            path = path + "/models"
+        elif path:
+            parent = path.rsplit("/", 1)[0]
+            path = parent + "/models"
+        else:
+            path = "/v1/models"
+
+    return urlunsplit(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            path,
+            "",
+            "",
+        )
+    )
+
+
+def _normalise_model_catalog(payload) -> list[dict]:
+    candidates = []
+
+    if isinstance(payload, dict):
+        raw = payload.get("data")
+        if not isinstance(raw, list):
+            raw = payload.get("models")
+        if isinstance(raw, list):
+            candidates = raw
+    elif isinstance(payload, list):
+        candidates = payload
+
+    model_ids = []
+    for item in candidates:
+        if isinstance(item, str):
+            value = item.strip()
+        elif isinstance(item, dict):
+            value = str(
+                item.get("id")
+                or item.get("model")
+                or item.get("name")
+                or ""
+            ).strip()
+        else:
+            value = ""
+
+        if value and value not in model_ids:
+            model_ids.append(value)
+
+    configured = (settings.llm_model or "visionone-bank-demo").strip()
+    if configured in model_ids:
+        model_ids.remove(configured)
+    model_ids.insert(0, configured)
+
+    return [
+        {
+            "id": model_id,
+            "configured": model_id == configured,
+        }
+        for model_id in model_ids[:200]
+    ]
+
+
+async def _discover_llm_models(force_refresh: bool = False) -> dict:
+    now = time.monotonic()
+    cached = _MODEL_DISCOVERY_CACHE.get("payload")
+    if (
+        not force_refresh
+        and cached is not None
+        and now < float(_MODEL_DISCOVERY_CACHE.get("expires", 0.0))
+    ):
+        return cached
+
+    configured = (settings.llm_model or "visionone-bank-demo").strip()
+    fallback = {
+        "models": [
+            {
+                "id": configured,
+                "configured": True,
+            }
+        ],
+        "source": "configured",
+        "querySupported": False,
+        "warning": None,
+    }
+
+    models_url = _llm_models_url(settings.llm_chat_url)
+    if not models_url:
+        fallback["warning"] = (
+            "The configured chat endpoint does not expose a standard "
+            "OpenAI-compatible models route. Showing the configured model."
+        )
+        _MODEL_DISCOVERY_CACHE["payload"] = fallback
+        _MODEL_DISCOVERY_CACHE["expires"] = (
+            now + _MODEL_DISCOVERY_TTL_SECONDS
+        )
+        return fallback
+
+    headers = {
+        "Accept": "application/json",
+    }
+    if settings.llm_api_key:
+        headers["Authorization"] = (
+            "Bearer " + settings.llm_api_key
+        )
+
+    timeout = min(
+        max(float(settings.llm_timeout_seconds), 1.0),
+        8.0,
+    )
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=True,
+        ) as client:
+            response = await client.get(
+                models_url,
+                headers=headers,
+            )
+        response.raise_for_status()
+        models = _normalise_model_catalog(response.json())
+        payload = {
+            "models": models,
+            "source": "upstream",
+            "querySupported": True,
+            "warning": None,
+        }
+    except Exception as exc:
+        logger.warning(
+            "Unable to discover models from configured LLM endpoint: %s",
+            exc,
+        )
+        payload = fallback
+        payload["querySupported"] = True
+        payload["warning"] = (
+            "The model list query failed. Showing the configured model only."
+        )
+
+    _MODEL_DISCOVERY_CACHE["payload"] = payload
+    _MODEL_DISCOVERY_CACHE["expires"] = (
+        now + _MODEL_DISCOVERY_TTL_SECONDS
+    )
+    return payload
+
+
+@app.get("/api/models")
+async def get_available_models(
+    refresh: bool = False,
+) -> dict:
+    return await _discover_llm_models(
+        force_refresh=refresh,
+    )
 
 
 @app.get("/api/settings")

@@ -485,8 +485,8 @@ exposePresenterLabFromUrl();
       topUpSub: 'Add demo funds',
       invest: 'Invest',
       investSub: 'Explore portfolios',
-      newAccount: 'New Account',
-      newAccountSub: 'Open a demo account',
+      newAccount: 'Manage Cards',
+      newAccountSub: 'View, freeze, or replace cards',
       totalBalance: 'Total Portfolio Balance',
       savings: 'Savings',
       investments: 'Investments',
@@ -560,8 +560,8 @@ exposePresenterLabFromUrl();
       topUpSub: 'Tambahkan dana demo',
       invest: 'Investasi',
       investSub: 'Jelajahi portofolio',
-      newAccount: 'Rekening Baru',
-      newAccountSub: 'Buka rekening demo',
+      newAccount: 'Kelola Kartu',
+      newAccountSub: 'Lihat, blokir, atau ganti kartu',
       totalBalance: 'Total Saldo Portofolio',
       savings: 'Tabungan',
       investments: 'Investasi',
@@ -7743,7 +7743,7 @@ exposePresenterLabFromUrl();
         ? words.queued
         : words.scanning;
     node.textContent =
-      `${stageLabel} · ${words.elapsed} ` +
+      `${words.elapsed} ` +
       formatElapsedV39(Date.now() - scanner.startedAt);
   }
 
@@ -7862,18 +7862,16 @@ exposePresenterLabFromUrl();
     progress.innerHTML = `
       <section class="bam-running-card-v37">
         <header class="bam-running-head-v37">
-          <span class="bam-running-mark-v37"
-                aria-hidden="true">
-            <i></i>
-          </span>
-          <div>
+          <div class="bam-running-mark-v41"
+               aria-hidden="true"></div>
+          <div class="bam-running-copy-v41">
             <strong id="bam-scan-progress-title-v34"></strong>
             <small id="bam-scan-progress-mode-v34"></small>
           </div>
-          <span class="bam-running-status-v39">
-            <span class="bam-running-pill-v37">Running</span>
+          <div class="bam-running-status-v41">
+            <div class="bam-running-pill-v41">Running</div>
             <small id="bam-scan-elapsed-v39"></small>
-          </span>
+          </div>
         </header>
         <div class="bam-running-track-v37"
              aria-hidden="true">
@@ -9228,3 +9226,269 @@ exposePresenterLabFromUrl();
   window.setTimeout(repair, 120);
   window.setTimeout(repair, 700);
 })();
+
+
+/* BAM_BANK_UI_REVISION_V41 */
+(() => {
+  const q = (selector, root = document) =>
+    root.querySelector(selector);
+  const isIndonesian = () =>
+    localStorage.getItem('bam-language') === 'id' ||
+    document.documentElement.lang === 'id';
+
+  const words = () => isIndonesian()
+    ? {
+        manage: 'Kelola Kartu',
+        manageSub: 'Lihat, blokir, atau ganti kartu',
+        modelLabel: 'Target AI Model',
+        modelBody:
+          'Model yang tersedia dari endpoint OpenAI-compatible yang dikonfigurasi.',
+        refresh: 'Muat ulang daftar',
+        loading: 'Memuat model yang tersedia…',
+        configured: 'Model yang dikonfigurasi',
+        upstream: 'Daftar model berhasil dimuat dari endpoint.',
+        fallback:
+          'Endpoint tidak menyediakan daftar model. Menggunakan model yang dikonfigurasi.',
+        failed:
+          'Daftar model tidak dapat dimuat. Menggunakan model yang dikonfigurasi.',
+        empty: 'Tidak ada model yang tersedia.'
+      }
+    : {
+        manage: 'Manage Cards',
+        manageSub: 'View, freeze, or replace cards',
+        modelLabel: 'Target AI Model',
+        modelBody:
+          'Models exposed by the configured OpenAI-compatible endpoint.',
+        refresh: 'Refresh list',
+        loading: 'Loading available models…',
+        configured: 'Configured model',
+        upstream: 'Model list loaded from the configured endpoint.',
+        fallback:
+          'The endpoint does not expose a model list. Using the configured model.',
+        failed:
+          'Unable to load the model list. Using the configured model.',
+        empty: 'No models are available.'
+      };
+
+  function repairManageCards() {
+    const button =
+      q('#action-manage-cards-v41') ||
+      q('#action-manage-cards-v40') ||
+      [...document.querySelectorAll(
+        '#dashboard-page .quick-actions button'
+      )][4];
+
+    if (!button) return false;
+
+    const copy = words();
+
+    if (button.id !== 'action-manage-cards-v41') {
+      button.id = 'action-manage-cards-v41';
+    }
+
+    const title = q('strong', button);
+    const subtitle = q('small', button);
+
+    if (title && title.textContent !== copy.manage) {
+      title.textContent = copy.manage;
+    }
+    if (subtitle && subtitle.textContent !== copy.manageSub) {
+      subtitle.textContent = copy.manageSub;
+    }
+
+    if (button.dataset.v41Bound !== 'true') {
+      button.dataset.v41Bound = 'true';
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        if (typeof showPage === 'function') {
+          showPage('accounts');
+        }
+      });
+    }
+    return true;
+  }
+
+  function syncModelCopy() {
+    const copy = words();
+    const label = q('#bam-model-label-v41');
+    const description = q(
+      '.bam-model-selector-head-v41 small'
+    );
+    const refresh = q('#bam-refresh-models-v41');
+
+    if (label) label.textContent = copy.modelLabel;
+    if (description) description.textContent = copy.modelBody;
+    if (refresh && !refresh.disabled) {
+      refresh.textContent = copy.refresh;
+    }
+  }
+
+  function syncSelectedModel() {
+    const select = q('#bam-scanner-model-select-v41');
+    const hidden = q('#bam-scanner-model-id-v38');
+    if (!select || !hidden) return;
+    hidden.value = select.value || 'visionone-bank-demo';
+  }
+
+  async function loadModels(forceRefresh = false) {
+    const select = q('#bam-scanner-model-select-v41');
+    const status = q('#bam-model-status-v41');
+    const refresh = q('#bam-refresh-models-v41');
+    if (!select || !status || !refresh) return false;
+
+    const copy = words();
+    const previous = select.value;
+
+    select.disabled = true;
+    refresh.disabled = true;
+    refresh.textContent = '…';
+    status.className = 'bam-model-status-v41 loading';
+    status.textContent = copy.loading;
+
+    try {
+      const response = await fetch(
+        `/api/models${forceRefresh ? '?refresh=true' : ''}`,
+        {
+          headers: {'Accept': 'application/json'}
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const models = Array.isArray(payload.models)
+        ? payload.models
+        : [];
+
+      select.innerHTML = '';
+      models.forEach(item => {
+        const modelId = String(item?.id || '').trim();
+        if (!modelId) return;
+
+        const option = document.createElement('option');
+        option.value = modelId;
+        option.textContent = item.configured
+          ? `${modelId} · ${copy.configured}`
+          : modelId;
+        select.appendChild(option);
+      });
+
+      if (!select.options.length) {
+        const option = document.createElement('option');
+        option.value = 'visionone-bank-demo';
+        option.textContent = copy.empty;
+        select.appendChild(option);
+      }
+
+      if (
+        previous &&
+        [...select.options].some(
+          option => option.value === previous
+        )
+      ) {
+        select.value = previous;
+      }
+
+      status.className =
+        'bam-model-status-v41 ' +
+        (payload.source === 'upstream'
+          ? 'success'
+          : 'warning');
+      status.textContent = payload.warning ||
+        (payload.source === 'upstream'
+          ? copy.upstream
+          : copy.fallback);
+    } catch (error) {
+      select.innerHTML = '';
+      const option = document.createElement('option');
+      option.value = 'visionone-bank-demo';
+      option.textContent =
+        `visionone-bank-demo · ${copy.configured}`;
+      select.appendChild(option);
+
+      status.className = 'bam-model-status-v41 error';
+      status.textContent = copy.failed;
+    } finally {
+      select.disabled = false;
+      refresh.disabled = false;
+      refresh.textContent = copy.refresh;
+      syncSelectedModel();
+    }
+
+    return true;
+  }
+
+  function install() {
+    repairManageCards();
+    syncModelCopy();
+
+    const select = q('#bam-scanner-model-select-v41');
+    const refresh = q('#bam-refresh-models-v41');
+
+    if (select && select.dataset.v41Bound !== 'true') {
+      select.dataset.v41Bound = 'true';
+      select.addEventListener('change', syncSelectedModel);
+      loadModels(false);
+    }
+
+    if (refresh && refresh.dataset.v41Bound !== 'true') {
+      refresh.dataset.v41Bound = 'true';
+      refresh.addEventListener(
+        'click',
+        () => loadModels(true)
+      );
+    }
+  }
+
+  install();
+  window.setTimeout(install, 180);
+  window.setTimeout(install, 700);
+
+  const quickActions = q('#dashboard-page .quick-actions');
+  if (
+    quickActions &&
+    quickActions.dataset.v42Observer !== 'true'
+  ) {
+    quickActions.dataset.v42Observer = 'true';
+
+    const observer = new MutationObserver(mutations => {
+      const relevant = mutations.some(
+        mutation => mutation.type === 'childList'
+      );
+      if (!relevant) return;
+
+      window.setTimeout(repairManageCards, 0);
+    });
+
+    observer.observe(
+      quickActions,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+  }
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(() => {
+      repairManageCards();
+      syncModelCopy();
+      loadModels(false);
+    }, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(() => {
+      repairManageCards();
+      syncModelCopy();
+      loadModels(false);
+    }, 0);
+  });
+})();
+
+
+/* BAM_BANK_UI_REVISION_V42
+ * Prevents the v41 Manage Cards observer from writing the same text
+ * repeatedly and saturating the browser main thread.
+ */

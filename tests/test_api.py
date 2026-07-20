@@ -440,3 +440,47 @@ def test_scanner_timeout_defaults_are_bounded() -> None:
 
     assert main_module._SCANNER_PREFLIGHT_TIMEOUT_SECONDS >= 5
     assert main_module._SCANNER_TIMEOUT_SECONDS >= 60
+
+
+# BAM_BANK_UI_REVISION_V41
+
+
+def test_llm_models_url_openai_compatible() -> None:
+    import app.main as main_module
+
+    assert main_module._llm_models_url(
+        "https://example.test/v1/chat/completions"
+    ) == "https://example.test/v1/models"
+
+
+def test_llm_models_url_rejects_azure_deployment_route() -> None:
+    import app.main as main_module
+
+    assert main_module._llm_models_url(
+        "https://example.openai.azure.com/openai/deployments/demo/"
+        "chat/completions?api-version=2024-06-01"
+    ) is None
+
+
+def test_model_catalog_keeps_configured_model_first() -> None:
+    import app.main as main_module
+
+    original = main_module.settings.llm_model
+    main_module.settings.llm_model = "configured-model"
+    try:
+        catalog = main_module._normalise_model_catalog(
+            {
+                "data": [
+                    {"id": "other-model"},
+                    {"id": "configured-model"},
+                    {"id": "other-model"},
+                ]
+            }
+        )
+    finally:
+        main_module.settings.llm_model = original
+
+    assert [item["id"] for item in catalog] == [
+        "configured-model",
+        "other-model",
+    ]
