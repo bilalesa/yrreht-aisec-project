@@ -156,3 +156,15 @@ def test_expanded_scanner_objective() -> None:
     body = response.json()
     assert body["total"] == 2
     assert body["blocked"] == 2
+
+
+
+def test_ai_guard_public_regions_are_documented_subset() -> None:
+    response = client.get("/api/settings")
+    assert response.status_code == 200
+    regions = response.json()["aiGuard"]["supportedRegions"]
+    codes = [item["code"] for item in regions]
+    assert codes == ["us", "eu", "jp", "au", "in", "sg", "mea"]
+    assert "id" not in codes
+    assert "ca" not in codes
+    assert "uk" not in codes

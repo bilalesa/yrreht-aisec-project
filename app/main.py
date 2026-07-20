@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .config import REGION_BASE_URLS, RuntimeConfig, Settings
+from .config import AI_GUARD_PUBLIC_REGIONS, REGION_BASE_URLS, RuntimeConfig, Settings
 from .services import (
     AIGuardClient,
     BankLLM,
@@ -40,7 +40,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.3.1",
+    version="1.4.0",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -78,7 +78,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.3.1"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.4.0"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -240,6 +240,15 @@ async def get_settings(request: Request) -> dict:
             "policies": cfg["policies"],
             "fallback": settings.ai_guard_fallback,
             "runtimeConfigurationAllowed": settings.allow_runtime_config,
+            "supportedRegions": [
+                {"code": code, "label": label}
+                for code, label in AI_GUARD_PUBLIC_REGIONS.items()
+            ],
+            "regionDocumentationNote": (
+                "Indonesia Vision One data center is available, but an "
+                "Indonesia Trend-hosted AI Guard endpoint is not yet listed "
+                "in the public AI Guard integration documentation."
+            ),
         },
         "llm": {"configured": bool(settings.llm_chat_url), "model": settings.llm_model},
         "fileSecurity": {

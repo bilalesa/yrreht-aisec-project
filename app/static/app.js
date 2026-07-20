@@ -2612,3 +2612,374 @@ exposePresenterLabFromUrl();
     }
   );
 })();
+
+
+/* BAM_BANK_UI_REVISION_V14 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  function isIndonesia() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id';
+  }
+
+  function replaceExactText(root, from, to) {
+    const match = qa('*', root).find(node =>
+      node.children.length === 0 &&
+      node.textContent.trim().toUpperCase() === from.toUpperCase()
+    );
+    if (match) match.textContent = to;
+  }
+
+  async function getLatestSettings() {
+    try {
+      const settings = await api('/api/settings');
+      state.settings = settings;
+      return settings;
+    } catch (_) {
+      return state.settings || {};
+    }
+  }
+
+  async function syncOfficialGuardRegions() {
+    const select = q('#guard-region');
+    if (!select) return;
+
+    const settings = await getLatestSettings();
+    const guard = settings.aiGuard || {};
+    const regions = guard.supportedRegions || [
+      { code: 'us', label: 'United States' },
+      { code: 'eu', label: 'Europe / Germany' },
+      { code: 'jp', label: 'Japan' },
+      { code: 'au', label: 'Australia' },
+      { code: 'in', label: 'India' },
+      { code: 'sg', label: 'Singapore' },
+      { code: 'mea', label: 'UAE / Middle East' }
+    ];
+
+    const selected = regions.some(item => item.code === guard.region)
+      ? guard.region
+      : 'sg';
+
+    select.innerHTML = regions
+      .map(item => `<option value="${item.code}">${item.label}</option>`)
+      .join('');
+    select.value = selected;
+
+    const label = select.closest('label');
+    if (label && !q('#guard-region-documentation-note')) {
+      const note = document.createElement('small');
+      note.id = 'guard-region-documentation-note';
+      note.className = 'guard-region-documentation-note';
+      label.appendChild(note);
+    }
+
+    const note = q('#guard-region-documentation-note');
+    if (note) {
+      note.textContent = isIndonesia()
+        ? 'Endpoint Trend-hosted AI Guard yang terdokumentasi publik: US, EU, JP, AU, IN, SG, dan MEA. Data center Vision One Indonesia sudah tersedia, tetapi endpoint AI Guard Indonesia belum dicantumkan pada dokumentasi publik.'
+        : 'Public Trend-hosted AI Guard endpoints: US, EU, JP, AU, IN, SG, and MEA. The Indonesia Vision One data center is live, but an Indonesia AI Guard endpoint is not yet listed publicly.';
+    }
+  }
+
+  function refineGuardReference() {
+    const card = q('#guard-official-coverage');
+    if (card) {
+      const kicker = q('.guard-coverage-kicker', card);
+      const title = q('strong', card);
+      const body = q('p', card);
+
+      if (kicker) kicker.textContent = 'TREND-HOSTED AI GUARD';
+      if (title) {
+        title.textContent = isIndonesia()
+          ? 'Kebijakan live dikelola di Vision One'
+          : 'Live policy is managed in Vision One';
+      }
+      if (body) {
+        body.textContent = isIndonesia()
+          ? 'AI Guard memeriksa prompt attacks, harmful content, dan sensitive information. Checkbox di bawah hanya mengatur perilaku lokal ketika Force Demo Mode aktif.'
+          : 'AI Guard evaluates prompt attacks, harmful content, and sensitive information. The checkboxes below only tune local behavior while Force Demo Mode is enabled.';
+      }
+    }
+
+    const guardContent = q('#guard-content');
+    if (guardContent) {
+      replaceExactText(
+        guardContent,
+        'AI GUARD POLICY',
+        isIndonesia() ? 'KEBIJAKAN FALLBACK LOKAL' : 'LOCAL FALLBACK POLICIES'
+      );
+    }
+  }
+
+  async function refineFileSecurityStatus() {
+    const payButton = q('#dashboard-page .quick-actions button[data-open="file"]');
+    if (!payButton) return false;
+
+    const settings = await getLatestSettings();
+    const fileSecurity = settings.fileSecurity || {};
+
+    let badge = q('.file-security-badge', payButton);
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'file-security-badge';
+      payButton.appendChild(badge);
+    }
+
+    payButton.classList.add('pay-bills-secured');
+    badge.classList.add('bam-file-protection-status');
+
+    let stateName = 'unavailable';
+    if (fileSecurity.sdkConfigured) stateName = 'protected';
+    else if (fileSecurity.enabled) stateName = 'ready';
+
+    badge.dataset.state = stateName;
+
+    const text = {
+      en: {
+        protected: 'File Security protected',
+        ready: 'File scan ready',
+        unavailable: 'File scan unavailable'
+      },
+      id: {
+        protected: 'Dilindungi File Security',
+        ready: 'Pemindaian file siap',
+        unavailable: 'Pemindaian file tidak tersedia'
+      }
+    };
+
+    badge.textContent = text[isIndonesia() ? 'id' : 'en'][stateName];
+    badge.title = badge.textContent;
+    return true;
+  }
+
+  function refineCreatorCredit() {
+    const credit = q('#bam-demo-credit');
+    if (!credit) return false;
+
+    credit.classList.add('bam-demo-credit-subtle');
+    credit.innerHTML = `
+      <span class="bam-credit-hairline" aria-hidden="true"></span>
+      <span id="bam-credit-subtle-text"></span>`;
+    syncCreatorCredit();
+    return true;
+  }
+
+  function syncCreatorCredit() {
+    const text = q('#bam-credit-subtle-text');
+    if (!text) return;
+
+    text.textContent = isIndonesia()
+      ? 'Konsep & pengalaman — Therry Fohan'
+      : 'Concept & experience — Therry Fohan';
+  }
+
+  function syncAll() {
+    syncOfficialGuardRegions();
+    refineGuardReference();
+    refineFileSecurityStatus();
+    refineCreatorCredit();
+    syncCreatorCredit();
+  }
+
+  syncAll();
+  window.setTimeout(syncAll, 180);
+  window.setTimeout(syncAll, 800);
+
+  q('#settings-button')?.addEventListener('click', () => {
+    window.setTimeout(() => {
+      syncOfficialGuardRegions();
+      refineGuardReference();
+    }, 30);
+  });
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncAll, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncAll, 0);
+  });
+
+  const quickActions = q('#dashboard-page .quick-actions');
+  if (quickActions) {
+    const observer = new MutationObserver(() => {
+      if (q('.file-security-badge', quickActions)) {
+        refineFileSecurityStatus();
+        observer.disconnect();
+      }
+    });
+    observer.observe(quickActions, { childList: true, subtree: true });
+    window.setTimeout(() => observer.disconnect(), 3000);
+  }
+})();
+
+
+/* BAM_BANK_UI_REVISION_V15 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+
+  const orbitLogo = `
+    <svg class="bam-orbit-logo-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect x="3" y="3" width="58" height="58" rx="18" fill="#1B315F"></rect>
+      <path d="M19 16h14.2c7.8 0 12.2 3.5 12.2 9.1 0 3.8-2 6.5-5.7 7.9 4.9 1.3 7.5 4.7 7.5 9.4 0 7.4-5.7 11.6-14.8 11.6H19V16Zm13.5 14.1c3.4 0 5.2-1.3 5.2-3.8 0-2.4-1.8-3.7-5.2-3.7h-5.8v7.5h5.8Zm.8 17.2c4 0 6-1.5 6-4.5 0-2.9-2-4.4-6-4.4h-6.6v8.9h6.6Z" fill="#fff"></path>
+      <path d="M9.5 44.8C21.4 25.1 40.9 14.4 54.5 23.6" fill="none" stroke="#7EE7C7" stroke-width="3.2" stroke-linecap="round"></path>
+      <circle cx="10.5" cy="44.1" r="3.2" fill="#7EE7C7"></circle>
+      <circle cx="54.3" cy="23.7" r="3.5" fill="#fff"></circle>
+    </svg>`;
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      session: 'Secure session',
+      sessionDetail: 'AI Guard active',
+      flow: 'Portfolio flow',
+      labEyebrow: 'DEMO TOOLKIT',
+      labTitle: 'AI security controls',
+      labBody: 'Testing utilities for this synthetic experience—kept separate from everyday banking.'
+    },
+    id: {
+      session: 'Sesi terlindungi',
+      sessionDetail: 'AI Guard aktif',
+      flow: 'Arus portofolio',
+      labEyebrow: 'PERANGKAT DEMO',
+      labTitle: 'Kontrol keamanan AI',
+      labBody: 'Utilitas pengujian untuk pengalaman sintetis ini—dipisahkan dari aktivitas perbankan.'
+    }
+  };
+
+  function installUnifiedBrand() {
+    const mark = q('.brand-mark');
+    if (mark) {
+      mark.classList.remove('sparkle-mark');
+      mark.classList.add('bam-orbit-logo');
+      mark.innerHTML = orbitLogo;
+    }
+
+    const eyebrow = q('#bam-hero-eyebrow');
+    if (eyebrow && !q('.bam-hero-brandline')) {
+      const line = document.createElement('div');
+      line.className = 'bam-hero-brandline';
+
+      const icon = document.createElement('span');
+      icon.className = 'bam-hero-brandmark';
+      icon.innerHTML = orbitLogo;
+
+      eyebrow.parentNode.insertBefore(line, eyebrow);
+      line.appendChild(icon);
+      line.appendChild(eyebrow);
+    }
+  }
+
+  function installEditorialHeroArt() {
+    const visual = q('#bam-experience-hero .bam-hero-visual');
+    if (!visual || visual.dataset.v15 === 'true') return false;
+
+    visual.dataset.v15 = 'true';
+    visual.innerHTML = `
+      <div class="bam-visual-grid" aria-hidden="true"></div>
+      <svg class="bam-flow-art" viewBox="0 0 640 330" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="bamV15Flow" x1="70" y1="260" x2="560" y2="70" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#79E4C6"></stop>
+            <stop offset=".55" stop-color="#77B5FF"></stop>
+            <stop offset="1" stop-color="#A493FF"></stop>
+          </linearGradient>
+          <radialGradient id="bamV15Halo" cx=".5" cy=".5" r=".5">
+            <stop stop-color="#8EE8D0" stop-opacity=".23"></stop>
+            <stop offset="1" stop-color="#8EE8D0" stop-opacity="0"></stop>
+          </radialGradient>
+        </defs>
+        <circle cx="403" cy="164" r="128" fill="url(#bamV15Halo)"></circle>
+        <ellipse cx="403" cy="164" rx="150" ry="92" fill="none" stroke="#A9C8FF" stroke-opacity=".28" stroke-width="1.2" transform="rotate(-17 403 164)"></ellipse>
+        <ellipse cx="403" cy="164" rx="112" ry="68" fill="none" stroke="#8FEBD1" stroke-opacity=".25" stroke-width="1.1" transform="rotate(21 403 164)"></ellipse>
+        <circle cx="403" cy="164" r="57" fill="#FFFFFF" fill-opacity=".055" stroke="#FFFFFF" stroke-opacity=".14"></circle>
+        <circle cx="403" cy="164" r="39" fill="#10264D" fill-opacity=".74"></circle>
+        <path d="M94 252C160 238 194 190 254 204c61 14 84-39 139-43 54-4 82-62 151-75" fill="none" stroke="url(#bamV15Flow)" stroke-width="7" stroke-linecap="round"></path>
+        <path d="M94 252C160 238 194 190 254 204c61 14 84-39 139-43 54-4 82-62 151-75" fill="none" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1.1"></path>
+        <circle cx="94" cy="252" r="7" fill="#79E4C6"></circle>
+        <circle cx="254" cy="204" r="6" fill="#88B8FF"></circle>
+        <circle cx="393" cy="161" r="7" fill="#9D96FF"></circle>
+        <circle cx="544" cy="86" r="8" fill="#FFFFFF"></circle>
+        <path d="M385 136h20c11 0 17 5 17 13 0 5-3 9-8 11 7 2 10 7 10 13 0 10-7 16-20 16h-19v-53Zm19 20c5 0 8-2 8-6s-3-6-8-6h-8v12h8Zm1 24c6 0 9-2 9-7s-3-7-9-7h-9v14h9Z" fill="#FFFFFF"></path>
+        <path d="M370 190c20-32 55-49 81-33" fill="none" stroke="#79E4C6" stroke-width="3" stroke-linecap="round"></path>
+        <circle cx="370" cy="190" r="3.5" fill="#79E4C6"></circle>
+        <circle cx="451" cy="157" r="4" fill="#FFFFFF"></circle>
+      </svg>
+      <div class="bam-visual-chip bam-session-chip">
+        <span class="bam-visual-chip-dot"></span>
+        <span>
+          <strong id="bam-v15-session"></strong>
+          <small id="bam-v15-session-detail"></small>
+        </span>
+      </div>
+      <div class="bam-visual-chip bam-flow-chip">
+        <small id="bam-v15-flow-label"></small>
+        <strong>+12.4%</strong>
+      </div>`;
+
+    syncV15Copy();
+    return true;
+  }
+
+  function moveSecurityLabOutOfBankingFlow() {
+    const promos = q('#demo-promos');
+    const grid = q('#dashboard-page .dashboard-grid');
+    if (!promos || !grid) return false;
+
+    promos.classList.add('bam-security-toolbelt');
+    grid.insertAdjacentElement('afterend', promos);
+    syncV15Copy();
+    return true;
+  }
+
+  function syncV15Copy() {
+    const text = copy[currentLanguage()];
+    const values = {
+      '#bam-v15-session': text.session,
+      '#bam-v15-session-detail': text.sessionDetail,
+      '#bam-v15-flow-label': text.flow,
+      '#bam-lab-eyebrow': text.labEyebrow,
+      '#bam-lab-title': text.labTitle,
+      '#bam-lab-body': text.labBody
+    };
+
+    Object.entries(values).forEach(([selector, value]) => {
+      const node = q(selector);
+      if (node) node.textContent = value;
+    });
+  }
+
+  function initialise() {
+    installUnifiedBrand();
+    installEditorialHeroArt();
+
+    if (!moveSecurityLabOutOfBankingFlow()) {
+      window.setTimeout(moveSecurityLabOutOfBankingFlow, 180);
+      window.setTimeout(moveSecurityLabOutOfBankingFlow, 700);
+    }
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncV15Copy, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncV15Copy, 0);
+  });
+
+  new MutationObserver(syncV15Copy).observe(
+    document.documentElement,
+    {
+      attributes: true,
+      attributeFilter: ['lang']
+    }
+  );
+})();

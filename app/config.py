@@ -9,13 +9,27 @@ from typing import Optional
 REGION_BASE_URLS = {
     "us": "https://api.xdr.trendmicro.com/v3.0/aiSecurity",
     "eu": "https://api.eu.xdr.trendmicro.com/v3.0/aiSecurity",
-    "jp": "https://api.xdr.trendmicro.co.jp/v3.0/aiSecurity",
+    "jp": "https://api.jp.xdr.trendmicro.com/v3.0/aiSecurity",
     "sg": "https://api.sg.xdr.trendmicro.com/v3.0/aiSecurity",
     "au": "https://api.au.xdr.trendmicro.com/v3.0/aiSecurity",
     "in": "https://api.in.xdr.trendmicro.com/v3.0/aiSecurity",
     "ca": "https://api.ca.xdr.trendmicro.com/v3.0/aiSecurity",
     "uk": "https://api.uk.xdr.trendmicro.com/v3.0/aiSecurity",
     "mea": "https://api.mea.xdr.trendmicro.com/v3.0/aiSecurity",
+}
+
+# Publicly documented Trend-hosted AI Guard regions.
+# Canada and the United Kingdom remain in REGION_BASE_URLS for backward
+# compatibility with existing deployments, but are not advertised by this
+# demo until the AI Guard-specific public documentation lists them.
+AI_GUARD_PUBLIC_REGIONS = {
+    "us": "United States",
+    "eu": "Europe / Germany",
+    "jp": "Japan",
+    "au": "Australia",
+    "in": "India",
+    "sg": "Singapore",
+    "mea": "UAE / Middle East",
 }
 
 REGION_TO_AWS = {
