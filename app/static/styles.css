@@ -6084,3 +6084,316 @@ html body #chat-panel .bam-chat-form-v25 textarea.bam-input-error-v27{
     right:9px!important;
   }
 }
+
+
+/* BAM_BANK_UI_REVISION_V28 */
+
+/* ------------------------------------------------------------------------
+   Pay Bills: one elegant defence icon, no permanent security wording
+   ------------------------------------------------------------------------ */
+#dashboard-page .quick-actions > button.bam-file-security-action-v28{
+  position:relative!important;
+  overflow:visible!important;
+  border:1.5px solid transparent!important;
+  background:
+    linear-gradient(#FFFFFF,#FFFFFF) padding-box,
+    linear-gradient(135deg,#39B894,#6B88DE) border-box!important;
+  box-shadow:
+    0 10px 24px rgba(39,94,88,.09),
+    inset 0 1px 0 rgba(255,255,255,.9)!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28:hover,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28:focus-visible{
+  background:
+    linear-gradient(135deg,#FFFFFF,#F6FBFA) padding-box,
+    linear-gradient(135deg,#22A981,#5274D3) border-box!important;
+  box-shadow:
+    0 15px 32px rgba(39,94,88,.15),
+    0 0 0 4px rgba(51,174,142,.07)!important;
+  transform:translateY(-1px)!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28 strong{
+  padding-right:54px!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28 small{
+  max-width:calc(100% - 48px)!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28::after{
+  content:attr(data-tooltip)!important;
+  position:absolute!important;
+  z-index:40!important;
+  left:18px!important;
+  top:calc(100% + 10px)!important;
+  width:min(280px,calc(100vw - 40px))!important;
+  padding:10px 12px!important;
+  border:1px solid #D8E5E1!important;
+  border-radius:12px!important;
+  color:#3C5D55!important;
+  background:rgba(255,255,255,.98)!important;
+  box-shadow:0 16px 34px rgba(25,55,49,.14)!important;
+  font-size:9px!important;
+  font-weight:560!important;
+  line-height:1.45!important;
+  text-align:left!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translateY(-5px)!important;
+  transition:
+    opacity .14s ease,
+    transform .14s ease,
+    visibility .14s ease!important;
+}
+
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28:hover::after,
+#dashboard-page
+.quick-actions > button.bam-file-security-action-v28:focus-visible::after{
+  opacity:1!important;
+  visibility:visible!important;
+  transform:none!important;
+}
+
+.bam-file-security-badge-v27{
+  display:none!important;
+}
+
+.bam-file-security-shield-v28{
+  position:absolute!important;
+  top:50%!important;
+  right:16px!important;
+  width:36px!important;
+  height:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #BFE6DA!important;
+  border-radius:12px!important;
+  color:#16896C!important;
+  background:
+    linear-gradient(145deg,#F0FBF7,#E2F5EF)!important;
+  box-shadow:
+    0 7px 16px rgba(39,123,101,.10),
+    inset 0 1px 0 rgba(255,255,255,.9)!important;
+  transform:translateY(-50%)!important;
+}
+
+.bam-file-security-shield-v28 svg{
+  width:19px!important;
+  height:19px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.8!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+
+/* ------------------------------------------------------------------------
+   Chat: slightly larger and messages always start at the top
+   ------------------------------------------------------------------------ */
+html body #chat-panel.bam-chat-panel-v25.bam-chat-panel-v28{
+  width:min(700px,calc(100vw - 48px))!important;
+  max-width:700px!important;
+  height:min(860px,calc(100dvh - 48px))!important;
+  max-height:860px!important;
+}
+
+html body #chat-panel
+.bam-prompt-library-v28.is-collapsed
+.bam-prompt-library-content-v25{
+  display:none!important;
+  max-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+}
+
+html body #chat-panel .bam-chat-messages-v28{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  align-items:stretch!important;
+  align-content:stretch!important;
+  gap:14px!important;
+  padding-top:18px!important;
+  padding-bottom:22px!important;
+}
+
+html body #chat-panel .bam-chat-messages-v28 > *{
+  flex:0 0 auto!important;
+}
+
+html body #chat-panel .bam-chat-messages-v28 .message{
+  margin-top:0!important;
+  margin-bottom:0!important;
+}
+
+html body #chat-panel
+.bam-chat-messages-v28 .message:first-child{
+  margin-top:0!important;
+}
+
+html body #chat-panel
+.bam-chat-messages-v28 .message:last-child{
+  margin-bottom:0!important;
+}
+
+/* Keep a useful conversation canvas without pushing messages downward. */
+html body #chat-panel.bam-chat-panel-v28
+.bam-chat-messages-v28:empty::before{
+  content:"Start with a banking question or a security test."!important;
+  display:block!important;
+  margin:auto!important;
+  color:#8A96A8!important;
+  font-size:10px!important;
+  text-align:center!important;
+}
+
+@media(max-width:760px){
+  html body #chat-panel.bam-chat-panel-v25.bam-chat-panel-v28{
+    width:100%!important;
+    max-width:none!important;
+    height:100dvh!important;
+    max-height:none!important;
+  }
+}
+
+@media(max-width:520px){
+  .bam-file-security-shield-v28{
+    right:12px!important;
+    width:34px!important;
+    height:34px!important;
+  }
+}
+
+
+/* BAM_BANK_UI_REVISION_V29 */
+
+/* Larger AI workspace, but a calmer and more proportional composer. */
+html body #chat-panel.bam-chat-panel-v25.bam-chat-panel-v28{
+  width:min(760px,calc(100vw - 48px))!important;
+  max-width:760px!important;
+  height:min(900px,calc(100dvh - 48px))!important;
+  max-height:900px!important;
+}
+
+/* Slightly larger typography so the expanded frame is actually useful. */
+html body #chat-panel>header.bam-chat-header-v25
+.bam-chat-avatar-v25+div strong{
+  font-size:22px!important;
+}
+
+html body #chat-panel>header.bam-chat-header-v25
+.bam-chat-avatar-v25+div small{
+  font-size:10.5px!important;
+}
+
+html body #chat-panel .bam-guard-banner-v25 strong{
+  font-size:15px!important;
+}
+
+html body #chat-panel .bam-guard-banner-v25 small{
+  font-size:10px!important;
+}
+
+.bam-prompt-library-copy-v25 strong{
+  font-size:12px!important;
+}
+
+.bam-prompt-library-copy-v25 small{
+  font-size:9px!important;
+}
+
+html body #chat-panel .prompt-tabs button{
+  font-size:10.5px!important;
+}
+
+html body #chat-panel .prompt-chips button{
+  font-size:9.5px!important;
+}
+
+html body #chat-panel .bam-chat-messages-v28 .message p{
+  font-size:13px!important;
+  line-height:1.58!important;
+}
+
+html body #chat-panel .bam-chat-messages-v28 .message small{
+  font-size:9px!important;
+}
+
+/*
+ * Composer:
+ * - wider input
+ * - smaller Send button
+ * - matching vertical rhythm
+ */
+html body #chat-panel .bam-chat-form-v25{
+  min-height:84px!important;
+  grid-template-columns:minmax(0,1fr) 92px!important;
+  align-items:end!important;
+  gap:10px!important;
+  padding:12px 16px 15px!important;
+}
+
+html body #chat-panel .bam-chat-form-v25 textarea{
+  min-height:56px!important;
+  max-height:132px!important;
+  padding:15px 16px!important;
+  border-radius:15px!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+
+html body #chat-panel .bam-chat-form-v25 button{
+  width:92px!important;
+  min-width:92px!important;
+  max-width:92px!important;
+  min-height:52px!important;
+  height:52px!important;
+  align-self:end!important;
+  padding:0 12px!important;
+  border-radius:14px!important;
+  font-size:12px!important;
+  font-weight:700!important;
+}
+
+/* More balanced header controls inside the larger frame. */
+html body #chat-panel>header.bam-chat-header-v25{
+  min-height:90px!important;
+  grid-template-columns:auto 50px minmax(0,1fr) 40px!important;
+  padding:16px 18px!important;
+}
+
+html body #chat-panel>header.bam-chat-header-v25 .bam-chat-avatar-v25{
+  width:50px!important;
+  min-width:50px!important;
+  height:50px!important;
+  min-height:50px!important;
+}
+
+@media(max-width:760px){
+  html body #chat-panel.bam-chat-panel-v25.bam-chat-panel-v28{
+    width:100%!important;
+    max-width:none!important;
+    height:100dvh!important;
+    max-height:none!important;
+  }
+
+  html body #chat-panel .bam-chat-form-v25{
+    grid-template-columns:minmax(0,1fr) 84px!important;
+  }
+
+  html body #chat-panel .bam-chat-form-v25 button{
+    width:84px!important;
+    min-width:84px!important;
+    max-width:84px!important;
+  }
+}

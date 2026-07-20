@@ -5613,3 +5613,163 @@ exposePresenterLabFromUrl();
     window.setTimeout(syncLanguage, 0);
   });
 })();
+
+
+/* BAM_BANK_UI_REVISION_V28 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  function currentLanguage() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id' ? 'id' : 'en';
+  }
+
+  const copy = {
+    en: {
+      tooltip:
+        'Protected by File Security. Uploaded bills are inspected before processing.',
+      aria: 'Pay Bills is protected by File Security',
+      subtitle: 'Upload a bill for secure inspection'
+    },
+    id: {
+      tooltip:
+        'Dilindungi File Security. Tagihan diperiksa sebelum diproses.',
+      aria: 'Bayar Tagihan dilindungi oleh File Security',
+      subtitle: 'Unggah tagihan untuk pemeriksaan aman'
+    }
+  };
+
+  function text() {
+    return copy[currentLanguage()];
+  }
+
+  function findPayBillsButton() {
+    return qa('#dashboard-page .quick-actions > button').find(button => {
+      const value = button.textContent.toLowerCase();
+      return value.includes('pay bills') ||
+        value.includes('bayar tagihan');
+    });
+  }
+
+  function isLegacyFileSecurityLabel(node) {
+    if (!(node instanceof HTMLElement)) return false;
+    if (node.classList.contains('bam-file-security-shield-v28')) return false;
+
+    const normalized = node.textContent
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    return [
+      'file security',
+      'file security protected',
+      'protected by file security',
+      'dilindungi file security',
+      'dilindungi oleh file security'
+    ].includes(normalized);
+  }
+
+  function removeLegacyFileSecurityLabels(button) {
+    q('.bam-file-security-badge-v27', button)?.remove();
+
+    qa('*', button)
+      .sort((a, b) => b.querySelectorAll('*').length -
+        a.querySelectorAll('*').length)
+      .forEach(node => {
+        if (isLegacyFileSecurityLabel(node)) node.remove();
+      });
+  }
+
+  function ensureShield(button) {
+    let shield = q('.bam-file-security-shield-v28', button);
+
+    if (!shield) {
+      shield = document.createElement('span');
+      shield.className = 'bam-file-security-shield-v28';
+      shield.setAttribute('role', 'img');
+      shield.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3.4 19 6v5.3c0 4.5-2.8 7.5-7 9.3-4.2-1.8-7-4.8-7-9.3V6l7-2.6Z"></path>
+          <path d="m8.8 12.1 2 2 4.5-4.6"></path>
+        </svg>`;
+      button.appendChild(shield);
+    }
+
+    shield.setAttribute('aria-label', text().aria);
+    shield.setAttribute('title', text().aria);
+  }
+
+  function refinePayBills() {
+    const button = findPayBillsButton();
+    if (!button) return false;
+
+    button.classList.remove('bam-file-security-action-v27');
+    button.classList.add('bam-file-security-action-v28');
+    button.dataset.tooltip = text().tooltip;
+    button.setAttribute('aria-label', text().aria);
+
+    removeLegacyFileSecurityLabels(button);
+    ensureShield(button);
+
+    const subtitle = q('small', button);
+    if (subtitle) subtitle.textContent = text().subtitle;
+
+    if (button.dataset.v28Observed !== 'true') {
+      button.dataset.v28Observed = 'true';
+
+      const observer = new MutationObserver(() => {
+        removeLegacyFileSecurityLabels(button);
+        ensureShield(button);
+      });
+
+      observer.observe(button, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+
+    return true;
+  }
+
+  function refineChatLayout() {
+    const panel = q('#chat-panel');
+    const messages = q('.bam-chat-messages-v25', panel);
+    const library = q('#bam-prompt-library-v25', panel);
+
+    if (!panel || !messages) return false;
+
+    panel.classList.add('bam-chat-panel-v28');
+    messages.classList.add('bam-chat-messages-v28');
+    library?.classList.add('bam-prompt-library-v28');
+
+    return true;
+  }
+
+  function syncLanguage() {
+    refinePayBills();
+  }
+
+  function initialise() {
+    const install = () => {
+      refinePayBills();
+      refineChatLayout();
+    };
+
+    install();
+    window.setTimeout(install, 180);
+    window.setTimeout(install, 800);
+    window.setTimeout(install, 1400);
+  }
+
+  initialise();
+
+  q('#language')?.addEventListener('change', () => {
+    window.setTimeout(syncLanguage, 0);
+  });
+
+  q('#settings-language')?.addEventListener('change', () => {
+    window.setTimeout(syncLanguage, 0);
+  });
+})();
