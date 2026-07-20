@@ -41,7 +41,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.8.1",
+    version="1.8.2",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -90,7 +90,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.1"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.2"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -864,15 +864,37 @@ async def _scanner_job_update(job_id: str, **updates) -> None:
             job["updatedAt"] = time.time()
 
 
+def _scanner_expand_log_lines(values) -> list[str]:
+    # TMAS may emit one record containing literal escaped newline tokens.
+    expanded: list[str] = []
+
+    for value in values or []:
+        text = str(value)
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+        text = (
+            text.replace("\\r\\n", "\n")
+            .replace("\\n", "\n")
+            .replace("\\r", "\n")
+        )
+
+        for line in text.splitlines():
+            clean = line.rstrip()
+            if clean:
+                expanded.append(clean)
+
+    return expanded
+
+
 async def _scanner_job_log(job_id: str, message: str) -> None:
-    clean = message.rstrip()
-    if not clean:
+    lines = _scanner_expand_log_lines([message])
+    if not lines:
         return
+
     async with _SCANNER_JOBS_LOCK:
         job = _SCANNER_JOBS.get(job_id)
         if job is None:
             return
-        job["logs"].append(clean[:3000])
+        job["logs"].extend(line[:3000] for line in lines)
         job["logs"] = job["logs"][-300:]
         job["updatedAt"] = time.time()
 
@@ -995,7 +1017,9 @@ def _scanner_summary_from_process_log(
         r"\|\s*(?P<ratio>\d+\s*/\s*\d+)\s*\|\s*$"
     )
 
-    for line in process_lines or []:
+    for raw_line in _scanner_expand_log_lines(process_lines or []):
+        line = raw_line.replace("│", "|")
+        line = re.sub(r"^\s*\[[^\]]+\]\s*", "", line)
         match = row_pattern.match(line)
         if not match:
             continue
@@ -1736,10 +1760,10 @@ async def _run_live_scanner_job(
                     "utf-8",
                     errors="replace",
                 ).rstrip()
-                if clean:
-                    process_lines.append(clean)
-                    process_lines[:] = process_lines[-120:]
-                    await _scanner_job_log(job_id, clean)
+                for logical_line in _scanner_expand_log_lines([clean]):
+                    process_lines.append(logical_line)
+                    process_lines[:] = process_lines[-240:]
+                    await _scanner_job_log(job_id, logical_line)
 
         try:
             await asyncio.wait_for(

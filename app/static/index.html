@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="BAM Bank synthetic digital banking demonstration." />
   <title>BAM Bank — Private Digital Banking Demo</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=1.8.1" />
-  <link rel="shortcut icon" href="/static/favicon.svg?v=1.8.1" />
-  <link rel="stylesheet" href="/static/styles.css?v=1.8.1" />
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=1.8.2" />
+  <link rel="shortcut icon" href="/static/favicon.svg?v=1.8.2" />
+  <link rel="stylesheet" href="/static/styles.css?v=1.8.2" />
 </head>
 <body>
   <div class="app-shell">
@@ -45,7 +45,7 @@
           <button><span>↗</span><strong>Send Money</strong><small>Demo transfer flow</small></button>
           <button><span>＋</span><strong>Top Up</strong><small>Add demo funds</small></button>
           <button><span>⌁</span><strong>Invest</strong><small>Explore portfolios</small></button>
-          <button><span>▤</span><strong>New Account</strong><small>Open a demo account</small></button>
+          <button id="action-manage-cards-v40"><span>▤</span><strong>Manage Cards</strong><small>View, freeze, or replace cards</small></button>
         </div>
 
         <div class="metrics-grid">
@@ -126,7 +126,32 @@
             <label class="endpoint-card selected"><input type="radio" name="scanner-target" value="vulnerable" checked /><span><b>Baseline · Vulnerable</b><small>Deliberately exposes synthetic weaknesses for assessment.</small><code id="vulnerable-endpoint">Loading…</code></span></label>
             <label class="endpoint-card"><input type="radio" name="scanner-target" value="protected" /><span><b>Retest · AI Guard Protected</b><small>Same model endpoint with pre-call and post-call enforcement.</small><code id="protected-endpoint">Loading…</code></span></label>
           </div>
-          <div class="scanner-config"><label>Target Model ID<input value="visionone-bank-demo" readonly /></label><label>Endpoint Format<input value="OpenAI-compatible chat completions" readonly /></label></div>
+          <div class="scanner-config bam-scanner-config-v40">
+            <section class="bam-model-picker-v40" aria-labelledby="bam-model-label-v40">
+              <label>
+                <span id="bam-model-label-v40">Target AI Model</span>
+                <select id="bam-scanner-model-select-v40">
+                  <option value="visionone-bank-demo">BAM Bank configured model</option>
+                  <option value="__custom__">Custom model ID…</option>
+                </select>
+              </label>
+              <label id="bam-scanner-custom-model-wrap-v40" hidden>
+                <span>Custom model ID</span>
+                <input id="bam-scanner-custom-model-v40"
+                       value=""
+                       maxlength="256"
+                       autocomplete="off"
+                       placeholder="Example: claude-4.5-sonnet-aws" />
+              </label>
+              <small id="bam-scanner-model-hint-v40">
+                The selected value is sent in the OpenAI-compatible model field. The target endpoint must support it.
+              </small>
+            </section>
+            <label class="bam-endpoint-format-v40">
+              <span>Endpoint Format</span>
+              <input value="OpenAI-compatible chat completions" readonly />
+            </label>
+          </div>
           <div class="action-row right"><button class="primary" data-next-step="2">Next: Select Attacks</button></div>
         </div>
         <div class="scanner-step" id="scanner-step-2">
@@ -188,7 +213,8 @@
   <!-- BAM_BANK_UI_REVISION_V37 -->
   <!-- BAM_BANK_UI_REVISION_V38 -->
   <!-- BAM_BANK_UI_REVISION_V39 -->
+  <!-- BAM_BANK_UI_REVISION_V40 -->
   <!-- BAM_BANK_UI_REVISION_V4 -->
-  <script src="/static/app.js?v=1.8.1" defer></script>
+  <script src="/static/app.js?v=1.8.2" defer></script>
 </body>
 </html>
