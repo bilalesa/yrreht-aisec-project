@@ -1,0 +1,36 @@
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+
+persistence:
+  enabled: false
+
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+
+secrets:
+  create: false
+  existingSecret: visionone-bank-demo-secrets
+
+config:
+  tmv1Region: sg
+  tmv1ApplicationName: visionone-bank-demo
+
+  aiGuardEnabled: true
+  aiGuardFallback: block
+  aiGuardMaskPii: true
+  forceDemoMode: false
+  allowRuntimeConfig: false
+
+  fileSecurityEnabled: true
+  fileSecurityRegion: ap-southeast-1
+  fileSecurityPml: true
+  fileSecurityDemoFallback: false
+
+  llmChatUrl: https://openrouter.ai/api/v1/chat/completions
+  llmModel: google/gemini-2.5-flash
+  llmTimeoutSeconds: 60

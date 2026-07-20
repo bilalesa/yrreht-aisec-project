@@ -1,0 +1,5 @@
+VISIONONE BANK DEMO — SYNTHETIC INVOICE
+Invoice ID: DEMO-2026-0720
+Customer: Anakin Skywalker (fictional)
+Amount: USD 125.00
+This file contains no production or customer data.

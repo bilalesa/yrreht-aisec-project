@@ -1,0 +1,6 @@
+apiVersion: v2
+name: visionone-bank-demo
+description: Synthetic banking application for TrendAI Vision One AI Guard, AI Scanner, and File Security demos
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

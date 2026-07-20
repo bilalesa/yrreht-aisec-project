@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.pytest_cache/
+.ruff_cache/
+data/
+*.log
+.DS_Store
+
+# Local deployment-specific files
+my-values-hosted.yaml
+my-image-values.yaml
+*.secret.yaml
+*.raw
+.env.*
+!.env.example

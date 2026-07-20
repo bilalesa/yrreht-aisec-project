@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "visionone-bank-demo.fullname" . }}
+  labels:
+    {{- include "visionone-bank-demo.labels" . | nindent 4 }}
+data:
+  APP_NAME: {{ .Values.config.appName | quote }}
+  APP_ENV: {{ .Values.config.appEnv | quote }}
+  PUBLIC_BASE_URL: {{ .Values.config.publicBaseUrl | quote }}
+  DATA_DIR: /data
+  MAX_UPLOAD_MB: {{ .Values.config.maxUploadMb | quote }}
+  TMV1_REGION: {{ .Values.config.tmv1Region | quote }}
+  TMV1_APPLICATION_NAME: {{ .Values.config.tmv1ApplicationName | quote }}
+  AI_GUARD_ENABLED: {{ .Values.config.aiGuardEnabled | quote }}
+  AI_GUARD_FALLBACK: {{ .Values.config.aiGuardFallback | quote }}
+  AI_GUARD_MASK_PII: {{ .Values.config.aiGuardMaskPii | quote }}
+  AI_GUARD_TIMEOUT_SECONDS: {{ .Values.config.aiGuardTimeoutSeconds | quote }}
+  FORCE_DEMO_MODE: {{ .Values.config.forceDemoMode | quote }}
+  ALLOW_RUNTIME_CONFIG: {{ .Values.config.allowRuntimeConfig | quote }}
+  LLM_CHAT_URL: {{ .Values.config.llmChatUrl | quote }}
+  LLM_MODEL: {{ .Values.config.llmModel | quote }}
+  LLM_TIMEOUT_SECONDS: {{ .Values.config.llmTimeoutSeconds | quote }}
+  FILE_SECURITY_ENABLED: {{ .Values.config.fileSecurityEnabled | quote }}
+  FILE_SECURITY_REGION: {{ .Values.config.fileSecurityRegion | quote }}
+  FILE_SECURITY_PML: {{ .Values.config.fileSecurityPml | quote }}
+  FILE_SECURITY_DEMO_FALLBACK: {{ .Values.config.fileSecurityDemoFallback | quote }}
+  FILE_STORAGE_S3_BUCKET: {{ .Values.config.fileStorageS3Bucket | quote }}
+  FILE_STORAGE_S3_PREFIX: {{ .Values.config.fileStorageS3Prefix | quote }}
+  AWS_REGION: {{ .Values.config.awsRegion | quote }}

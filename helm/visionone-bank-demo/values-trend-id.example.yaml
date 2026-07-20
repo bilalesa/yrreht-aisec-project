@@ -1,0 +1,70 @@
+replicaCount: 1
+
+image:
+  repository: your-registry.example.com/security/visionone-bank-demo
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  annotations: {}
+  automountServiceAccountToken: false
+
+config:
+  # Hosted-only: endpoint is derived from tmv1Region; no custom AI Guard URL.
+  appName: VisionOne Bank Demo
+  appEnv: demo
+  publicBaseUrl: https://ai-bank.trend-id.top
+  tmv1Region: sg
+  tmv1ApplicationName: visionone-bank-demo
+  aiGuardEnabled: true
+  aiGuardFallback: block
+  aiGuardMaskPii: true
+  aiGuardTimeoutSeconds: 8
+  forceDemoMode: false
+  allowRuntimeConfig: false
+  llmChatUrl: ""
+  llmModel: visionone-bank-demo
+  llmTimeoutSeconds: 30
+  fileSecurityEnabled: true
+  fileSecurityRegion: ap-southeast-1
+  fileSecurityPml: true
+  fileSecurityDemoFallback: false
+  fileStorageS3Bucket: ""
+  fileStorageS3Prefix: incoming/
+  awsRegion: ap-southeast-1
+
+secrets:
+  create: false
+  existingSecret: visionone-bank-demo-secrets
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "12m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: ai-bank.trend-id.top
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: ai-bank-trend-id-tls
+      hosts:
+        - ai-bank.trend-id.top
+
+persistence:
+  # Current lab cluster has no StorageClass; keep disabled until one is installed.
+  enabled: false
+  size: 1Gi
+
+networkPolicy:
+  enabled: false
+  additionalEgress: []
+
+extraEnv: []
+extraEnvFrom: []
+extraVolumes: []
+extraVolumeMounts: []

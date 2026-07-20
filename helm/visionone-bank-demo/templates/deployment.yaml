@@ -1,0 +1,115 @@
+{{- $rwo := has "ReadWriteOnce" .Values.persistence.accessModes -}}
+{{- if and .Values.persistence.enabled $rwo (or (gt (int .Values.replicaCount) 1) (and .Values.autoscaling.enabled (gt (int .Values.autoscaling.maxReplicas) 1))) -}}
+{{- fail "persistence.accessModes contains ReadWriteOnce, but multi-replica/HPA is enabled. Use one replica or an RWX volume." -}}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "visionone-bank-demo.fullname" . }}
+  labels:
+    {{- include "visionone-bank-demo.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: 3
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "visionone-bank-demo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "visionone-bank-demo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- with .Values.podLabels }}{{ toYaml . | nindent 8 }}{{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "visionone-bank-demo.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: app
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "visionone-bank-demo.fullname" . }}
+            {{- if or .Values.secrets.create .Values.secrets.existingSecret }}
+            - secretRef:
+                name: {{ include "visionone-bank-demo.secretName" . }}
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "visionone-bank-demo.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

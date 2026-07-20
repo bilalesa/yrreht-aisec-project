@@ -1,0 +1,17 @@
+services:
+  bank-demo:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - bank-demo-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  bank-demo-data:

@@ -1,0 +1,14 @@
+1. Check the rollout:
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+2. Open the application:
+{{- if .Values.ingress.enabled }}
+   https://{{ (index .Values.ingress.hosts 0).host }}
+{{- else }}
+   kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "visionone-bank-demo.fullname" . }} 8080:{{ .Values.service.port }}
+   http://127.0.0.1:8080
+{{- end }}
+
+3. AI Scanner targets:
+   Vulnerable: /api/ai/vulnerable/v1/chat/completions
+   Protected:  /api/ai/protected/v1/chat/completions
