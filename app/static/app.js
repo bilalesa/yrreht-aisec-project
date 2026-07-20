@@ -7018,7 +7018,7 @@ exposePresenterLabFromUrl();
         'The full live report is available in AI Security → AI Scanner on the matching Vision One tenant.',
       demoConsole:
         'Demo result only. Nothing was submitted to Vision One.',
-      setupReady: 'Live setup ready',
+      setupReady: 'Live configuration detected',
       targetRequired: 'Select a target.',
       attackRequired: 'Select at least one attack objective.',
       guardLive: 'Vision One live test passed',
@@ -7083,7 +7083,7 @@ exposePresenterLabFromUrl();
         'Laporan live lengkap tersedia di AI Security → AI Scanner pada tenant Vision One yang sesuai.',
       demoConsole:
         'Hasil demo saja. Tidak ada data yang dikirim ke Vision One.',
-      setupReady: 'Konfigurasi live siap',
+      setupReady: 'Konfigurasi live terdeteksi',
       targetRequired: 'Pilih target.',
       attackRequired: 'Pilih minimal satu attack objective.',
       guardLive: 'Tes live Vision One berhasil',
@@ -7463,20 +7463,29 @@ exposePresenterLabFromUrl();
     if (!progress) return;
 
     progress.className =
-      'scan-progress bam-scan-progress-v34';
+      'scan-progress bam-scan-progress-v34 ' +
+      'bam-scan-progress-v37';
     progress.innerHTML = `
-      <div class="bam-scan-progress-header-v34">
-        <span class="bam-scan-radar-v34" aria-hidden="true">
+      <section class="bam-running-card-v37">
+        <header class="bam-running-head-v37">
+          <span class="bam-running-mark-v37"
+                aria-hidden="true">
+            <i></i>
+          </span>
+          <div>
+            <strong id="bam-scan-progress-title-v34"></strong>
+            <small id="bam-scan-progress-mode-v34"></small>
+          </div>
+          <span class="bam-running-pill-v37">Running</span>
+        </header>
+        <div class="bam-running-track-v37"
+             aria-hidden="true">
           <i></i>
-        </span>
-        <span>
-          <strong id="bam-scan-progress-title-v34"></strong>
-          <small id="bam-scan-progress-mode-v34"></small>
-        </span>
-      </div>
-      <pre id="bam-scan-live-log-v34"
-           class="bam-scan-live-log-v34"
-           aria-live="polite"></pre>`;
+        </div>
+        <pre id="bam-scan-live-log-v34"
+             class="bam-scan-live-log-v34"
+             aria-live="polite"></pre>
+      </section>`;
 
     q('#bam-scan-progress-title-v34').textContent =
       text().processTitle;
@@ -7485,6 +7494,7 @@ exposePresenterLabFromUrl();
         ? text().processLive
         : text().processDemo;
   }
+
 
   function renderLiveLogs(logs) {
     scanner.logs = Array.isArray(logs) ? logs.slice() : [];
@@ -7596,13 +7606,11 @@ exposePresenterLabFromUrl();
 
       if (job.status === 'failed') {
         scanner.running = false;
-        scanner.jobAccepted = false;
-        q('#scan-progress')?.classList.add('hidden');
-        showStep(2);
-        showScannerNotice(
-          job.error || text().failed,
-          'error'
-        );
+        scanner.jobAccepted = true;
+        scanner.logs = Array.isArray(job.logs)
+          ? job.logs.slice()
+          : scanner.logs;
+        renderScannerFailure(job);
         syncScannerUi();
         return;
       }
@@ -7618,6 +7626,109 @@ exposePresenterLabFromUrl();
       );
     }
   }
+
+  function renderScannerFailure(job) {
+    const progress = q('#scan-progress');
+    const results = q('#scan-results');
+    if (!results) return;
+
+    progress?.classList.add('hidden');
+    results.className = 'bam-scan-failure-v37';
+
+    const failure = job.failure || {};
+    const title = failure.title || text().failed;
+    const message = failure.message || job.error || text().failed;
+    const remediation = Array.isArray(failure.remediation)
+      ? failure.remediation
+      : [];
+    const logs = Array.isArray(job.logs)
+      ? job.logs
+      : scanner.logs;
+
+    results.innerHTML = `
+      <section class="bam-failure-card-v37">
+        <div class="bam-failure-heading-v37">
+          <span aria-hidden="true">!</span>
+          <div>
+            <small>${
+              scanner.mode === 'live'
+                ? text().live
+                : text().demo
+            }</small>
+            <h3></h3>
+            <p></p>
+          </div>
+        </div>
+
+        <div class="bam-failure-guidance-v37">
+          <strong>What to check</strong>
+          <ol></ol>
+        </div>
+
+        <details class="bam-process-archive-v34"
+                 open>
+          <summary></summary>
+          <pre></pre>
+        </details>
+
+        <div class="bam-failure-actions-v37">
+          <button type="button"
+                  class="secondary"
+                  id="bam-failure-back-v37">
+            Back to attacks
+          </button>
+          <button type="button"
+                  class="primary"
+                  id="bam-failure-retry-v37">
+            Retry scan
+          </button>
+        </div>
+      </section>`;
+
+    q('.bam-failure-heading-v37 h3', results).textContent =
+      title;
+    q('.bam-failure-heading-v37 p', results).textContent =
+      message;
+
+    const list = q('.bam-failure-guidance-v37 ol', results);
+    (
+      remediation.length
+        ? remediation
+        : [
+            'Review the TMAS process log.',
+            'Verify the API key, region, and network access.'
+          ]
+    ).forEach(item => {
+      const entry = document.createElement('li');
+      entry.textContent = item;
+      list?.appendChild(entry);
+    });
+
+    const details = q('.bam-process-archive-v34', results);
+    const summary = q('summary', details);
+    const log = q('pre', details);
+    summary.textContent = text().hideLog;
+    log.textContent = logs.join('\n');
+    details.addEventListener('toggle', () => {
+      summary.textContent = details.open
+        ? text().hideLog
+        : text().viewLog;
+    });
+
+    q('#bam-failure-back-v37', results)
+      ?.addEventListener('click', () => {
+        resetScanner(false);
+        showStep(2);
+      });
+
+    q('#bam-failure-retry-v37', results)
+      ?.addEventListener('click', () => {
+        resetScanner(false);
+        showStep(2);
+        window.setTimeout(startScannerJob, 0);
+      });
+  }
+
 
   function resultCell(value, className = '') {
     const cell = document.createElement('span');
@@ -8597,3 +8708,5 @@ exposePresenterLabFromUrl();
     () => window.setTimeout(updateCopy, 0)
   );
 })();
+
+/* BAM_BANK_UI_REVISION_V37 */

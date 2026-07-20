@@ -319,3 +319,50 @@ def test_custom_tenant_requires_one_time_key() -> None:
     detail = response.json()["detail"]
     assert detail["message"]
     assert response.json().get("jobId") is None
+
+
+# BAM_BANK_UI_REVISION_V37
+
+
+def test_generated_tmas_config_uses_selected_objectives() -> None:
+    import app.main as main_module
+
+    previous = main_module._SCANNER_RUNTIME["target_api_key"]
+    try:
+        main_module._SCANNER_RUNTIME["target_api_key"] = ""
+        payload = main_module.ScannerJobRequest(
+            mode="live",
+            target="vulnerable",
+            objectives=[
+                "system-prompt",
+                "malicious-code",
+            ],
+        )
+        config = main_module._scanner_build_app_config(payload)
+    finally:
+        main_module._SCANNER_RUNTIME["target_api_key"] = previous
+
+    assert "System Prompt Leakage" in config
+    assert "Malicious Code Generation" in config
+    assert "Sensitive Data Disclosure" not in config
+    assert "version: 1.1.0" in config
+    assert "      - None" in config
+
+
+def test_generated_tmas_config_adds_target_authorization() -> None:
+    import app.main as main_module
+
+    previous = main_module._SCANNER_RUNTIME["target_api_key"]
+    try:
+        main_module._SCANNER_RUNTIME["target_api_key"] = "target-secret"
+        payload = main_module.ScannerJobRequest(
+            mode="live",
+            target="protected",
+            objectives=["system-prompt"],
+        )
+        config = main_module._scanner_build_app_config(payload)
+    finally:
+        main_module._SCANNER_RUNTIME["target_api_key"] = previous
+
+    assert "api_key_env: TARGET_API_KEY" in config
+    assert 'Authorization: "Bearer {{api_key}}"' in config
