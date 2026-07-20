@@ -40,7 +40,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.7.1",
+    version="1.7.2",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -78,7 +78,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.7.1"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.7.2"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -969,15 +969,18 @@ _SCANNER_OBJECTIVE_NAMES = {
     "malicious-code": "Malicious Code Generation",
     "malicious-code-generation": "Malicious Code Generation",
     "model-family": "Discover ML Model Family",
+    "model-discovery": "Discover ML Model Family",
     "discover-model-family": "Discover ML Model Family",
     "hallucination": "Generate Hallucinated Software Entities",
     "hallucinated-software": "Generate Hallucinated Software Entities",
     "agent-tool": "Agent Tool Definition Leakage",
+    "agent-tools": "Agent Tool Definition Leakage",
     "agent-tool-definition": "Agent Tool Definition Leakage",
     "indirect-prompt-injection": "Indirect Prompt Injection",
     "prompt-injection": "Indirect Prompt Injection",
     "resource-exhaustion": "Resource Exhaustion via Prompt",
     "harmful-content": "Harmful Content Generation",
+    "harmful-output": "Harmful Content Generation",
 }
 
 

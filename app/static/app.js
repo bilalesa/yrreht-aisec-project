@@ -8277,3 +8277,323 @@ exposePresenterLabFromUrl();
     }, 0)
   );
 })();
+
+
+/* BAM_BANK_UI_REVISION_V36 */
+(() => {
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [
+    ...root.querySelectorAll(selector)
+  ];
+
+  const recommended = new Set([
+    'sensitive-data',
+    'system-prompt',
+    'indirect-prompt-injection'
+  ]);
+
+  function language() {
+    return (
+      localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id'
+    ) ? 'id' : 'en';
+  }
+
+  function copy() {
+    return language() === 'id'
+      ? {
+          eyebrow: 'ASSESSMENT SCOPE',
+          title: 'Pilih attack objective',
+          body:
+            'Pilihan ini dipakai untuk Demo maupun Vision One Live. Pada live scan, aplikasi membuat konfigurasi TMAS sementara dari objective yang dipilih.',
+          selected: 'dipilih',
+          recommended: 'Rekomendasi',
+          all: 'Pilih semua',
+          clear: 'Kosongkan',
+          execution: 'Rencana eksekusi',
+          demo: 'Demo lokal',
+          live: 'Vision One Live',
+          defaultTenant: 'Tenant default',
+          customTenant: 'Tenant lain',
+          baseline: 'Baseline',
+          protected: 'AI Guard protected',
+          objective: 'objective',
+          objectivePlural: 'objectives',
+          notes: 'Catatan coverage',
+          notesBody:
+            'Objective yang dipilih diteruskan ke TMAS. Hasil live lengkap tersedia di AI Security → AI Scanner pada tenant tujuan.',
+          empty:
+            'Pilih minimal satu objective sebelum menjalankan scan.'
+        }
+      : {
+          eyebrow: 'ASSESSMENT SCOPE',
+          title: 'Choose attack objectives',
+          body:
+            'These selections apply to both Demo and Vision One Live. For a live scan, the app builds a temporary TMAS configuration from the selected objectives.',
+          selected: 'selected',
+          recommended: 'Recommended',
+          all: 'Select all',
+          clear: 'Clear',
+          execution: 'Execution plan',
+          demo: 'Local demo',
+          live: 'Vision One Live',
+          defaultTenant: 'Default tenant',
+          customTenant: 'Another tenant',
+          baseline: 'Baseline',
+          protected: 'AI Guard protected',
+          objective: 'objective',
+          objectivePlural: 'objectives',
+          notes: 'Coverage notes',
+          notesBody:
+            'Selected objectives are passed to TMAS. The complete live report is available in AI Security → AI Scanner on the destination tenant.',
+          empty:
+            'Select at least one objective before running the scan.'
+        };
+  }
+
+  function selectedInputs() {
+    return qa('#scanner-step-2 .attack-grid input[type="checkbox"]');
+  }
+
+  function selectedCount() {
+    return selectedInputs().filter(input => input.checked).length;
+  }
+
+  function modeLabel(words) {
+    const active = q(
+      '#bam-scanner-mode-v31 [data-bam-scanner-mode].active'
+    );
+    return active?.dataset.bamScannerMode === 'live'
+      ? words.live
+      : words.demo;
+  }
+
+  function tenantLabel(words) {
+    const root = q('#bam-scanner-tenant-v35');
+    if (!root || root.dataset.mode !== 'custom') {
+      return words.defaultTenant;
+    }
+    return words.customTenant;
+  }
+
+  function targetLabel(words) {
+    const target = q(
+      '#scanner-step-1 input[name="scanner-target"]:checked'
+    )?.value;
+    return target === 'protected'
+      ? words.protected
+      : words.baseline;
+  }
+
+  function updateCopy() {
+    const words = copy();
+    const eyebrow = q('#bam-attack-eyebrow-v36');
+    const title = q('#bam-attack-title-v36');
+    const body = q('#bam-attack-body-v36');
+    const recommendedButton = q('#bam-attack-recommended-v36');
+    const allButton = q('#bam-attack-all-v36');
+    const clearButton = q('#bam-attack-clear-v36');
+    const notes = q('#bam-attack-notes-v36 summary strong');
+    const notesBody = q('#bam-attack-notes-v36 p');
+
+    if (eyebrow) eyebrow.textContent = words.eyebrow;
+    if (title) title.textContent = words.title;
+    if (body) body.textContent = words.body;
+    if (recommendedButton) {
+      recommendedButton.textContent = words.recommended;
+    }
+    if (allButton) allButton.textContent = words.all;
+    if (clearButton) clearButton.textContent = words.clear;
+    if (notes) notes.textContent = words.notes;
+    if (notesBody) notesBody.textContent = words.notesBody;
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const words = copy();
+    const count = selectedCount();
+    const countNode = q('#bam-attack-count-v36');
+    const summary = q('#bam-execution-summary-v36');
+    const run = q('#run-scan');
+    const wasSelectionBlocked =
+      run?.dataset.v36Empty === 'true';
+
+    if (countNode) {
+      countNode.textContent = `${count} ${words.selected}`;
+    }
+
+    if (summary) {
+      const noun = count === 1
+        ? words.objective
+        : words.objectivePlural;
+      summary.innerHTML = `
+        <span>
+          <small>${words.execution}</small>
+          <strong>${modeLabel(words)}</strong>
+        </span>
+        <i aria-hidden="true"></i>
+        <span>${tenantLabel(words)}</span>
+        <i aria-hidden="true"></i>
+        <span>${targetLabel(words)}</span>
+        <i aria-hidden="true"></i>
+        <span>${count} ${noun}</span>`;
+      summary.classList.toggle('empty', count === 0);
+      summary.title = count === 0 ? words.empty : '';
+    }
+
+    if (run) {
+      run.dataset.v36Empty = count === 0 ? 'true' : 'false';
+      if (count === 0) {
+        run.disabled = true;
+        run.setAttribute('aria-disabled', 'true');
+        run.title = words.empty;
+      } else if (wasSelectionBlocked) {
+        run.removeAttribute('title');
+      }
+    }
+  }
+
+  function refreshScannerController() {
+    document.dispatchEvent(
+      new CustomEvent('bam:scanner-tenant-change')
+    );
+    window.setTimeout(updateSummary, 0);
+  }
+
+  function setSelection(kind) {
+    selectedInputs().forEach(input => {
+      if (kind === 'all') input.checked = true;
+      else if (kind === 'clear') input.checked = false;
+      else input.checked = recommended.has(input.value);
+    });
+    refreshScannerController();
+  }
+
+  function bindInputs() {
+    selectedInputs().forEach(input => {
+      if (input.dataset.v36Bound === 'true') return;
+      input.dataset.v36Bound = 'true';
+      input.addEventListener(
+        'change',
+        refreshScannerController
+      );
+    });
+
+    qa(
+      '#scanner-step-1 input[name="scanner-target"], ' +
+      '#bam-scanner-mode-v31 [data-bam-scanner-mode], ' +
+      '#bam-scanner-tenant-v35 [data-tenant-choice]'
+    ).forEach(control => {
+      if (control.dataset.v36Bound === 'true') return;
+      control.dataset.v36Bound = 'true';
+      control.addEventListener(
+        'click',
+        () => window.setTimeout(updateSummary, 0)
+      );
+      control.addEventListener(
+        'change',
+        () => window.setTimeout(updateSummary, 0)
+      );
+    });
+  }
+
+  function installAttackPicker() {
+    const step = q('#scanner-step-2');
+    const grid = q('.attack-grid', step);
+    const actions = q('.action-row', step);
+    if (!step || !grid || !actions) return false;
+
+    q('.tmas-command', step)?.remove();
+    q('#scanner-coverage-reference', step)?.remove();
+    q('#bam-scanner-objective-source-v31', step)?.remove();
+
+    if (!q('#bam-attack-picker-v36', step)) {
+      const picker = document.createElement('section');
+      picker.id = 'bam-attack-picker-v36';
+      picker.className = 'bam-attack-picker-v36';
+      picker.innerHTML = `
+        <header>
+          <div>
+            <span id="bam-attack-eyebrow-v36"></span>
+            <h3 id="bam-attack-title-v36"></h3>
+            <p id="bam-attack-body-v36"></p>
+          </div>
+          <strong id="bam-attack-count-v36"></strong>
+        </header>
+        <div class="bam-attack-tools-v36">
+          <button type="button"
+                  id="bam-attack-recommended-v36"></button>
+          <button type="button"
+                  id="bam-attack-all-v36"></button>
+          <button type="button"
+                  id="bam-attack-clear-v36"></button>
+        </div>`;
+      grid.before(picker);
+
+      q('#bam-attack-recommended-v36', picker)
+        ?.addEventListener('click', () => setSelection('recommended'));
+      q('#bam-attack-all-v36', picker)
+        ?.addEventListener('click', () => setSelection('all'));
+      q('#bam-attack-clear-v36', picker)
+        ?.addEventListener('click', () => setSelection('clear'));
+    }
+
+    if (!q('#bam-execution-summary-v36', step)) {
+      const summary = document.createElement('div');
+      summary.id = 'bam-execution-summary-v36';
+      summary.className = 'bam-execution-summary-v36';
+      grid.insertAdjacentElement('afterend', summary);
+    }
+
+    if (!q('#bam-attack-notes-v36', step)) {
+      const notes = document.createElement('details');
+      notes.id = 'bam-attack-notes-v36';
+      notes.className = 'bam-attack-notes-v36';
+      notes.innerHTML = `
+        <summary>
+          <strong></strong>
+          <span>9</span>
+        </summary>
+        <p></p>`;
+      q('#bam-execution-summary-v36', step)
+        ?.insertAdjacentElement('afterend', notes);
+    }
+
+    grid.classList.add('bam-attack-grid-v36');
+    qa('label', grid).forEach(label => {
+      label.classList.add('bam-attack-card-v36');
+    });
+
+    bindInputs();
+    updateCopy();
+    return true;
+  }
+
+  function keepUiClean() {
+    q('.tmas-command')?.remove();
+    q('#scanner-coverage-reference')?.remove();
+    q('#bam-scanner-objective-source-v31')?.remove();
+    installAttackPicker();
+    updateSummary();
+  }
+
+  installAttackPicker();
+  window.setTimeout(keepUiClean, 180);
+  window.setTimeout(keepUiClean, 700);
+  window.setTimeout(keepUiClean, 1500);
+
+  document.addEventListener(
+    'bam:scanner-tenant-change',
+    () => window.setTimeout(updateSummary, 0)
+  );
+
+  q('#language')?.addEventListener(
+    'change',
+    () => window.setTimeout(updateCopy, 0)
+  );
+  q('#settings-language')?.addEventListener(
+    'change',
+    () => window.setTimeout(updateCopy, 0)
+  );
+})();
