@@ -47,7 +47,7 @@ def _int(name: str, default: int) -> int:
 
 @dataclass
 class Settings:
-    app_name: str = field(default_factory=lambda: os.getenv("APP_NAME", "VisionOne Bank Demo"))
+    app_name: str = field(default_factory=lambda: os.getenv("APP_NAME", "BAM Bank Demo"))
     app_env: str = field(default_factory=lambda: os.getenv("APP_ENV", "demo"))
     public_base_url: str = field(default_factory=lambda: os.getenv("PUBLIC_BASE_URL", ""))
     data_dir: str = field(default_factory=lambda: os.getenv("DATA_DIR", "/data"))

@@ -35,9 +35,9 @@ llm = BankLLM(settings)
 file_security = FileSecurityService(settings)
 
 app = FastAPI(
-    title="VisionOne Bank Demo",
+    title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.0.0",
+    version="1.0.2",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -49,6 +49,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=12000)
+    guard_enabled: bool = True
 
 
 class RuntimeSettingsRequest(BaseModel):
@@ -70,7 +71,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.0.0"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.0.2"}
 
 
 @app.get("/api/preflight")
@@ -176,6 +177,15 @@ async def guard_test(payload: ChatRequest) -> dict:
 @app.post("/api/chat")
 async def chat(payload: ChatRequest) -> dict:
     try:
+        if not payload.guard_enabled:
+            unprotected_response = await llm.complete(payload.message, vulnerable=True)
+            message = unprotected_response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return {
+                "status": "allowed",
+                "message": message,
+                "guard": {"enabled": False, "input": None, "output": None},
+            }
+
         prompt_result = await guard.inspect_prompt(payload.message)
         safe_prompt = prompt_result.get("content", payload.message)
         llm_response = await llm.complete(safe_prompt, vulnerable=False)
@@ -184,6 +194,7 @@ async def chat(payload: ChatRequest) -> dict:
             "status": "allowed",
             "message": output_result.get("content", ""),
             "guard": {
+                "enabled": True,
                 "input": {"action": prompt_result.get("action", "allow"), "reasons": prompt_result.get("reasons", [])},
                 "output": {"action": output_result.get("action", "allow"), "reasons": output_result.get("reasons", [])},
             },
