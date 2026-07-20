@@ -484,3 +484,12 @@ def test_model_catalog_keeps_configured_model_first() -> None:
         "configured-model",
         "other-model",
     ]
+
+# BAM_BANK_UI_REVISION_V43
+
+
+def test_assistant_is_named_bambang() -> None:
+    from app.services import BankLLM
+
+    assert "Bambang" in BankLLM.SYSTEM_PROMPT
+    assert "Bamsky" not in BankLLM.SYSTEM_PROMPT

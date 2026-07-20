@@ -1140,7 +1140,7 @@ exposePresenterLabFromUrl();
 
   if (!chatPanel || !chatLauncher || !demoPromos) return;
 
-  const syncBamskyUi = () => {
+  const syncBambangUi = () => {
     const isOpen = chatPanel.classList.contains('open');
 
     demoPromos.classList.toggle('chat-open', isOpen);
@@ -1148,16 +1148,16 @@ exposePresenterLabFromUrl();
     chatLauncher.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     chatLauncher.setAttribute(
       'aria-label',
-      isOpen ? 'Close Bamsky banking assistant' : 'Open Bamsky banking assistant'
+      isOpen ? 'Close Bambang banking assistant' : 'Open Bambang banking assistant'
     );
   };
 
-  new MutationObserver(syncBamskyUi).observe(chatPanel, {
+  new MutationObserver(syncBambangUi).observe(chatPanel, {
     attributes: true,
     attributeFilter: ['class']
   });
 
-  syncBamskyUi();
+  syncBambangUi();
 })();
 
 
@@ -1170,7 +1170,7 @@ exposePresenterLabFromUrl();
       eyebrow: 'BAM PRIVATE DIGITAL BANKING',
       title: 'Your money, beautifully in motion.',
       body: 'A clearer view of spending, saving, and intelligent protection—built for everyday decisions.',
-      ask: 'Ask Bamsky',
+      ask: 'Ask Bambang',
       security: 'Security center',
       protected: 'AI Guard protected',
       scanner: 'AI Scanner assessment ready',
@@ -1185,7 +1185,7 @@ exposePresenterLabFromUrl();
       eyebrow: 'PERBANKAN DIGITAL PRIVAT BAM',
       title: 'Keuangan Anda, bergerak lebih cerdas.',
       body: 'Pantau pengeluaran, tabungan, dan perlindungan cerdas dalam satu pengalaman yang lebih jernih.',
-      ask: 'Tanya Bamsky',
+      ask: 'Tanya Bambang',
       security: 'Pusat keamanan',
       protected: 'Dilindungi AI Guard',
       scanner: 'AI Scanner siap untuk assessment',
@@ -3366,8 +3366,8 @@ exposePresenterLabFromUrl();
     lab.removeAttribute('style');
 
     const chatLabel = currentLanguage() === 'id'
-      ? 'Buka Bamsky'
-      : 'Open Bamsky';
+      ? 'Buka Bambang'
+      : 'Open Bambang';
     chat.setAttribute('aria-label', chatLabel);
     chat.setAttribute('title', chatLabel);
 
@@ -3403,7 +3403,7 @@ exposePresenterLabFromUrl();
     const tooltip = q('#bam-v16-lab-tooltip');
 
     const isId = currentLanguage() === 'id';
-    const chatLabel = isId ? 'Buka Bamsky' : 'Open Bamsky';
+    const chatLabel = isId ? 'Buka Bambang' : 'Open Bambang';
     const labLabel = isId
       ? 'Buka kontrol demo keamanan AI'
       : 'Open AI security demo controls';
@@ -3513,7 +3513,7 @@ exposePresenterLabFromUrl();
       hubEyebrow: 'ASSISTANCE HUB',
       hubTitle: 'What would you like to do?',
       hubBody: 'Banking help and AI security testing, available from one place.',
-      chatTitle: 'Chat with Bamsky',
+      chatTitle: 'Chat with Bambang',
       chatBody: 'Ask about balances, transfers, and banking.',
       labLabel: 'AI SECURITY LAB',
       scannerTitle: 'AI Scanner',
@@ -3529,7 +3529,7 @@ exposePresenterLabFromUrl();
       hubEyebrow: 'PUSAT BANTUAN',
       hubTitle: 'Apa yang ingin dilakukan?',
       hubBody: 'Bantuan perbankan dan pengujian keamanan AI dari satu tempat.',
-      chatTitle: 'Chat dengan Bamsky',
+      chatTitle: 'Chat dengan Bambang',
       chatBody: 'Tanyakan saldo, transfer, dan layanan perbankan.',
       labLabel: 'LAB KEAMANAN AI',
       scannerTitle: 'AI Scanner',
@@ -4980,7 +4980,7 @@ exposePresenterLabFromUrl();
 
   const copy = {
     en: {
-      assistantTitle: 'Bamsky',
+      assistantTitle: 'Bambang',
       assistantMeta: 'AI Banking Assistant · Always available',
       libraryTitle: 'Sample prompt library',
       libraryMeta: 'Choose a scenario or write your own prompt',
@@ -4988,11 +4988,11 @@ exposePresenterLabFromUrl();
       collapse: 'Hide sample prompts',
       banking: 'Banking',
       attacks: 'Security tests',
-      input: 'Ask Bamsky or enter a custom security test…',
+      input: 'Ask Bambang or enter a custom security test…',
       send: 'Send'
     },
     id: {
-      assistantTitle: 'Bamsky',
+      assistantTitle: 'Bambang',
       assistantMeta: 'Asisten Perbankan AI · Selalu tersedia',
       libraryTitle: 'Kumpulan contoh prompt',
       libraryMeta: 'Pilih skenario atau tulis prompt sendiri',
@@ -5000,7 +5000,7 @@ exposePresenterLabFromUrl();
       collapse: 'Sembunyikan contoh prompt',
       banking: 'Perbankan',
       attacks: 'Uji keamanan',
-      input: 'Tanyakan ke Bamsky atau masukkan pengujian keamanan…',
+      input: 'Tanyakan ke Bambang atau masukkan pengujian keamanan…',
       send: 'Kirim'
     }
   };
@@ -9492,3 +9492,281 @@ exposePresenterLabFromUrl();
  * Prevents the v41 Manage Cards observer from writing the same text
  * repeatedly and saturating the browser main thread.
  */
+
+/* BAM_BANK_UI_REVISION_V43 */
+(() => {
+  const q = (selector, root = document) =>
+    root.querySelector(selector);
+  const qa = (selector, root = document) =>
+    [...root.querySelectorAll(selector)];
+
+  const isId = () =>
+    localStorage.getItem('bam-language') === 'id' ||
+    document.documentElement.lang === 'id';
+
+  const readyCopy = () => isId()
+    ? {
+        title: 'Konfigurasi live siap',
+        body: 'Tenant Vision One default dan endpoint model sudah terdeteksi.'
+      }
+    : {
+        title: 'Live setup ready',
+        body: 'Default Vision One tenant and model endpoint detected.'
+      };
+
+  function renameVisibleAssistant() {
+    const root = document.body;
+    if (!root) return;
+
+    const walker = document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_TEXT
+    );
+    const nodes = [];
+
+    while (walker.nextNode()) {
+      if (walker.currentNode.nodeValue.includes('Bamsky')) {
+        nodes.push(walker.currentNode);
+      }
+    }
+
+    nodes.forEach(node => {
+      node.nodeValue = node.nodeValue.replace(/Bamsky/g, 'Bambang');
+    });
+
+    const input = q('#chat-input');
+    if (input) {
+      input.placeholder = input.placeholder.replace(/Bamsky/g, 'Bambang');
+    }
+  }
+
+  function findLiveStatusLeaf() {
+    const step = q('#scanner-step-1');
+    if (!step) return null;
+
+    return qa('*', step).find(node => {
+      if (node.children.length) return false;
+      const text = node.textContent.trim().toLowerCase();
+      return (
+        text === 'live configuration detected' ||
+        text === 'live setup ready' ||
+        text.includes('konfigurasi live')
+      );
+    }) || null;
+  }
+
+  function polishLiveStatus() {
+    const step = q('#scanner-step-1');
+    if (!step) return false;
+
+    let host =
+      q('.bam-live-config-v43', step) ||
+      findLiveStatusLeaf();
+
+    if (
+      host &&
+      !host.classList.contains('bam-live-config-v43')
+    ) {
+      while (
+        host.parentElement &&
+        host.parentElement !== step &&
+        host.parentElement.textContent.trim() === host.textContent.trim() &&
+        host.parentElement.children.length <= 2
+      ) {
+        host = host.parentElement;
+      }
+    }
+
+    if (!host) {
+      const endpointCards = q('.endpoint-cards', step);
+      if (!endpointCards) return false;
+      host = document.createElement('div');
+      endpointCards.insertAdjacentElement('beforebegin', host);
+    }
+
+    const text = readyCopy();
+    host.className = 'bam-live-config-v43';
+    host.innerHTML = `
+      <span class="bam-live-config-icon-v43" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="m7.5 12.5 3 3 6-7"></path>
+        </svg>
+      </span>
+      <span class="bam-live-config-copy-v43">
+        <strong>${text.title}</strong>
+        <small>${text.body}</small>
+      </span>`;
+
+    qa('.bam-live-config-v43', step)
+      .slice(1)
+      .forEach(node => node.remove());
+
+    return true;
+  }
+
+  function isLibraryPrompt(button) {
+    return Boolean(
+      button &&
+      button.matches(
+        '#banking-prompts button, #malicious-prompts button'
+      )
+    );
+  }
+
+  function autoSubmitPrompt(event) {
+    const button = event.target.closest('button');
+    if (!isLibraryPrompt(button)) return;
+
+    const message = String(
+      button.dataset.prompt ||
+      button.dataset.value ||
+      button.textContent ||
+      ''
+    ).trim();
+
+    if (!message) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const sendButton =
+      q('#chat-form button[type="submit"]') ||
+      q('#chat-form button');
+
+    if (sendButton && sendButton.disabled) return;
+
+    const input = q('#chat-input');
+    if (input) {
+      input.value = message;
+      input.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+
+    q('#chat-panel')?.classList.add('open');
+
+    window.requestAnimationFrame(() => {
+      if (typeof sendChat === 'function') {
+        sendChat(message);
+      } else {
+        q('#chat-form')?.requestSubmit();
+      }
+    });
+  }
+
+  function installPromptAutoSubmit() {
+    if (document.documentElement.dataset.v43PromptSubmit === 'true') {
+      return;
+    }
+
+    document.documentElement.dataset.v43PromptSubmit = 'true';
+    document.addEventListener('click', autoSubmitPrompt, true);
+  }
+
+  function createParticle(svg, pathData) {
+    if (
+      q('.bam-flow-particle-v43', svg) ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const particle = document.createElementNS(ns, 'circle');
+    particle.setAttribute('r', '4.8');
+    particle.setAttribute('fill', '#FFFFFF');
+    particle.setAttribute('class', 'bam-flow-particle-v43');
+
+    const motion = document.createElementNS(ns, 'animateMotion');
+    motion.setAttribute('dur', '6.8s');
+    motion.setAttribute('repeatCount', 'indefinite');
+    motion.setAttribute('path', pathData);
+    motion.setAttribute('calcMode', 'spline');
+    motion.setAttribute('keyTimes', '0;1');
+    motion.setAttribute('keySplines', '.42 0 .22 1');
+
+    particle.appendChild(motion);
+    svg.appendChild(particle);
+  }
+
+  function animateHero() {
+    const svg = q('#bam-experience-hero .bam-pulse-art');
+    if (!svg || svg.dataset.v43Animated === 'true') return false;
+
+    svg.dataset.v43Animated = 'true';
+
+    const direct = [...svg.children];
+    const paths = direct.filter(node =>
+      node.tagName.toLowerCase() === 'path'
+    );
+    const circles = direct.filter(node =>
+      node.tagName.toLowerCase() === 'circle'
+    );
+    const ellipses = direct.filter(node =>
+      node.tagName.toLowerCase() === 'ellipse'
+    );
+    const core = direct.find(node =>
+      node.tagName.toLowerCase() === 'g'
+    );
+
+    paths[0]?.classList.add('bam-flow-glow-v43');
+    paths[1]?.classList.add('bam-flow-line-v43');
+
+    circles.forEach((node, index) => {
+      node.classList.add(
+        'bam-flow-node-v43',
+        `bam-flow-node-${index + 1}-v43`
+      );
+    });
+
+    ellipses.forEach(node =>
+      node.classList.add('bam-flow-orbit-v43')
+    );
+
+    if (core) {
+      core.classList.add('bam-flow-core-v43');
+      qa('circle', core).forEach((node, index) => {
+        node.classList.add(
+          `bam-flow-core-ring-${index + 1}-v43`
+        );
+      });
+    }
+
+    createParticle(
+      svg,
+      'M78 254C145 245 189 211 240 218c58 8 85-34 139-43 61-10 102-66 211-93'
+    );
+
+    return true;
+  }
+
+  function refresh() {
+    renameVisibleAssistant();
+    polishLiveStatus();
+    animateHero();
+  }
+
+  installPromptAutoSubmit();
+  refresh();
+
+  [150, 500, 1200, 2400].forEach(delay => {
+    window.setTimeout(refresh, delay);
+  });
+
+  qa('.security-tabs button').forEach(button => {
+    button.addEventListener('click', () => {
+      if (button.dataset.securityTab === 'scanner') {
+        window.setTimeout(polishLiveStatus, 0);
+        window.setTimeout(polishLiveStatus, 350);
+      }
+    });
+  });
+
+  q('#language')?.addEventListener(
+    'change',
+    () => window.setTimeout(refresh, 0)
+  );
+  q('#settings-language')?.addEventListener(
+    'change',
+    () => window.setTimeout(refresh, 0)
+  );
+})();

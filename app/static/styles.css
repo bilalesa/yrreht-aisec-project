@@ -9036,3 +9036,178 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
     width:100%!important;
   }
 }
+
+/* BAM_BANK_UI_REVISION_V43 */
+
+#scanner-step-1 .bam-live-config-v43{
+  width:auto!important;
+  max-width:100%!important;
+  min-height:54px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  margin:14px 0 16px!important;
+  padding:10px 13px!important;
+  border:1px solid #B9E2D5!important;
+  border-radius:14px!important;
+  color:#1C5F50!important;
+  background:linear-gradient(
+    135deg,
+    rgba(239,250,246,.98),
+    rgba(247,252,250,.98)
+  )!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  transform:none!important;
+  animation:none!important;
+}
+
+#scanner-step-1 .bam-live-config-icon-v43{
+  width:32px!important;
+  height:32px!important;
+  flex:0 0 32px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:10px!important;
+  color:#16775F!important;
+  background:#DDF4EC!important;
+}
+
+#scanner-step-1 .bam-live-config-icon-v43 svg{
+  width:17px!important;
+  height:17px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2.2!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+
+#scanner-step-1 .bam-live-config-copy-v43{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+}
+
+#scanner-step-1 .bam-live-config-copy-v43 strong{
+  color:#155C4C!important;
+  font-size:10px!important;
+  font-weight:760!important;
+  line-height:1.25!important;
+}
+
+#scanner-step-1 .bam-live-config-copy-v43 small{
+  color:#648379!important;
+  font-size:8.8px!important;
+  line-height:1.4!important;
+}
+
+#bam-experience-hero .bam-pulse-art{
+  overflow:visible!important;
+}
+
+#bam-experience-hero .bam-flow-line-v43{
+  stroke-dasharray:18 11!important;
+  animation:bam-v43-flow-dash 8s linear infinite!important;
+}
+
+#bam-experience-hero .bam-flow-glow-v43{
+  animation:bam-v43-glow 4.8s ease-in-out infinite!important;
+}
+
+#bam-experience-hero .bam-flow-orbit-v43{
+  stroke-dasharray:10 8!important;
+  animation:bam-v43-orbit-dash 13s linear infinite!important;
+}
+
+#bam-experience-hero .bam-flow-node-v43{
+  transform-box:fill-box!important;
+  transform-origin:center!important;
+  animation:bam-v43-node-pulse 3.6s ease-in-out infinite!important;
+}
+
+#bam-experience-hero .bam-flow-node-2-v43{
+  animation-delay:.55s!important;
+}
+
+#bam-experience-hero .bam-flow-node-3-v43{
+  animation-delay:1.1s!important;
+}
+
+#bam-experience-hero .bam-flow-node-4-v43{
+  animation-delay:1.65s!important;
+}
+
+#bam-experience-hero .bam-flow-core-ring-1-v43,
+#bam-experience-hero .bam-flow-core-ring-2-v43{
+  transform-box:fill-box!important;
+  transform-origin:center!important;
+  animation:bam-v43-core-breathe 4.4s ease-in-out infinite!important;
+}
+
+#bam-experience-hero .bam-flow-core-ring-2-v43{
+  animation-delay:.6s!important;
+}
+
+#bam-experience-hero .bam-flow-particle-v43{
+  filter:
+    drop-shadow(0 0 6px rgba(125,232,200,.95))
+    drop-shadow(0 0 12px rgba(123,185,255,.55))!important;
+}
+
+@keyframes bam-v43-flow-dash{
+  to{stroke-dashoffset:-116}
+}
+
+@keyframes bam-v43-orbit-dash{
+  to{stroke-dashoffset:-144}
+}
+
+@keyframes bam-v43-glow{
+  0%,100%{opacity:.52}
+  50%{opacity:.9}
+}
+
+@keyframes bam-v43-node-pulse{
+  0%,100%{
+    opacity:.84;
+    transform:scale(1);
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.16);
+  }
+}
+
+@keyframes bam-v43-core-breathe{
+  0%,100%{
+    opacity:.82;
+    transform:scale(1);
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.055);
+  }
+}
+
+@media(max-width:760px){
+  #scanner-step-1 .bam-live-config-v43{
+    margin:10px 0 13px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  #bam-experience-hero .bam-flow-line-v43,
+  #bam-experience-hero .bam-flow-glow-v43,
+  #bam-experience-hero .bam-flow-orbit-v43,
+  #bam-experience-hero .bam-flow-node-v43,
+  #bam-experience-hero .bam-flow-core-ring-1-v43,
+  #bam-experience-hero .bam-flow-core-ring-2-v43{
+    animation:none!important;
+  }
+
+  #bam-experience-hero .bam-flow-particle-v43{
+    display:none!important;
+  }
+}
