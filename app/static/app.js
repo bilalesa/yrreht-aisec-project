@@ -21,6 +21,21 @@ async function api(path, options = {}) {
   return body;
 }
 
+
+function safeText(selector, value) {
+  const node = $(selector);
+  if (!node) return false;
+  node.textContent = value == null ? '' : String(value);
+  return true;
+}
+
+function safeValue(selector, value) {
+  const node = $(selector);
+  if (!node) return false;
+  node.value = value == null ? '' : String(value);
+  return true;
+}
+
 function setPill(el, type, label) {
   el.className = `pill ${type}`;
   el.textContent = label;
@@ -93,37 +108,37 @@ async function loadSettings() {
   try {
     state.settings = await api('/api/settings');
     const guardSettings = state.settings.aiGuard;
-    $('#guard-region').value = guardSettings.region;
-    $('#guard-app-name').value = guardSettings.applicationName;
-    $('#guard-base-url').value = guardSettings.baseUrl || '';
+    safeValue('#guard-region', guardSettings.region);
+    safeValue('#guard-app-name', guardSettings.applicationName);
+    safeValue('#guard-base-url', guardSettings.baseUrl || '');
     $('#force-demo-mode').checked = guardSettings.forceDemoMode;
-    $('#vulnerable-endpoint').textContent = state.settings.scanner.vulnerableEndpoint;
-    $('#protected-endpoint').textContent = state.settings.scanner.protectedEndpoint;
-    $('#file-limit').textContent = `Any file type · maximum ${state.settings.fileSecurity.maxUploadMb} MB`;
-    $('#tmas-command').textContent = `export TMAS_API_KEY=<VISION_ONE_API_KEY>\ntmas aiscan llm -i --region=${state.settings.fileSecurity.region}`;
+    safeText('#vulnerable-endpoint', state.settings.scanner.vulnerableEndpoint);
+    safeText('#protected-endpoint', state.settings.scanner.protectedEndpoint);
+    safeText('#file-limit', `Any file type · maximum ${state.settings.fileSecurity.maxUploadMb} MB`);
+    safeText('#tmas-command', `export TMAS_API_KEY=<VISION_ONE_API_KEY>\ntmas aiscan llm -i --region=${state.settings.fileSecurity.region}`);
 
     const available = guardSettings.forceDemoMode || guardSettings.configured;
     state.guardEnabled = available;
     $('#guard-toggle').checked = available;
     $('#guard-toggle').disabled = !available;
-    $('#guard-mode-label').textContent = available
+    safeText('#guard-mode-label', available
       ? 'Protected · prompts and responses inspected'
-      : 'Protection unavailable';
+      : 'Protection unavailable');
 
     if (guardSettings.forceDemoMode) {
       setPill($('#guard-status-badge'), 'warning', 'Local Demo');
-      $('#guard-status-title').textContent = 'AI Guard local demonstration mode';
-      $('#guard-status-description').textContent = 'Pattern matching is active. Configure a Vision One key for live inspection.';
+      safeText('#guard-status-title', 'AI Guard local demonstration mode');
+      safeText('#guard-status-description', 'Pattern matching is active. Configure a Vision One key for live inspection.');
       $('#launcher-status').classList.add('online');
     } else if (guardSettings.configured) {
       setPill($('#guard-status-badge'), 'success', 'Configured');
-      $('#guard-status-title').textContent = 'Trend-hosted AI Guard is configured';
-      $('#guard-status-description').textContent = `Prompt and response inspection uses the ${guardSettings.region.toUpperCase()} regional Vision One API.`;
+      safeText('#guard-status-title', 'Trend-hosted AI Guard is configured');
+      safeText('#guard-status-description', `Prompt and response inspection uses the ${guardSettings.region.toUpperCase()} regional Vision One API.`);
       $('#launcher-status').classList.add('online');
     } else {
       setPill($('#guard-status-badge'), 'danger', 'Action Required');
-      $('#guard-status-title').textContent = 'AI Guard is not configured';
-      $('#guard-status-description').textContent = 'Provide the API key through a Kubernetes Secret or enable runtime configuration.';
+      safeText('#guard-status-title', 'AI Guard is not configured');
+      safeText('#guard-status-description', 'Provide the API key through a Kubernetes Secret or enable runtime configuration.');
       $('#launcher-status').classList.remove('online');
     }
 
@@ -133,7 +148,7 @@ async function loadSettings() {
     else setPill($('#file-status-badge'), 'danger', 'Not Configured');
 
     if (!guardSettings.runtimeConfigurationAllowed) {
-      $('#save-guard').textContent = 'Kubernetes Secret Required';
+      safeText('#save-guard', 'Kubernetes Secret Required');
       $('#guard-api-key').disabled = true;
       $('#guard-region').disabled = true;
       $('#guard-app-name').disabled = true;
@@ -9912,4 +9927,26 @@ exposePresenterLabFromUrl();
     'change',
     () => window.setTimeout(install, 0)
   );
+})();
+
+
+/* BAM_BANK_UI_REVISION_V46 */
+(() => {
+  const q = (selector, root = document) =>
+    root.querySelector(selector);
+
+  function hardenSettingsUi() {
+    const input = q('#guard-api-key');
+    if (input) {
+      input.value = '';
+      input.placeholder = 'Used once and never saved';
+      input.autocomplete = 'new-password';
+      input.spellcheck = false;
+    }
+  }
+
+  hardenSettingsUi();
+  [100, 350, 900, 1800].forEach(delay => {
+    window.setTimeout(hardenSettingsUi, delay);
+  });
 })();

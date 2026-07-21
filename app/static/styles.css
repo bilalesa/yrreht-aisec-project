@@ -9400,3 +9400,10 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
   cursor:not-allowed!important;
   opacity:.58!important;
 }
+
+
+/* BAM_BANK_UI_REVISION_V46 */
+#toast.show{
+  max-width:min(560px,calc(100vw - 32px))!important;
+  overflow-wrap:anywhere!important;
+}
