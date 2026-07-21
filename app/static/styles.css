@@ -9555,3 +9555,73 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
 #cp-messages{display:flex;flex-direction:column;gap:10px}.cp-message{padding:13px;border:1px solid #dae4f1;border-radius:12px;background:#fff}.cp-message>div{margin-bottom:8px}.cp-message select{width:150px}.cp-actions{justify-content:flex-end}
 .cp-result{padding:15px;border:1px solid #d4dfed;border-radius:13px;background:#fff}.cp-result.hidden{display:none}.cp-result.blocked{border-color:#99dfc7;background:#f1fbf7}.cp-result.successful{border-color:#efc3c3;background:#fff7f7}.cp-result.error{border-color:#ead19f;background:#fffaf0}.cp-result header b{text-transform:uppercase;font-size:10px}.cp-result>div{display:flex;gap:8px;margin:12px 0}.cp-result>div span{padding:7px 9px;border-radius:8px;background:#fff;font-size:9px}.cp-result p,.cp-result pre{font-size:9px;white-space:pre-wrap}
 @media(max-width:760px){.cp-grid{grid-template-columns:1fr}.cp-grid .wide{grid-column:auto}.cp-studio header{flex-direction:column}}
+
+/* BAM_BANK_UI_REVISION_V53 */
+#scanner-content .cp-mode{display:flex;width:fit-content;gap:6px;margin:0 0 20px;padding:5px;border:1px solid #dfe6f1;border-radius:12px;background:#f5f7fb}
+#scanner-content .cp-mode button{min-height:34px;padding:0 16px;border:1px solid transparent;border-radius:9px;background:transparent;color:#718097;font-size:10px;font-weight:750;line-height:1;transition:.18s ease}
+#scanner-content .cp-mode button:hover{color:#315fbd;background:#edf3ff}
+#scanner-content .cp-mode button.active{border-color:#cbdafa;background:#fff;color:#155eef;box-shadow:0 3px 10px rgba(30,72,150,.09)}
+#scanner-content .cp-studio{gap:20px;padding:22px;border:1px solid #dfe6f1;border-radius:16px;background:#fff;box-shadow:0 7px 22px rgba(36,61,107,.045)}
+#scanner-content .cp-studio>header{align-items:flex-start;padding-bottom:17px;border-bottom:1px solid #edf1f6}
+#scanner-content .cp-studio>header>div{display:flex;flex-direction:column;align-items:flex-start}
+#scanner-content .cp-studio>header span{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:6px;background:#edf3ff;color:#225fcf;font-size:8px;font-weight:800;letter-spacing:.12em}
+#scanner-content .cp-studio h3{margin:8px 0 4px;color:#1c2c46;font-size:16px;line-height:1.2}
+#scanner-content .cp-studio>header p{max-width:520px;color:#76849a;font-size:10px;line-height:1.5}
+#scanner-content .cp-studio>header small{display:flex;align-items:center;max-width:260px;min-height:34px;padding:8px 11px;border:1px solid #dce6f5;border-radius:9px;background:#f7f9fd;color:#60728e;font-size:8.5px;line-height:1.45}
+#scanner-content .cp-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:15px 17px}
+#scanner-content .cp-grid label{gap:7px;color:#40516a;font-size:9px;font-weight:700}
+#scanner-content .cp-grid input,#scanner-content .cp-grid select,#scanner-content .cp-grid textarea,#scanner-content .cp-message select,#scanner-content .cp-message textarea{min-height:38px;padding:10px 12px;border:1px solid #d9e2ef;border-radius:9px;color:#1f304a;background:#fff;font-size:10px;line-height:1.45;transition:.18s ease}
+#scanner-content .cp-grid textarea,#scanner-content .cp-message textarea{resize:vertical}
+#scanner-content .cp-grid input:focus,#scanner-content .cp-grid select:focus,#scanner-content .cp-grid textarea:focus,#scanner-content .cp-message select:focus,#scanner-content .cp-message textarea:focus{border-color:#83a9f4;outline:0;box-shadow:0 0 0 3px rgba(35,103,255,.09)}
+#scanner-content .cp-grid small{margin-top:-1px;color:#8491a5;font-size:7.5px;font-weight:500;line-height:1.4}
+#scanner-content .cp-head{min-height:35px;margin-top:1px}
+#scanner-content .cp-head strong{color:#293a55;font-size:10px;font-weight:750}
+#scanner-content .cp-head button,#scanner-content .cp-message button{min-height:31px;padding:0 12px;border:1px solid #cfdcf0;border-radius:8px;background:#fff;color:#3564b4;font-size:8.5px;font-weight:750}
+#scanner-content .cp-head button:hover,#scanner-content .cp-message button:hover:not(:disabled){border-color:#aac2ee;background:#f4f8ff}
+#scanner-content #cp-messages{gap:12px}
+#scanner-content .cp-message{padding:14px;border:1px solid #dde5f0;border-radius:12px;background:#fafcff;color:#41516a;box-shadow:none}
+#scanner-content .cp-message>div{margin-bottom:9px}
+#scanner-content .cp-message select{width:128px;min-height:34px;padding-top:7px;padding-bottom:7px;background:#fff}
+#scanner-content .cp-message textarea{min-height:78px;background:#fff}
+#scanner-content .cp-actions{gap:9px;padding-top:2px}
+#scanner-content .cp-actions button{display:inline-flex;align-items:center;justify-content:center;min-width:124px;min-height:36px;padding:0 15px;border-radius:9px;font-size:9px;font-weight:750}
+#scanner-content #cp-export{border:1px solid #cfd9e8;background:#fff;color:#4d607c}
+#scanner-content #cp-export:hover{border-color:#aebfd8;background:#f6f8fc}
+#scanner-content #cp-run{border:1px solid #155eef;background:#155eef;color:#fff;box-shadow:0 5px 13px rgba(21,94,239,.18)}
+#scanner-content #cp-run:hover{border-color:#0e4fd3;background:#0e4fd3;transform:translateY(-1px)}
+#scanner-content #cp-run:disabled{opacity:.65;transform:none;cursor:wait}
+#scanner-content .cp-result{padding:16px 17px;border-radius:12px;box-shadow:none}
+#scanner-content .cp-result.blocked{border:1px solid #9edfc8;background:#f1fbf7}
+#scanner-content .cp-result.successful{border:1px solid #efc3c8;background:#fff7f8}
+#scanner-content .cp-result.error{border:1px solid #ead19f;background:#fffbf2}
+#scanner-content .cp-result header strong{color:#243650;font-size:11px}
+#scanner-content .cp-result header b{padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.75);color:#34445c;font-size:7.5px;letter-spacing:.06em}
+#scanner-content .cp-result>div{flex-wrap:wrap;margin:11px 0 9px}
+#scanner-content .cp-result>div span{border:1px solid rgba(205,217,232,.7);background:rgba(255,255,255,.82);color:#52637d}
+#scanner-content .cp-result p{margin:0;color:#53647c;line-height:1.5}
+
+.chat-launcher{right:24px;bottom:24px;width:auto;min-width:154px;height:56px;padding:0 15px 0 10px;border:1px solid rgba(255,255,255,.38);border-radius:17px;display:flex;align-items:center;justify-content:flex-start;gap:10px;background:radial-gradient(circle at 18% 0%,rgba(111,226,255,.72),transparent 34%),linear-gradient(135deg,#123eaa 0%,#165fe8 52%,#1689e8 100%);color:#fff;box-shadow:0 15px 34px rgba(19,74,182,.32),inset 0 1px 0 rgba(255,255,255,.20);font-size:initial;overflow:visible;transition:.18s ease}
+.chat-launcher:hover{transform:translateY(-2px);filter:saturate(1.08);box-shadow:0 19px 42px rgba(19,74,182,.38),inset 0 1px 0 rgba(255,255,255,.24)}
+.chat-launcher:active{transform:translateY(0)}
+.chat-launcher .chat-icon{width:37px;height:37px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.chat-launcher .chat-icon svg{width:21px;height:21px}
+.chat-launcher .bam-assist-copy-v53{display:flex;min-width:78px;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;line-height:1}
+.chat-launcher .bam-assist-copy-v53 strong{color:#fff;font-size:11px;font-weight:800;letter-spacing:.01em}
+.chat-launcher .bam-assist-copy-v53 small{color:#d9e8ff;font-size:7.5px;font-weight:600;white-space:nowrap}
+.chat-launcher i{right:-2px;top:-2px;width:11px;height:11px;border-width:2px;box-shadow:0 2px 7px rgba(10,35,86,.18)}
+.chat-panel header{background:radial-gradient(circle at 12% 0%,rgba(93,214,255,.22),transparent 31%),linear-gradient(135deg,#0b1c49,#123b91)}
+.assistant-avatar{position:relative;overflow:hidden;width:40px;height:40px;border-radius:13px;color:transparent;background:linear-gradient(135deg,#5ee0ff,#4f7cff 56%,#7957f6);box-shadow:0 7px 18px rgba(31,99,255,.28)}
+.assistant-avatar::before{content:"";width:19px;height:15px;border:2px solid #fff;border-radius:6px;position:absolute;left:9px;top:9px}
+.assistant-avatar::after{content:"";width:6px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;position:absolute;left:11px;top:21px;transform:skewY(-28deg)}
+.chat-panel header strong{font-size:12px;letter-spacing:.005em}
+.chat-panel header small{margin-top:2px;color:#bfd2fb;font-size:9px}
+@media(max-width:760px){
+  #scanner-content .cp-grid{grid-template-columns:1fr}
+  #scanner-content .cp-grid .wide{grid-column:auto}
+  #scanner-content .cp-studio>header{flex-direction:column}
+  #scanner-content .cp-studio>header small{max-width:none}
+  #scanner-content .cp-actions{display:grid;grid-template-columns:1fr 1fr}
+  #scanner-content .cp-actions button{width:100%;min-width:0}
+  .chat-launcher{min-width:56px;width:56px;padding:0;justify-content:center;border-radius:17px}
+  .chat-launcher .bam-assist-copy-v53{display:none}
+}

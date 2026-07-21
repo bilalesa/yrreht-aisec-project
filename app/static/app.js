@@ -10457,3 +10457,47 @@ exposePresenterLabFromUrl();
 
 
 /* BAM_BANK_UI_REVISION_V52 */
+
+/* BAM_BANK_UI_REVISION_V53 */
+(() => {
+  function isIndonesian() {
+    return localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id';
+  }
+
+  function syncLauncher() {
+    const launcher = document.querySelector('#chat-launcher');
+    if (!launcher) return;
+
+    let copy = launcher.querySelector('.bam-assist-copy-v53');
+    if (!copy) {
+      copy = document.createElement('span');
+      copy.className = 'bam-assist-copy-v53';
+      const status = launcher.querySelector('#launcher-status');
+      if (status) launcher.insertBefore(copy, status);
+      else launcher.appendChild(copy);
+    }
+
+    copy.innerHTML = isIndonesian()
+      ? '<strong>BAM Assist</strong><small>Asisten AI aman</small>'
+      : '<strong>BAM Assist</strong><small>Secure AI banking</small>';
+
+    launcher.setAttribute(
+      'aria-label',
+      isIndonesian() ? 'Buka BAM Assist' : 'Open BAM Assist'
+    );
+  }
+
+  syncLauncher();
+  [150, 500, 1200].forEach(delay => window.setTimeout(syncLauncher, delay));
+
+  ['#language', '#settings-language'].forEach(selector => {
+    const control = document.querySelector(selector);
+    if (control) {
+      control.addEventListener(
+        'change',
+        () => window.setTimeout(syncLauncher, 0)
+      );
+    }
+  });
+})();
