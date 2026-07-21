@@ -36,6 +36,27 @@ function safeValue(selector, value) {
   return true;
 }
 
+function safeChecked(selector, checked) {
+  const node = $(selector);
+  if (!node) return false;
+  node.checked = Boolean(checked);
+  return true;
+}
+
+function safeDisabled(selector, disabled) {
+  const node = $(selector);
+  if (!node) return false;
+  node.disabled = Boolean(disabled);
+  return true;
+}
+
+function safeClass(selector, action, ...tokens) {
+  const node = $(selector);
+  if (!node) return false;
+  node.classList[action](...tokens);
+  return true;
+}
+
 function setPill(el, type, label) {
   el.className = `pill ${type}`;
   el.textContent = label;
@@ -111,7 +132,7 @@ async function loadSettings() {
     safeValue('#guard-region', guardSettings.region);
     safeValue('#guard-app-name', guardSettings.applicationName);
     safeValue('#guard-base-url', guardSettings.baseUrl || '');
-    $('#force-demo-mode').checked = guardSettings.forceDemoMode;
+    safeChecked('#force-demo-mode', guardSettings.forceDemoMode);
     safeText('#vulnerable-endpoint', state.settings.scanner.vulnerableEndpoint);
     safeText('#protected-endpoint', state.settings.scanner.protectedEndpoint);
     safeText('#file-limit', `Any file type · maximum ${state.settings.fileSecurity.maxUploadMb} MB`);
@@ -119,8 +140,8 @@ async function loadSettings() {
 
     const available = guardSettings.forceDemoMode || guardSettings.configured;
     state.guardEnabled = available;
-    $('#guard-toggle').checked = available;
-    $('#guard-toggle').disabled = !available;
+    safeChecked('#guard-toggle', available);
+    safeDisabled('#guard-toggle', !available);
     safeText('#guard-mode-label', available
       ? 'Protected · prompts and responses inspected'
       : 'Protection unavailable');
@@ -129,17 +150,17 @@ async function loadSettings() {
       setPill($('#guard-status-badge'), 'warning', 'Local Demo');
       safeText('#guard-status-title', 'AI Guard local demonstration mode');
       safeText('#guard-status-description', 'Pattern matching is active. Configure a Vision One key for live inspection.');
-      $('#launcher-status').classList.add('online');
+      safeClass('#launcher-status', 'add', 'online');
     } else if (guardSettings.configured) {
       setPill($('#guard-status-badge'), 'success', 'Configured');
       safeText('#guard-status-title', 'Trend-hosted AI Guard is configured');
       safeText('#guard-status-description', `Prompt and response inspection uses the ${guardSettings.region.toUpperCase()} regional Vision One API.`);
-      $('#launcher-status').classList.add('online');
+      safeClass('#launcher-status', 'add', 'online');
     } else {
       setPill($('#guard-status-badge'), 'danger', 'Action Required');
       safeText('#guard-status-title', 'AI Guard is not configured');
       safeText('#guard-status-description', 'Provide the API key through a Kubernetes Secret or enable runtime configuration.');
-      $('#launcher-status').classList.remove('online');
+      safeClass('#launcher-status', 'remove', 'online');
     }
 
     const fs = state.settings.fileSecurity;
@@ -149,11 +170,11 @@ async function loadSettings() {
 
     if (!guardSettings.runtimeConfigurationAllowed) {
       safeText('#save-guard', 'Kubernetes Secret Required');
-      $('#guard-api-key').disabled = true;
-      $('#guard-region').disabled = true;
-      $('#guard-app-name').disabled = true;
-      $('#guard-base-url').disabled = true;
-      $('#force-demo-mode').disabled = true;
+      safeDisabled('#guard-api-key', true);
+      safeDisabled('#guard-region', true);
+      safeDisabled('#guard-app-name', true);
+      safeDisabled('#guard-base-url', true);
+      safeDisabled('#force-demo-mode', true);
     }
   } catch (error) {
     setPill($('#guard-pill'), 'danger', 'Backend Offline');
@@ -9950,3 +9971,6 @@ exposePresenterLabFromUrl();
     window.setTimeout(hardenSettingsUi, delay);
   });
 })();
+
+
+/* BAM_BANK_UI_REVISION_V47 */
