@@ -9211,3 +9211,163 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
     display:none!important;
   }
 }
+
+/* BAM_BANK_UI_REVISION_V44 */
+
+#bam-scanner-tenant-v35.bam-tenant-panel-v44{
+  overflow:visible!important;
+}
+
+#bam-scanner-tenant-v35 .bam-tenant-fields-grid-v44{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(280px,.8fr) minmax(380px,1.2fr)!important;
+  align-items:end!important;
+  gap:18px!important;
+  margin-top:14px!important;
+}
+
+#bam-scanner-tenant-v35 .bam-tenant-region-field-v44,
+#bam-scanner-tenant-v35 .bam-tenant-key-field-v44{
+  width:100%!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:8px!important;
+  margin:0!important;
+}
+
+#bam-scanner-tenant-v35 .bam-tenant-control-v44{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:52px!important;
+  min-height:52px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:0 15px!important;
+  border:1px solid #CCD9E8!important;
+  border-radius:14px!important;
+  color:#263751!important;
+  background-color:#FFFFFF!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  font-weight:560!important;
+  outline:none!important;
+}
+
+#bam-scanner-tenant-v35 select.bam-tenant-control-v44{
+  padding-right:45px!important;
+}
+
+#bam-scanner-tenant-v35 .bam-tenant-control-v44:hover{
+  border-color:#AFC2DA!important;
+}
+
+#bam-scanner-tenant-v35 .bam-tenant-control-v44:focus{
+  border-color:#6E94D4!important;
+  box-shadow:0 0 0 4px rgba(65,105,180,.10)!important;
+}
+
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-mark-v41::before{
+  animation:bam-v44-status-pulse 2.2s ease-in-out infinite!important;
+}
+
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-mark-v41::after{
+  animation:bam-v44-ready-dot 1.8s ease-in-out infinite!important;
+}
+
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-track-v37{
+  position:relative!important;
+  height:7px!important;
+  overflow:hidden!important;
+  border-radius:999px!important;
+  background:#E7EDF5!important;
+}
+
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-track-v37 i{
+  position:absolute!important;
+  inset:0 auto 0 -34%!important;
+  width:34%!important;
+  height:100%!important;
+  display:block!important;
+  border-radius:999px!important;
+  background:linear-gradient(
+    90deg,
+    rgba(58,114,211,0),
+    rgba(58,114,211,.36) 24%,
+    rgba(79,194,170,.92) 58%,
+    rgba(111,143,244,.88) 82%,
+    rgba(111,143,244,0)
+  )!important;
+  box-shadow:0 0 12px rgba(81,157,221,.30)!important;
+  transform:none!important;
+  animation:bam-v44-progress-sweep 2.35s
+    cubic-bezier(.45,0,.2,1) infinite!important;
+}
+
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-copy-v41,
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-status-v41,
+#scanner-content #scan-progress.bam-running-motion-v44
+.bam-running-pill-v41,
+#scanner-content #scan-progress.bam-running-motion-v44
+#bam-scan-elapsed-v39{
+  transform:none!important;
+  animation:none!important;
+  rotate:0deg!important;
+}
+
+@keyframes bam-v44-progress-sweep{
+  0%{left:-34%;opacity:.18}
+  12%{opacity:1}
+  82%{opacity:1}
+  100%{left:100%;opacity:.15}
+}
+
+@keyframes bam-v44-status-pulse{
+  0%,100%{
+    box-shadow:0 0 0 8px rgba(57,116,212,.08)!important;
+    transform:translate(-50%,-50%) scale(1)!important;
+  }
+  50%{
+    box-shadow:0 0 0 13px rgba(57,116,212,.03)!important;
+    transform:translate(-50%,-50%) scale(1.08)!important;
+  }
+}
+
+@keyframes bam-v44-ready-dot{
+  0%,100%{opacity:.68;transform:scale(.88)}
+  50%{opacity:1;transform:scale(1.12)}
+}
+
+@media(max-width:900px){
+  #bam-scanner-tenant-v35 .bam-tenant-fields-grid-v44{
+    grid-template-columns:1fr!important;
+    gap:13px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  #scanner-content #scan-progress.bam-running-motion-v44
+  .bam-running-mark-v41::before,
+  #scanner-content #scan-progress.bam-running-motion-v44
+  .bam-running-mark-v41::after,
+  #scanner-content #scan-progress.bam-running-motion-v44
+  .bam-running-track-v37 i{
+    animation:none!important;
+  }
+
+  #scanner-content #scan-progress.bam-running-motion-v44
+  .bam-running-track-v37 i{
+    left:0!important;
+    width:100%!important;
+    opacity:.72!important;
+  }
+}

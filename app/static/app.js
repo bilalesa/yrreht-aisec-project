@@ -9770,3 +9770,65 @@ exposePresenterLabFromUrl();
     () => window.setTimeout(refresh, 0)
   );
 })();
+
+/* BAM_BANK_UI_REVISION_V44 */
+(() => {
+  const q = (selector, root = document) =>
+    root.querySelector(selector);
+
+  function commonAncestor(first, second, boundary) {
+    if (!first || !second) return null;
+    let current = first.parentElement;
+    while (current && current !== boundary) {
+      if (current.contains(second)) return current;
+      current = current.parentElement;
+    }
+    return null;
+  }
+
+  function polishTenantFields() {
+    const root = q('#bam-scanner-tenant-v35');
+    const region = q('#bam-scanner-custom-region-v35');
+    const apiKey = q('#bam-scanner-custom-key-v35');
+    if (!root || !region || !apiKey) return false;
+
+    const regionLabel = region.closest('label') || region.parentElement;
+    const keyLabel = apiKey.closest('label') || apiKey.parentElement;
+    const host = commonAncestor(regionLabel, keyLabel, root);
+
+    root.classList.add('bam-tenant-panel-v44');
+    host?.classList.add('bam-tenant-fields-grid-v44');
+    regionLabel?.classList.add('bam-tenant-region-field-v44');
+    keyLabel?.classList.add('bam-tenant-key-field-v44');
+    region.classList.add('bam-tenant-control-v44');
+    apiKey.classList.add('bam-tenant-control-v44');
+    return true;
+  }
+
+  function enableRunningMotion() {
+    const progress = q('#scan-progress');
+    if (!progress) return false;
+    progress.classList.add('bam-running-motion-v44');
+    return true;
+  }
+
+  function install() {
+    polishTenantFields();
+    enableRunningMotion();
+  }
+
+  install();
+  [120, 400, 900, 1800].forEach(delay => {
+    window.setTimeout(install, delay);
+  });
+
+  document.addEventListener('click', event => {
+    if (event.target.closest(
+      '[data-bam-scanner-mode], .scanner-steps button, ' +
+      '#run-scan, [data-next-step]'
+    )) {
+      window.setTimeout(install, 0);
+      window.setTimeout(install, 250);
+    }
+  });
+})();
