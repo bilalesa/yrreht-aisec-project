@@ -5,18 +5,8 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    environment:
-      TMAS_BINARY: /usr/local/bin/tmas
-      TMAS_ENV_FILE: /run/secrets/tmas.env
-      TMAS_REGION: ap-southeast-1
-      AI_SCANNER_TARGET_BASE_URL: http://127.0.0.1:8080
-      AI_SCANNER_RUNTIME_DIR: /tmp/bambank-aiscan
-      AI_SCANNER_MAX_SECONDS: "900"
     volumes:
       - bank-demo-data:/data
-      # BAM_BANK_UI_REVISION_V56
-      - /usr/local/bin/tmas:/usr/local/bin/tmas:ro
-      - /home/ec2-user/.tmas/.env:/run/secrets/tmas.env:ro
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777

@@ -19,8 +19,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .config import AI_GUARD_PUBLIC_REGIONS, REGION_BASE_URLS, RuntimeConfig, Settings
-from .vision_one_live import router as vision_one_live_router
-
 from .services import (
     AIGuardClient,
     BankLLM,
@@ -49,7 +47,6 @@ app = FastAPI(
     redoc_url=None,
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.include_router(vision_one_live_router)
 
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
