@@ -419,6 +419,19 @@ async def run_live(
                     f"{TMAS_BINARY}"
                 )
 
+            # BAM_V58_CREDENTIAL_PREFLIGHT
+            readable_env_file = bool(
+                TMAS_ENV_FILE
+                and Path(TMAS_ENV_FILE).is_file()
+                and os.access(TMAS_ENV_FILE, os.R_OK)
+                and os.access(TMAS_ENV_FILE, os.R_OK)
+            )
+            if not os.getenv("TMAS_API_KEY") and not readable_env_file:
+                raise RuntimeError(
+                    "TMAS credential is unavailable. Configure "
+                    "TMAS_API_KEY in the container environment."
+                )
+
             command = [
                 TMAS_BINARY,
                 "aiscan",
@@ -432,6 +445,8 @@ async def run_live(
             if (
                 TMAS_ENV_FILE
                 and Path(TMAS_ENV_FILE).is_file()
+                and os.access(TMAS_ENV_FILE, os.R_OK)
+                and os.access(TMAS_ENV_FILE, os.R_OK)
             ):
                 command.extend(
                     [

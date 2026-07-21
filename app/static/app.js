@@ -11003,3 +11003,295 @@ exposePresenterLabFromUrl();
   install();
   [200, 650, 1400].forEach(delay => window.setTimeout(install, delay));
 })();
+
+/* BAM_BANK_UI_REVISION_V58 */
+(() => {
+  if (window.__bamRevisionV58) return;
+  window.__bamRevisionV58 = true;
+
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+  let syncingGuard = false;
+
+  const chatIcon = `
+    <svg viewBox="0 0 48 48" focusable="false">
+      <path class="bam-chat-bubble-v58"
+        d="M10.5 9.5h27a5 5 0 0 1 5 5v16a5 5 0 0 1-5 5H23l-10.5 6v-6.4a5 5 0 0 1-4-4.9V14.5a5 5 0 0 1 5-5Z"/>
+      <circle class="bam-chat-dot-v58 dot-one" cx="18" cy="23" r="2.2"/>
+      <circle class="bam-chat-dot-v58 dot-two" cx="24.5" cy="23" r="2.2"/>
+      <circle class="bam-chat-dot-v58 dot-three" cx="31" cy="23" r="2.2"/>
+      <path class="bam-chat-spark-v58"
+        d="M37 5.2c.45 2.7 2.05 4.3 4.75 4.75-2.7.45-4.3 2.05-4.75 4.75-.45-2.7-2.05-4.3-4.75-4.75C34.95 9.5 36.55 7.9 37 5.2Z"/>
+    </svg>`;
+
+  const guardIcon = `
+    <span class="bam-guard-icon-v58" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3.2 19 6v5.1c0 4.6-2.9 7.8-7 9.4-4.1-1.6-7-4.8-7-9.4V6l7-2.8Z"/>
+        <path d="m8.8 12 2.1 2.1 4.5-4.7"/>
+      </svg>
+    </span>`;
+
+  function polishLauncher() {
+    const launcher = q('#chat-launcher');
+    if (!launcher) return false;
+
+    if (!launcher.classList.contains('bam-chat-launcher-v58')) {
+      launcher.classList.add('bam-chat-launcher-v58');
+      launcher.setAttribute('aria-label', 'Open BAM Assist');
+      launcher.setAttribute('title', 'Open BAM Assist');
+      launcher.innerHTML = `
+        <span class="bam-chat-orb-v58" aria-hidden="true">${chatIcon}</span>
+        <span class="bam-chat-copy-v58">
+          <strong>BAM Assist</strong>
+          <small>Secure AI banking</small>
+        </span>
+        <span class="bam-chat-live-v58"><i></i>Online</span>
+        <i id="launcher-status"></i>`;
+    }
+
+    const avatar = q('#chat-panel .assistant-avatar, .assistant-avatar');
+    if (avatar && !avatar.classList.contains('bam-chat-avatar-v58')) {
+      avatar.classList.add('bam-chat-avatar-v58');
+      avatar.innerHTML = chatIcon;
+    }
+    return true;
+  }
+
+  function findGuardRows() {
+    const rows = new Set();
+
+    const original = q('#guard-toggle');
+    if (original) {
+      const row = original.closest(
+        '.guard-banner,[class*="runtime"],[class*="control"],section,article,div'
+      );
+      if (row) rows.add(row);
+    }
+
+    qa('strong,h2,h3,h4,span,div').forEach(title => {
+      if ((title.textContent || '').trim() !== 'AI Guard') return;
+      let row = title.closest(
+        '[class*="runtime"],[class*="control"],[class*="guard"],section,article,div'
+      );
+      while (row && !row.querySelector('input[type="checkbox"]')) {
+        row = row.parentElement;
+      }
+      if (row) rows.add(row);
+    });
+
+    return [...rows];
+  }
+
+  function guardInputs() {
+    const inputs = new Set();
+    const original = q('#guard-toggle');
+    if (original) inputs.add(original);
+
+    findGuardRows().forEach(row => {
+      qa('input[type="checkbox"]', row).forEach(input => inputs.add(input));
+    });
+
+    qa(
+      'input[type="checkbox"][data-runtime-control="guard"],' +
+      'input[type="checkbox"][id*="ai-guard"],' +
+      'input[type="checkbox"][id*="guard-toggle"]'
+    ).forEach(input => inputs.add(input));
+
+    return [...inputs];
+  }
+
+  function updateGuardVisuals(enabled) {
+    findGuardRows().forEach(row => {
+      row.classList.add('bam-guard-row-v58');
+      row.classList.toggle('is-enabled', enabled);
+
+      qa('small,p', row).forEach(node => {
+        const text = (node.textContent || '').trim().toLowerCase();
+        if (
+          text.includes('unprotected demo') ||
+          text.includes('direct model response') ||
+          text.includes('protected by') ||
+          text.includes('runtime enforcement')
+        ) {
+          node.textContent = enabled
+            ? 'Protected by Trend Vision One AI Guard'
+            : 'Unprotected demo · direct model response';
+        }
+      });
+
+      qa('.pill,[class*="badge"],[class*="status"]').forEach(node => {
+        const text = (node.textContent || '').trim().toLowerCase();
+        if (['baseline', 'protected', 'enabled', 'disabled'].includes(text)) {
+          node.textContent = enabled ? 'Protected' : 'Baseline';
+          node.classList.toggle('is-protected', enabled);
+        }
+      });
+    });
+
+    const label = q('#guard-mode-label');
+    if (label) {
+      label.textContent = enabled
+        ? 'AI Guard protection enabled'
+        : 'Unprotected demo · direct model response';
+    }
+  }
+
+  function setGuardState(enabled, source = null) {
+    if (syncingGuard) return;
+    syncingGuard = true;
+
+    try {
+      const inputs = guardInputs();
+      inputs.forEach(input => {
+        input.disabled = false;
+        input.removeAttribute('disabled');
+        input.setAttribute('aria-disabled', 'false');
+        input.checked = enabled;
+      });
+
+      if (typeof state === 'object' && state) {
+        state.guardEnabled = enabled;
+      }
+
+      const original = q('#guard-toggle');
+      if (original && source !== original) {
+        original.checked = enabled;
+        original.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      updateGuardVisuals(enabled);
+    } finally {
+      syncingGuard = false;
+    }
+  }
+
+  function installGuard() {
+    const inputs = guardInputs();
+    if (!inputs.length) return false;
+
+    inputs.forEach(input => {
+      input.disabled = false;
+      input.removeAttribute('disabled');
+      input.setAttribute('aria-disabled', 'false');
+
+      if (input.dataset.bamGuardV58Bound !== 'true') {
+        input.dataset.bamGuardV58Bound = 'true';
+        input.addEventListener('change', event => {
+          if (!syncingGuard) {
+            setGuardState(Boolean(event.target.checked), event.target);
+          }
+        });
+      }
+    });
+
+    findGuardRows().forEach(row => {
+      row.classList.add('bam-guard-row-v58');
+      qa('.bam-runtime-icon-v55', row).forEach(icon => icon.remove());
+      if (q('.bam-guard-icon-v58', row)) return;
+
+      const title = qa('strong,h2,h3,h4,span,div', row)
+        .find(node => (node.textContent || '').trim() === 'AI Guard');
+      if (!title) return;
+
+      const host = title.parentElement || title;
+      host.classList.add('bam-guard-copy-v58');
+      host.insertAdjacentHTML('afterbegin', guardIcon);
+    });
+
+    const original = q('#guard-toggle');
+    updateGuardVisuals(original ? Boolean(original.checked) : inputs.some(input => input.checked));
+    return true;
+  }
+
+  function modeIcon(type) {
+    if (type === 'live') {
+      return `
+        <span class="cp-mode-icon-v58 live" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 17.5h10a4 4 0 0 0 .5-7.97A5.7 5.7 0 0 0 6.65 8.1 4.8 4.8 0 0 0 7 17.5Z"/>
+            <path d="m9.5 13 2 2 3.7-4"/>
+          </svg>
+        </span>`;
+    }
+    return `
+      <span class="cp-mode-icon-v58 demo" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M8 6.5 17 12l-9 5.5v-11Z"/></svg>
+      </span>`;
+  }
+
+  function polishModes() {
+    const studio = q('#cp-studio');
+    const mode = q('#cp-live-mode-v57');
+    if (!studio || !mode) return false;
+
+    let toolbar = q('#cp-execution-toolbar-v58');
+    if (!toolbar) {
+      toolbar = document.createElement('section');
+      toolbar.id = 'cp-execution-toolbar-v58';
+      toolbar.className = 'cp-execution-toolbar-v58';
+      toolbar.innerHTML = `
+        <div class="cp-execution-copy-v58">
+          <span>Execution mode</span>
+          <small>Choose a local preview or an official Vision One assessment.</small>
+        </div>`;
+      q(':scope > header', studio)?.insertAdjacentElement('afterend', toolbar);
+    }
+
+    if (mode.parentElement !== toolbar) toolbar.appendChild(mode);
+    mode.classList.add('cp-live-mode-v58');
+
+    const demo = q('[data-cp-execution="demo"]', mode);
+    const live = q('[data-cp-execution="live"]', mode);
+
+    if (demo && demo.dataset.bamModeV58 !== 'true') {
+      demo.dataset.bamModeV58 = 'true';
+      demo.innerHTML = `
+        ${modeIcon('demo')}
+        <span><strong>Demo</strong><small>Test in app</small></span>`;
+    }
+
+    if (live && live.dataset.bamModeV58 !== 'true') {
+      live.dataset.bamModeV58 = 'true';
+      live.innerHTML = `
+        ${modeIcon('live')}
+        <span><strong>Vision One Live</strong><small>TMAS · hosted judge</small></span>`;
+    }
+
+    const globalMode = q('#bam-scanner-mode-v31');
+    globalMode?.classList.toggle(
+      'bam-hide-global-mode-v58',
+      !studio.classList.contains('hidden')
+    );
+    return true;
+  }
+
+  function install() {
+    polishLauncher();
+    installGuard();
+    polishModes();
+  }
+
+  const observer = new MutationObserver(() => {
+    window.requestAnimationFrame(install);
+  });
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['disabled', 'class']
+  });
+
+  document.addEventListener('click', event => {
+    if (event.target.closest(
+      '#chat-launcher,[data-cp-mode],[data-security-tab="scanner"],#cp-run'
+    )) {
+      window.setTimeout(install, 0);
+      window.setTimeout(install, 220);
+    }
+  });
+
+  install();
+  [120, 400, 900, 1600].forEach(delay => window.setTimeout(install, delay));
+})();
