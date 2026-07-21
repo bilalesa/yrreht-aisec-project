@@ -9974,3 +9974,352 @@ exposePresenterLabFromUrl();
 
 
 /* BAM_BANK_UI_REVISION_V47 */
+
+/* BAM_BANK_UI_REVISION_V48 */
+(() => {
+  const q = (selector, root = document) =>
+    root.querySelector(selector);
+
+  const text = {
+    en: {
+      defaultTitle: 'Server default',
+      defaultBody:
+        'Using the API key configured securely on this server.',
+      customTitle: 'Custom tenant active',
+      customBody:
+        'The custom API key is active for this runtime and cannot be displayed again.',
+      emptyTitle: 'No API key configured',
+      emptyBody:
+        'Enter a Vision One API key or configure TMV1_API_KEY on the server.',
+      pendingTitle: 'New key ready to save',
+      pendingBody:
+        'Save & Enable will replace the active runtime credential.',
+      reset: 'Use server default',
+      resetting: 'Switching…',
+      resetConfirm:
+        'Switch AI Guard back to the server default Vision One tenant?',
+      resetDone:
+        'AI Guard is now using the server default tenant.',
+      resetFailed:
+        'Unable to switch to the server default tenant.',
+      masked: '••••••••••••••••••••••••',
+      enterKey: 'Enter another Vision One API key'
+    },
+    id: {
+      defaultTitle: 'Default server',
+      defaultBody:
+        'Menggunakan API key yang dikonfigurasi aman pada server ini.',
+      customTitle: 'Tenant custom aktif',
+      customBody:
+        'API key custom aktif untuk runtime ini dan tidak dapat ditampilkan kembali.',
+      emptyTitle: 'API key belum dikonfigurasi',
+      emptyBody:
+        'Masukkan API key Vision One atau konfigurasi TMV1_API_KEY pada server.',
+      pendingTitle: 'Key baru siap disimpan',
+      pendingBody:
+        'Save & Enable akan mengganti credential runtime yang aktif.',
+      reset: 'Gunakan default server',
+      resetting: 'Mengalihkan…',
+      resetConfirm:
+        'Kembalikan AI Guard ke tenant Vision One default server?',
+      resetDone:
+        'AI Guard sekarang menggunakan tenant default server.',
+      resetFailed:
+        'Tidak dapat kembali ke tenant default server.',
+      masked: '••••••••••••••••••••••••',
+      enterKey: 'Masukkan API key Vision One lain'
+    }
+  };
+
+  let currentSettings = null;
+
+  function language() {
+    return (
+      localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id'
+    ) ? 'id' : 'en';
+  }
+
+  function words() {
+    return text[language()];
+  }
+
+  function credentialLabel() {
+    const input = q('#guard-api-key');
+    return input?.closest('label') ||
+      input?.parentElement ||
+      null;
+  }
+
+  function ensureCredentialStatus() {
+    const input = q('#guard-api-key');
+    const label = credentialLabel();
+    if (!input || !label) return null;
+
+    input.type = 'password';
+    input.autocomplete = 'new-password';
+    input.spellcheck = false;
+
+    let status = q('#bam-guard-credential-status-v48');
+
+    if (!status) {
+      status = document.createElement('div');
+      status.id = 'bam-guard-credential-status-v48';
+      status.className = 'bam-guard-credential-status-v48';
+      status.innerHTML = `
+        <div class="bam-guard-credential-state-v48">
+          <span class="bam-guard-credential-dot-v48"
+                aria-hidden="true"></span>
+          <span>
+            <strong id="bam-guard-credential-title-v48"></strong>
+            <small id="bam-guard-credential-copy-v48"></small>
+          </span>
+        </div>
+        <button type="button"
+                id="bam-guard-reset-default-v48"
+                class="bam-guard-reset-default-v48">
+        </button>`;
+
+      label.appendChild(status);
+
+      q('#bam-guard-reset-default-v48')
+        ?.addEventListener('click', resetToDefault);
+    }
+
+    q('.guard-api-key-note-v45')?.setAttribute('hidden', '');
+    q('#guard-api-key-note-v45')?.setAttribute('hidden', '');
+
+    [...label.querySelectorAll(
+      '.drawer-help, small:not(#bam-guard-credential-copy-v48)'
+    )].forEach(node => {
+      if (!node.closest('#bam-guard-credential-status-v48')) {
+        node.hidden = true;
+      }
+    });
+
+    if (input.dataset.v48Bound !== 'true') {
+      input.dataset.v48Bound = 'true';
+      input.addEventListener('input', () => {
+        renderCredentialState(
+          currentSettings,
+          input.value.trim().length > 0
+        );
+      });
+    }
+
+    return status;
+  }
+
+  function renderCredentialState(settings, pending = false) {
+    const input = q('#guard-api-key');
+    const status = ensureCredentialStatus();
+    if (!input || !status) return;
+
+    const copy = words();
+    const title = q('#bam-guard-credential-title-v48');
+    const body = q('#bam-guard-credential-copy-v48');
+    const reset = q('#bam-guard-reset-default-v48');
+    const stateNode = q(
+      '.bam-guard-credential-state-v48',
+      status
+    );
+
+    const guard = settings?.aiGuard || {};
+    const configured = Boolean(guard.configured);
+    const usingDefault = guard.usingDefaultApiKey !== false;
+    const customActive = configured && !usingDefault;
+
+    status.classList.toggle('is-custom', customActive);
+    status.classList.toggle(
+      'is-default',
+      configured && usingDefault
+    );
+    status.classList.toggle('is-empty', !configured);
+    status.classList.toggle('is-pending', pending);
+
+    if (pending) {
+      input.placeholder = copy.enterKey;
+      if (title) title.textContent = copy.pendingTitle;
+      if (body) body.textContent = copy.pendingBody;
+      if (reset) reset.hidden = true;
+      stateNode?.setAttribute(
+        'aria-label',
+        copy.pendingTitle
+      );
+      return;
+    }
+
+    input.value = '';
+    input.placeholder = configured
+      ? copy.masked
+      : copy.enterKey;
+
+    if (customActive) {
+      if (title) title.textContent = copy.customTitle;
+      if (body) body.textContent = copy.customBody;
+      if (reset) {
+        reset.hidden = false;
+        reset.textContent = copy.reset;
+      }
+      stateNode?.setAttribute(
+        'aria-label',
+        copy.customTitle
+      );
+    } else if (configured) {
+      if (title) title.textContent = copy.defaultTitle;
+      if (body) body.textContent = copy.defaultBody;
+      if (reset) reset.hidden = true;
+      stateNode?.setAttribute(
+        'aria-label',
+        copy.defaultTitle
+      );
+    } else {
+      if (title) title.textContent = copy.emptyTitle;
+      if (body) body.textContent = copy.emptyBody;
+      if (reset) reset.hidden = true;
+      stateNode?.setAttribute(
+        'aria-label',
+        copy.emptyTitle
+      );
+    }
+  }
+
+  async function fetchCredentialState() {
+    try {
+      const response = await fetch('/api/settings', {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      currentSettings = await response.json();
+
+      if (typeof state === 'object') {
+        state.settings = currentSettings;
+      }
+
+      renderCredentialState(currentSettings);
+      return currentSettings;
+    } catch (error) {
+      console.error(
+        'Unable to refresh AI Guard credential state',
+        error
+      );
+      return null;
+    }
+  }
+
+  function scheduleRefresh(delays = [0, 250, 800]) {
+    delays.forEach(delay => {
+      window.setTimeout(() => {
+        ensureCredentialStatus();
+        fetchCredentialState();
+      }, delay);
+    });
+  }
+
+  async function resetToDefault() {
+    const copy = words();
+    const button = q('#bam-guard-reset-default-v48');
+
+    if (!button || button.disabled) return;
+    if (!window.confirm(copy.resetConfirm)) return;
+
+    button.disabled = true;
+    button.textContent = copy.resetting;
+
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ api_key: '' })
+      });
+
+      const payload = await response
+        .json()
+        .catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          payload.detail ||
+          payload.message ||
+          `HTTP ${response.status}`
+        );
+      }
+
+      const input = q('#guard-api-key');
+      if (input) input.value = '';
+
+      await fetchCredentialState();
+
+      if (typeof toast === 'function') {
+        toast(copy.resetDone);
+      }
+    } catch (error) {
+      console.error(
+        'AI Guard default reset failed',
+        error
+      );
+
+      if (typeof toast === 'function') {
+        toast(`${copy.resetFailed} ${error.message}`);
+      }
+    } finally {
+      button.disabled = false;
+      renderCredentialState(currentSettings);
+    }
+  }
+
+  function bindRefreshTriggers() {
+    const bindings = [
+      ['#settings-button', [50, 300]],
+      ['[data-security-tab="guard"]', [20, 220]],
+      ['#save-guard', [300, 900, 1600]],
+      ['#test-guard', [300, 900]]
+    ];
+
+    bindings.forEach(([selector, delays]) => {
+      const node = q(selector);
+      if (!node || node.dataset.v48RefreshBound === 'true') {
+        return;
+      }
+
+      node.dataset.v48RefreshBound = 'true';
+      node.addEventListener(
+        'click',
+        () => scheduleRefresh(delays)
+      );
+    });
+
+    ['#language', '#settings-language'].forEach(selector => {
+      const node = q(selector);
+      if (!node || node.dataset.v48LanguageBound === 'true') {
+        return;
+      }
+
+      node.dataset.v48LanguageBound = 'true';
+      node.addEventListener('change', () => {
+        window.setTimeout(
+          () => renderCredentialState(currentSettings),
+          0
+        );
+      });
+    });
+  }
+
+  function install() {
+    ensureCredentialStatus();
+    bindRefreshTriggers();
+    fetchCredentialState();
+  }
+
+  install();
+  window.setTimeout(install, 250);
+  window.setTimeout(install, 900);
+})();
