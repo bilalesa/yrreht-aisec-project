@@ -42,7 +42,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.9.2",
+    version="2.0.1",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -68,6 +68,21 @@ class RuntimeSettingsRequest(BaseModel):
     pii_detection: Optional[bool] = None
 
 
+class CustomPromptMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str = Field(min_length=1, max_length=12000)
+
+
+class CustomPromptRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=160)
+    category: str = Field(min_length=1, max_length=160)
+    evaluation_criteria: str = Field(min_length=1, max_length=2000)
+    tags: list[str] = Field(min_length=1, max_length=24)
+    messages: list[CustomPromptMessage] = Field(min_length=1, max_length=20)
+    target: Literal["vulnerable", "protected"] = "protected"
+    model_id: str = Field(default="visionone-bank-demo", min_length=1, max_length=256)
+
+
 class ScannerSimulationRequest(BaseModel):
     target: Literal["vulnerable", "protected"] = "vulnerable"
     objectives: list[str] = Field(
@@ -91,7 +106,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.9.2"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "2.0.1"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -688,6 +703,56 @@ async def scanner_vulnerable(payload: dict = Body(...), authorization: Optional[
 @app.post("/api/ai/protected/v1/chat/completions")
 async def scanner_protected(payload: dict = Body(...), authorization: Optional[str] = Header(default=None)) -> dict:
     return await _scanner_completion(payload, authorization, protected=True)
+
+
+def _custom_prompt_text(messages: list[CustomPromptMessage]) -> str:
+    return "\n\n".join(
+        f"{item.role.upper()}: {item.content.strip()}" for item in messages
+    )
+
+
+@app.post("/api/scanner/custom")
+async def scanner_custom(payload: CustomPromptRequest) -> dict:
+    conversation = _custom_prompt_text(payload.messages)
+    result, detail, excerpt = "successful", "Target returned a response.", ""
+    try:
+        if payload.target == "protected":
+            inspected = await guard.inspect_prompt(conversation)
+            response = await llm.complete(inspected.get("content", conversation), vulnerable=True)
+            inspected_response = await guard.inspect_response(response)
+            excerpt = str(inspected_response.get("content", ""))[:800]
+        else:
+            response = await llm.complete(conversation, vulnerable=True)
+            excerpt = str(response.get("choices", [{}])[0].get("message", {}).get("content", ""))[:800]
+    except GuardBlocked as exc:
+        result = "blocked"
+        detail = ", ".join(exc.details.get("reasons") or [exc.reason])
+    except GuardUnavailable as exc:
+        result, detail = "error", str(exc)
+    except Exception as exc:
+        logger.exception("Custom prompt validation failed")
+        result, detail = "error", str(exc)
+
+    low = [tag.lower() for tag in payload.tags]
+    severity = next((x for x in ("critical","high","medium","low") if any(x in t for t in low)), "unknown")
+    finding = {
+        "id": "CUSTOM-01", "objective": payload.name,
+        "category": payload.category, "severity": severity,
+        "result": result, "framework": " · ".join(payload.tags),
+        "detail": detail, "evaluationCriteria": payload.evaluation_criteria,
+        "responseExcerpt": excerpt,
+    }
+    return {
+        "mode": "custom-prompts", "schemaVersion": "custom/1.0",
+        "target": payload.target, "modelId": payload.model_id,
+        "total": 1, "totalAttempts": 1,
+        "successful": int(result == "successful"),
+        "successfulAttempts": int(result == "successful"),
+        "blocked": int(result == "blocked"),
+        "resisted": int(result == "blocked"),
+        "errors": int(result == "error"),
+        "findings": [finding], "simulated": False, "deterministic": True,
+    }
 
 
 @app.post("/api/scanner/simulate")
