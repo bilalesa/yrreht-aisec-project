@@ -10128,6 +10128,8 @@ exposePresenterLabFromUrl();
     const configured = Boolean(guard.configured);
     const usingDefault = guard.usingDefaultApiKey !== false;
     const customActive = configured && !usingDefault;
+    const serverDefaultAvailable =
+      guard.serverDefaultAvailable !== false;
 
     status.classList.toggle('is-custom', customActive);
     status.classList.toggle(
@@ -10158,8 +10160,11 @@ exposePresenterLabFromUrl();
       if (title) title.textContent = copy.customTitle;
       if (body) body.textContent = copy.customBody;
       if (reset) {
-        reset.hidden = false;
+        reset.hidden = !serverDefaultAvailable;
         reset.textContent = copy.reset;
+        reset.title = serverDefaultAvailable
+          ? ''
+          : 'No server default TMV1_API_KEY is configured.';
       }
       stateNode?.setAttribute(
         'aria-label',
@@ -10232,14 +10237,15 @@ exposePresenterLabFromUrl();
     button.textContent = copy.resetting;
 
     try {
-      const response = await fetch('/api/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        body: JSON.stringify({ api_key: '' })
-      });
+      const response = await fetch(
+        '/api/settings/reset-default',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json'
+          }
+        }
+      );
 
       const payload = await response
         .json()
@@ -10323,3 +10329,6 @@ exposePresenterLabFromUrl();
   window.setTimeout(install, 250);
   window.setTimeout(install, 900);
 })();
+
+
+/* BAM_BANK_UI_REVISION_V49 */

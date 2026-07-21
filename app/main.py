@@ -42,7 +42,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.9.0",
+    version="1.9.1",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -91,7 +91,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.9.0"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.9.1"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -435,6 +435,9 @@ async def get_settings(request: Request) -> dict:
             "enabled": settings.ai_guard_enabled,
             "configured": cfg["configured"],
             "usingDefaultApiKey": cfg["using_default_api_key"],
+            "serverDefaultAvailable": cfg[
+                "server_default_available"
+            ],
             "region": cfg["region"],
             "applicationName": cfg["application_name"],
             "baseUrl": cfg["base_url"],
@@ -489,7 +492,46 @@ async def update_settings(payload: RuntimeSettingsRequest) -> dict:
         "saved": True,
         "configured": cfg["configured"],
         "usingDefaultApiKey": cfg["using_default_api_key"],
+        "serverDefaultAvailable": cfg[
+            "server_default_available"
+        ],
         "region": cfg["region"],
+        "forceDemoMode": cfg["force_demo_mode"],
+        "policies": cfg["policies"],
+    }
+
+
+@app.post("/api/settings/reset-default")
+async def reset_settings_to_server_default() -> dict:
+    if not settings.allow_runtime_config:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Runtime credential configuration is disabled. "
+                "Use the server deployment configuration."
+            ),
+        )
+
+    restored = runtime.reset_to_server_default()
+    if not restored:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "The server does not have a default TMV1_API_KEY. "
+                "The active custom tenant was left unchanged."
+            ),
+        )
+
+    cfg = runtime.snapshot()
+    return {
+        "reset": True,
+        "configured": cfg["configured"],
+        "usingDefaultApiKey": cfg["using_default_api_key"],
+        "serverDefaultAvailable": cfg[
+            "server_default_available"
+        ],
+        "region": cfg["region"],
+        "applicationName": cfg["application_name"],
         "forceDemoMode": cfg["force_demo_mode"],
         "policies": cfg["policies"],
     }

@@ -533,3 +533,65 @@ def test_runtime_blank_key_without_server_default_is_unconfigured() -> None:
     assert runtime.snapshot()["configured"] is False
     assert runtime.snapshot()["api_key"] == ""
     assert runtime.snapshot()["using_default_api_key"] is True
+
+
+# BAM_BANK_UI_REVISION_V49
+
+
+def test_runtime_reset_restores_all_server_defaults() -> None:
+    from app.config import RuntimeConfig, Settings
+
+    settings = Settings()
+    settings.tmv1_api_key = "server-key"
+    settings.tmv1_region = "sg"
+    settings.tmv1_application_name = "server-app"
+    settings.force_demo_mode = False
+    settings.ai_guard_mask_pii = True
+
+    runtime = RuntimeConfig(settings)
+
+    runtime.update(
+        api_key="custom-key",
+        region="us",
+        application_name="custom-app",
+        force_demo_mode=True,
+        prompt_injection_detection=False,
+        jailbreak_detection=False,
+        harmful_content_detection=False,
+        pii_detection=False,
+    )
+
+    assert runtime.snapshot()["using_default_api_key"] is False
+    assert runtime.reset_to_server_default() is True
+
+    snapshot = runtime.snapshot()
+    assert snapshot["api_key"] == "server-key"
+    assert snapshot["using_default_api_key"] is True
+    assert snapshot["server_default_available"] is True
+    assert snapshot["region"] == "sg"
+    assert snapshot["application_name"] == "server-app"
+    assert snapshot["force_demo_mode"] is False
+    assert snapshot["policies"] == {
+        "promptInjection": True,
+        "jailbreak": True,
+        "harmfulContent": True,
+        "pii": True,
+    }
+
+
+def test_runtime_reset_without_server_key_keeps_custom_active() -> None:
+    from app.config import RuntimeConfig, Settings
+
+    settings = Settings()
+    settings.tmv1_api_key = ""
+
+    runtime = RuntimeConfig(settings)
+    runtime.update(api_key="custom-key", region="us")
+
+    assert runtime.reset_to_server_default() is False
+
+    snapshot = runtime.snapshot()
+    assert snapshot["api_key"] == "custom-key"
+    assert snapshot["configured"] is True
+    assert snapshot["using_default_api_key"] is False
+    assert snapshot["server_default_available"] is False

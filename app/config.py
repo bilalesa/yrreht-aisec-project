@@ -111,13 +111,26 @@ class RuntimeConfig:
         )
         self._tmv1_api_key: Optional[str] = self._default_tmv1_api_key
         self._using_default_api_key = True
-        self._region = settings.tmv1_region
-        self._application_name = settings.tmv1_application_name
-        self._force_demo_mode = settings.force_demo_mode
-        self._prompt_injection_detection = True
-        self._jailbreak_detection = True
-        self._harmful_content_detection = True
-        self._pii_detection = settings.ai_guard_mask_pii
+
+        self._default_region = settings.tmv1_region
+        self._default_application_name = settings.tmv1_application_name
+        self._default_force_demo_mode = settings.force_demo_mode
+        self._default_prompt_injection_detection = True
+        self._default_jailbreak_detection = True
+        self._default_harmful_content_detection = True
+        self._default_pii_detection = settings.ai_guard_mask_pii
+
+        self._region = self._default_region
+        self._application_name = self._default_application_name
+        self._force_demo_mode = self._default_force_demo_mode
+        self._prompt_injection_detection = (
+            self._default_prompt_injection_detection
+        )
+        self._jailbreak_detection = self._default_jailbreak_detection
+        self._harmful_content_detection = (
+            self._default_harmful_content_detection
+        )
+        self._pii_detection = self._default_pii_detection
 
     def update(
         self,
@@ -155,6 +168,29 @@ class RuntimeConfig:
             if pii_detection is not None:
                 self._pii_detection = pii_detection
 
+    def reset_to_server_default(self) -> bool:
+        # Restore the immutable configuration captured at process startup.
+        with self._lock:
+            if not self._default_tmv1_api_key:
+                return False
+
+            self._tmv1_api_key = self._default_tmv1_api_key
+            self._using_default_api_key = True
+            self._region = self._default_region
+            self._application_name = self._default_application_name
+            self._force_demo_mode = self._default_force_demo_mode
+            self._prompt_injection_detection = (
+                self._default_prompt_injection_detection
+            )
+            self._jailbreak_detection = (
+                self._default_jailbreak_detection
+            )
+            self._harmful_content_detection = (
+                self._default_harmful_content_detection
+            )
+            self._pii_detection = self._default_pii_detection
+            return True
+
     def snapshot(self) -> dict:
         with self._lock:
             base_url = REGION_BASE_URLS.get(self._region, REGION_BASE_URLS["sg"])
@@ -162,6 +198,9 @@ class RuntimeConfig:
                 "api_key": self._tmv1_api_key or "",
                 "configured": bool(self._tmv1_api_key),
                 "using_default_api_key": self._using_default_api_key,
+                "server_default_available": bool(
+                    self._default_tmv1_api_key
+                ),
                 "region": self._region,
                 "application_name": self._application_name,
                 "base_url": base_url.rstrip("/"),
