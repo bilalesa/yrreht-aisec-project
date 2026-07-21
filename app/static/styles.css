@@ -10189,3 +10189,12 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
   #chat-launcher.bam-chat-launcher-v58::after,
   .bam-chat-dot-v58,.bam-chat-spark-v58{animation:none!important}
 }
+
+/* BAM_BANK_UI_REVISION_V59_1 */
+.file-security-badge,
+.file-security-ready,
+[data-file-security-ready],
+.bam-file-ready-hidden-v59-1 {
+  display: none !important;
+  pointer-events: none !important;
+}

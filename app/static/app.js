@@ -10758,18 +10758,23 @@ exposePresenterLabFromUrl();
     addExecutionDisclosure();
     rebuildResult();
   }
+  // Revision 59.1: use finite result refreshes instead of a
+  // document-wide characterData observer.
+  function scheduleV55ResultRefresh() {
+    [0, 180, 550, 1200, 2500, 5000].forEach(delay => {
+      window.setTimeout(install, delay);
+    });
+  }
 
-  const observer = new MutationObserver(() => {
-    window.requestAnimationFrame(install);
-  });
-
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    characterData: true
-  });
-
-  install();
+  document.addEventListener('click', event => {
+    if (
+      event.target instanceof Element &&
+      event.target.closest('#cp-run')
+    ) {
+      scheduleV55ResultRefresh();
+    }
+  }, true);
+install();
   [150, 500, 1200].forEach(delay => {
     window.setTimeout(install, delay);
   });
@@ -10997,10 +11002,9 @@ exposePresenterLabFromUrl();
   }
 
   function install() { ensureLiveControls(); }
-
-  const observer = new MutationObserver(() => window.requestAnimationFrame(install));
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  install();
+  // Revision 59.1: controls are installed once and retried by
+  // the existing finite setTimeout calls below.
+install();
   [200, 650, 1400].forEach(delay => window.setTimeout(install, delay));
 })();
 
@@ -11271,19 +11275,9 @@ exposePresenterLabFromUrl();
     installGuard();
     polishModes();
   }
-
-  const observer = new MutationObserver(() => {
-    window.requestAnimationFrame(install);
-  });
-
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['disabled', 'class']
-  });
-
-  document.addEventListener('click', event => {
+  // Revision 59.1: avoid observing class and disabled changes
+  // that are also written by install().
+document.addEventListener('click', event => {
     if (event.target.closest(
       '#chat-launcher,[data-cp-mode],[data-security-tab="scanner"],#cp-run'
     )) {
@@ -11294,4 +11288,74 @@ exposePresenterLabFromUrl();
 
   install();
   [120, 400, 900, 1600].forEach(delay => window.setTimeout(install, delay));
+})();
+
+/* BAM_BANK_UI_REVISION_V59_1 */
+(() => {
+  if (window.__bamRevisionV591) return;
+  window.__bamRevisionV591 = true;
+
+  const hiddenPhrases = new Set([
+    'file security ready',
+    'protected by file security',
+    'file security scanning enabled',
+    'dilindungi file security',
+    'pemindaian file security aktif'
+  ]);
+
+  function normalize(value) {
+    return String(value || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function hideFileSecurityLabels() {
+    document.querySelectorAll(
+      '.file-security-badge,' +
+      '.file-security-ready,' +
+      '[data-file-security-ready]'
+    ).forEach(node => {
+      node.classList.add('bam-file-ready-hidden-v59-1');
+      node.setAttribute('aria-hidden', 'true');
+    });
+
+    document.querySelectorAll(
+      '.quick-actions button em,' +
+      '.quick-actions button small,' +
+      '.quick-actions button span,' +
+      '.quick-actions button b'
+    ).forEach(node => {
+      if (!hiddenPhrases.has(normalize(node.textContent))) return;
+      node.classList.add('bam-file-ready-hidden-v59-1');
+      node.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  function scheduleLabelCleanup() {
+    [0, 120, 450, 1100].forEach(delay => {
+      window.setTimeout(hideFileSecurityLabels, delay);
+    });
+  }
+
+  document.querySelector('#language')
+    ?.addEventListener('change', scheduleLabelCleanup);
+
+  document.querySelector('#settings-language')
+    ?.addEventListener('change', scheduleLabelCleanup);
+
+  document.addEventListener('click', event => {
+    if (
+      event.target instanceof Element &&
+      event.target.closest(
+        '[data-open="file"],' +
+        '.quick-actions,' +
+        '[data-close="security-modal"]'
+      )
+    ) {
+      scheduleLabelCleanup();
+    }
+  }, true);
+
+  scheduleLabelCleanup();
 })();
