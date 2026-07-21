@@ -94,6 +94,51 @@ class AIGuardClient:
                 ]
             )
 
+        # BAM_BANK_UI_REVISION_V61_GUARD_RULES
+        if policies.get("promptInjection", True):
+            rules.extend(
+                [
+                    (
+                        r"\b(follow|obey|execute)\b.{0,90}"
+                        r"\b(instruction|instructions|directive|command)\b"
+                        r".{0,90}\b(hidden|embedded|inside|uploaded|"
+                        r"document|file|bill|invoice|attachment)\b",
+                        "Indirect prompt injection attempt",
+                    ),
+                    (
+                        r"\b(follow|obey|execute)\b.{0,90}"
+                        r"\b(hidden|embedded|retrieved|uploaded|"
+                        r"document|file|bill|invoice|attachment)\b"
+                        r".{0,90}\b(instruction|instructions|"
+                        r"directive|command)\b",
+                        "Indirect prompt injection attempt",
+                    ),
+                ]
+            )
+
+        if policies.get("harmfulContent", True):
+            rules.extend(
+                [
+                    (
+                        r"\b(encode|base64|encrypt|obfuscate)\b"
+                        r".{0,100}\b(sensitive|account|customer|"
+                        r"private|secret|credential|banking)\b"
+                        r".{0,100}\b(send|transmit|share|post|"
+                        r"upload|external|externally|outside)\b",
+                        "Sensitive-data exfiltration attempt",
+                    ),
+                    (
+                        r"\b(send|transmit|share|post|upload|"
+                        r"exfiltrate)\b.{0,100}"
+                        r"\b(sensitive|account|customer|private|"
+                        r"secret|credential|banking)\b"
+                        r".{0,100}\b(external|externally|outside|"
+                        r"remote|third[- ]?party)\b",
+                        "Sensitive-data exfiltration attempt",
+                    ),
+                ]
+            )
+
         reasons = [
             reason
             for pattern, reason in rules

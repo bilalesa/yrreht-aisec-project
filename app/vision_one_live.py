@@ -599,7 +599,7 @@ async def vision_one_live(
     return public_job(job)
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/vision-one-live/jobs/{job_id}")
 async def get_job(job_id: str) -> dict:
     job = JOBS.get(job_id)
 

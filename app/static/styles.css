@@ -10548,3 +10548,156 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
     animation: none !important;
   }
 }
+
+/* BAM_BANK_UI_REVISION_V61 */
+#guard-content.bam-guard-local-demo-v61 .two-column-form,
+#guard-content.bam-guard-local-demo-v61 .policy-grid,
+#guard-content.bam-guard-local-demo-v61 .toggle-line,
+#guard-content.bam-guard-local-demo-v61 .code-note,
+#guard-content.bam-guard-local-demo-v61 #save-guard,
+#guard-content.bam-guard-local-demo-v61 #bam-guard-credential-status-v48,
+#guard-content.bam-guard-local-demo-v61 .bam-guard-runtime-disabled-v49 {
+  display: none !important;
+}
+
+#guard-content.bam-guard-local-demo-v61 .action-row {
+  justify-content: flex-start !important;
+  margin-top: 14px !important;
+}
+#guard-content.bam-guard-local-demo-v61 #test-guard {
+  min-width: 150px;
+  border-color: #c9d9f1 !important;
+  background: #fff !important;
+  color: #2859ad !important;
+}
+.bam-guard-demo-summary-v61 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #cce8db;
+  border-radius: 13px;
+  background: linear-gradient(135deg,#f2fcf7,#edf8f4);
+}
+.bam-guard-demo-summary-v61 > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: #dff5ea;
+  color: #11825a;
+  font-size: 16px;
+  font-weight: 900;
+}
+.bam-guard-demo-summary-v61 strong,
+.bam-guard-demo-summary-v61 small { display: block; }
+.bam-guard-demo-summary-v61 strong {
+  color: #223852;
+  font-size: 12px;
+  font-weight: 800;
+}
+.bam-guard-demo-summary-v61 small {
+  margin-top: 4px;
+  color: #6d7f94;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+#chat-panel .guard-banner.bam-guard-banner-v61 {
+  min-height: 88px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  justify-items: stretch !important;
+  gap: 18px !important;
+  padding: 15px 24px !important;
+  text-align: left !important;
+}
+#chat-panel .guard-banner.bam-guard-banner-v61 > .bam-guard-control-v61 {
+  min-width: 0;
+  display: grid !important;
+  grid-template-columns: 44px minmax(0,1fr) !important;
+  align-items: center !important;
+  justify-items: start !important;
+  gap: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+.bam-guard-icon-v61 {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  margin: 0 !important;
+  border: 1px solid #d3e0f2;
+  border-radius: 13px;
+  background: linear-gradient(145deg,#f1f6ff,#e6efff);
+  color: #2f6bd5;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
+.bam-guard-icon-v61 svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bam-guard-copy-v61 {
+  min-width: 0;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  margin: 0 !important;
+  text-align: left !important;
+}
+.bam-guard-copy-v61 strong {
+  margin: 0 !important;
+  color: #20334f !important;
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+  font-weight: 820 !important;
+}
+.bam-guard-copy-v61 small {
+  margin: 0 !important;
+  color: #7b8ca3 !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+#chat-panel .guard-banner.bam-guard-banner-v61 > label.switch {
+  align-self: center !important;
+  justify-self: end !important;
+  margin: 0 !important;
+}
+.bam-guard-banner-v61 .bam-guard-icon-v60,
+.bam-guard-banner-v61 .bam-guard-icon-v58,
+.bam-guard-banner-v61 .bam-runtime-icon-v55,
+.bam-guard-banner-v61 .bam-guard-text-v60 {
+  display: none !important;
+}
+.bam-guard-banner-v61.is-enabled-v61 .bam-guard-icon-v61 {
+  border-color: #bee7d6;
+  background: linear-gradient(145deg,#e9faf2,#def5ea);
+  color: #11825a;
+}
+@media(max-width:760px) {
+  #chat-panel .guard-banner.bam-guard-banner-v61 {
+    padding: 14px 16px !important;
+  }
+  #chat-panel .guard-banner.bam-guard-banner-v61 > .bam-guard-control-v61 {
+    grid-template-columns: 40px minmax(0,1fr) !important;
+    gap: 11px !important;
+  }
+  .bam-guard-icon-v61 {
+    width: 40px;
+    height: 40px;
+  }
+}
