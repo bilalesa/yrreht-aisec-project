@@ -42,7 +42,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="1.8.6",
+    version="1.8.7",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -91,7 +91,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.6"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "1.8.7"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -434,6 +434,7 @@ async def get_settings(request: Request) -> dict:
             "deploymentMode": "trend-hosted",
             "enabled": settings.ai_guard_enabled,
             "configured": cfg["configured"],
+            "usingDefaultApiKey": cfg["using_default_api_key"],
             "region": cfg["region"],
             "applicationName": cfg["application_name"],
             "baseUrl": cfg["base_url"],
@@ -487,6 +488,7 @@ async def update_settings(payload: RuntimeSettingsRequest) -> dict:
     return {
         "saved": True,
         "configured": cfg["configured"],
+        "usingDefaultApiKey": cfg["using_default_api_key"],
         "region": cfg["region"],
         "forceDemoMode": cfg["force_demo_mode"],
         "policies": cfg["policies"],

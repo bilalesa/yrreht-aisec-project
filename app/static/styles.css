@@ -9371,3 +9371,32 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
     opacity:.72!important;
   }
 }
+
+/* BAM_BANK_UI_REVISION_V45 */
+
+#guard-api-key{
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace!important;
+  letter-spacing:.055em!important;
+}
+
+.bam-guard-key-hint-v45{
+  display:block!important;
+  margin-top:8px!important;
+  color:#74839A!important;
+  font-size:9px!important;
+  font-weight:500!important;
+  line-height:1.45!important;
+  letter-spacing:0!important;
+}
+
+#save-guard:disabled,
+#test-guard:disabled{
+  cursor:not-allowed!important;
+  opacity:.58!important;
+}

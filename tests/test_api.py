@@ -493,3 +493,43 @@ def test_assistant_is_named_bambang() -> None:
 
     assert "Bambang" in BankLLM.SYSTEM_PROMPT
     assert "Bamsky" not in BankLLM.SYSTEM_PROMPT
+
+# BAM_BANK_UI_REVISION_V45
+
+
+def test_runtime_custom_key_can_return_to_server_default() -> None:
+    from app.config import RuntimeConfig, Settings
+
+    settings = Settings()
+    settings.tmv1_api_key = "server-default-key"
+    runtime = RuntimeConfig(settings)
+
+    assert runtime.snapshot()["api_key"] == "server-default-key"
+    assert runtime.snapshot()["using_default_api_key"] is True
+
+    runtime.update(api_key="customer-tenant-key")
+
+    assert runtime.snapshot()["api_key"] == "customer-tenant-key"
+    assert runtime.snapshot()["using_default_api_key"] is False
+
+    runtime.update(api_key="")
+
+    assert runtime.snapshot()["api_key"] == "server-default-key"
+    assert runtime.snapshot()["using_default_api_key"] is True
+
+
+def test_runtime_blank_key_without_server_default_is_unconfigured() -> None:
+    from app.config import RuntimeConfig, Settings
+
+    settings = Settings()
+    settings.tmv1_api_key = ""
+    runtime = RuntimeConfig(settings)
+
+    runtime.update(api_key="customer-key")
+    assert runtime.snapshot()["configured"] is True
+
+    runtime.update(api_key="")
+
+    assert runtime.snapshot()["configured"] is False
+    assert runtime.snapshot()["api_key"] == ""
+    assert runtime.snapshot()["using_default_api_key"] is True

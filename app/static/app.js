@@ -354,7 +354,7 @@ function bindEvents() {
     try {
       await api('/api/settings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-          api_key: $('#guard-api-key').value || undefined,
+          api_key: $('#guard-api-key').value.trim(),
           region: $('#guard-region').value,
           application_name: $('#guard-app-name').value,
           force_demo_mode: $('#force-demo-mode').checked,
@@ -364,7 +364,8 @@ function bindEvents() {
           pii_detection: $('#guard-policy-pii')?.checked ?? true
         })
       });
-      toast('Runtime configuration saved in pod memory.');
+      $('#guard-api-key').value = '';
+      toast('AI Guard configuration saved.');
       await loadSettings();
     } catch (error) { toast(error.message); }
   });
@@ -9831,4 +9832,84 @@ exposePresenterLabFromUrl();
       window.setTimeout(install, 250);
     }
   });
+})();
+
+/* BAM_BANK_UI_REVISION_V45 */
+(() => {
+  const originalSetPill = setPill;
+
+  setPill = function safeSetPill(element, type, label) {
+    if (!element) return false;
+    originalSetPill(element, type, label);
+    return true;
+  };
+
+  const q = (selector, root = document) =>
+    root.querySelector(selector);
+
+  function isIndonesian() {
+    return (
+      localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id'
+    );
+  }
+
+  function updateCredentialHint() {
+    const input = q('#guard-api-key');
+    if (!input) return;
+
+    const settings = state.settings?.aiGuard;
+    const oldHint = input.parentElement?.querySelector('small');
+
+    input.autocomplete = 'new-password';
+    input.setAttribute('aria-describedby', 'guard-key-hint-v45');
+
+    let node = q('#guard-key-hint-v45');
+    if (!node) {
+      node = document.createElement('small');
+      node.id = 'guard-key-hint-v45';
+      node.className = 'bam-guard-key-hint-v45';
+      input.insertAdjacentElement('afterend', node);
+    }
+
+    const usingDefault = settings?.usingDefaultApiKey !== false;
+
+    if (isIndonesian()) {
+      node.textContent = usingDefault
+        ? 'Kosongkan untuk tetap memakai API key default server. Isi hanya untuk memakai tenant Vision One lain.'
+        : 'Custom tenant aktif. Kosongkan lalu Save & Enable untuk kembali ke API key default server.';
+    } else {
+      node.textContent = usingDefault
+        ? 'Leave blank to keep using the server default API key. Enter a key only for another Vision One tenant.'
+        : 'A custom tenant is active. Clear this field and save to return to the server default API key.';
+    }
+
+    if (oldHint && oldHint !== node) {
+      oldHint.hidden = true;
+    }
+  }
+
+  const originalLoadSettings = loadSettings;
+  loadSettings = async function loadSettingsV45() {
+    await originalLoadSettings();
+    updateCredentialHint();
+  };
+
+  function install() {
+    updateCredentialHint();
+  }
+
+  install();
+  [150, 500, 1200].forEach(delay => {
+    window.setTimeout(install, delay);
+  });
+
+  q('#language')?.addEventListener(
+    'change',
+    () => window.setTimeout(install, 0)
+  );
+  q('#settings-language')?.addEventListener(
+    'change',
+    () => window.setTimeout(install, 0)
+  );
 })();

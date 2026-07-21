@@ -106,7 +106,11 @@ class RuntimeConfig:
 
     def __init__(self, settings: Settings):
         self._lock = RLock()
-        self._tmv1_api_key: Optional[str] = settings.tmv1_api_key or None
+        self._default_tmv1_api_key: Optional[str] = (
+            settings.tmv1_api_key.strip() or None
+        )
+        self._tmv1_api_key: Optional[str] = self._default_tmv1_api_key
+        self._using_default_api_key = True
         self._region = settings.tmv1_region
         self._application_name = settings.tmv1_application_name
         self._force_demo_mode = settings.force_demo_mode
@@ -128,8 +132,14 @@ class RuntimeConfig:
         pii_detection: Optional[bool] = None,
     ) -> None:
         with self._lock:
-            if api_key is not None and api_key.strip():
-                self._tmv1_api_key = api_key.strip()
+            if api_key is not None:
+                candidate = api_key.strip()
+                if candidate:
+                    self._tmv1_api_key = candidate
+                    self._using_default_api_key = False
+                else:
+                    self._tmv1_api_key = self._default_tmv1_api_key
+                    self._using_default_api_key = True
             if region is not None and region in REGION_BASE_URLS:
                 self._region = region
             if application_name is not None and application_name.strip():
@@ -151,6 +161,7 @@ class RuntimeConfig:
             return {
                 "api_key": self._tmv1_api_key or "",
                 "configured": bool(self._tmv1_api_key),
+                "using_default_api_key": self._using_default_api_key,
                 "region": self._region,
                 "application_name": self._application_name,
                 "base_url": base_url.rstrip("/"),
