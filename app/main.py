@@ -19,6 +19,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .config import AI_GUARD_PUBLIC_REGIONS, REGION_BASE_URLS, RuntimeConfig, Settings
+from .vision_one_live import router as vision_one_live_router
+
 from .services import (
     AIGuardClient,
     BankLLM,
@@ -42,11 +44,12 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="2.0.3",
+    version="2.2.1",
     docs_url="/api/docs",
     redoc_url=None,
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.include_router(vision_one_live_router)
 
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -106,7 +109,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "2.0.3"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "2.2.1"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -752,6 +755,14 @@ async def scanner_custom(payload: CustomPromptRequest) -> dict:
         "resisted": int(result == "blocked"),
         "errors": int(result == "error"),
         "findings": [finding], "simulated": False, "deterministic": True,
+        "resultSource": "local-app-validation",
+        "visionOnePublished": False,
+        "visionOneNote": (
+            "This endpoint validates the prompt through the local "
+            "BAM Bank application path. Run the exported custom "
+            "prompt YAML through TMAS/AI Scanner to create an "
+            "official Vision One scan result."
+        ),
     }
 
 

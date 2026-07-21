@@ -10567,3 +10567,439 @@ exposePresenterLabFromUrl();
     }
   });
 })();
+
+/* BAM_BANK_UI_REVISION_V55 */
+(() => {
+  const guardIcon = `
+    <span class="bam-runtime-icon-v55" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3.5 19 6v5.3c0 4.5-2.8 7.7-7 9.2-4.2-1.5-7-4.7-7-9.2V6l7-2.5Z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    </span>`;
+
+  function findRuntimeRows() {
+    const candidates = [
+      ...document.querySelectorAll(
+        'section,article,div,label'
+      )
+    ];
+
+    candidates.forEach(node => {
+      if (node.dataset.bamGuardIconChecked === 'true') {
+        return;
+      }
+
+      const text = (
+        node.childNodes.length
+          ? [...node.childNodes]
+              .filter(item => item.nodeType === Node.TEXT_NODE)
+              .map(item => item.textContent)
+              .join(' ')
+          : node.textContent
+      ).trim();
+
+      if (text !== 'AI Guard') return;
+
+      const row = node.closest(
+        '[class*="runtime"],[class*="control"],' +
+        '[class*="toggle"],article,section'
+      );
+
+      if (!row) return;
+      if (!row.querySelector('input[type="checkbox"]')) return;
+      if (row.querySelector('.bam-runtime-icon-v55')) return;
+
+      node.dataset.bamGuardIconChecked = 'true';
+      row.classList.add('bam-runtime-control-v55');
+
+      const content = node.parentElement;
+      if (content) {
+        content.insertAdjacentHTML('afterbegin', guardIcon);
+      }
+    });
+  }
+
+  function addExecutionDisclosure() {
+    const studio = document.querySelector('#cp-studio');
+    if (!studio) return;
+    if (studio.querySelector('.cp-execution-note-v55')) return;
+
+    const note = document.createElement('div');
+    note.className = 'cp-execution-note-v55';
+    note.innerHTML = `
+      <span>↗</span>
+      <div>
+        <strong>Local application validation</strong>
+        <p>
+          This button tests the exact prompt through BAM Bank.
+          It does not create an AI Scanner campaign or publish
+          this result to the Vision One console. Download the
+          YAML and reference it from a TMAS scan configuration
+          for an official AI Scanner result.
+        </p>
+      </div>`;
+
+    const grid = studio.querySelector('.cp-grid');
+    if (grid) {
+      grid.insertAdjacentElement('beforebegin', note);
+    } else {
+      studio.prepend(note);
+    }
+
+    const runButton = studio.querySelector('#cp-run');
+    if (runButton) {
+      runButton.textContent = 'Test in app';
+      runButton.title =
+        'Local validation only; this does not publish a Vision One scan result.';
+    }
+  }
+
+  function textFrom(selector, root) {
+    const node = root.querySelector(selector);
+    return node ? node.textContent.trim() : '';
+  }
+
+  function rebuildResult() {
+    const result = document.querySelector('#cp-result');
+    if (!result || result.classList.contains('hidden')) return;
+    if (result.dataset.bamPolishing === 'true') return;
+
+    const rawText = result.textContent.trim();
+    if (!rawText) return;
+
+    const oldHeader = result.querySelector('header');
+    const title = oldHeader
+      ? textFrom('strong', oldHeader)
+      : 'Custom prompt';
+    const status = oldHeader
+      ? textFrom('b', oldHeader)
+      : 'unknown';
+
+    const chips = [
+      ...result.querySelectorAll(':scope > div span')
+    ].map(node => node.textContent.trim()).filter(Boolean);
+
+    const paragraph = result.querySelector(':scope > p');
+    const summary = paragraph
+      ? paragraph.textContent.trim()
+      : '';
+
+    const pre = result.querySelector('pre');
+    const response = pre
+      ? pre.textContent.trim()
+      : '';
+
+    const execution = 'LOCAL VALIDATION';
+
+    result.dataset.bamPolishing = 'true';
+    result.classList.add('cp-result-v55');
+
+    const meta = chips.map(value => (
+      `<span class="cp-result-chip-v55">${
+        value.replace(/[&<>"']/g, character => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[character])
+      }</span>`
+    )).join('');
+
+    const responseBlock = response
+      ? `<section class="cp-result-response-v55">
+          <div class="cp-result-response-head-v55">
+            <span class="cp-result-response-icon-v55">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linejoin="round"
+                  d="M5 5.5h14a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-8l-5.5 3v-3H5A2.5 2.5 0 0 1 2.5 15V8A2.5 2.5 0 0 1 5 5.5Z"/>
+              </svg>
+            </span>
+            Model response
+          </div>
+          <pre></pre>
+        </section>`
+      : '';
+
+    result.innerHTML = `
+      <div class="cp-result-head-v55">
+        <div>
+          <span class="cp-result-kicker-v55">${execution}</span>
+          <strong></strong>
+        </div>
+        <span class="cp-result-status-v55"></span>
+      </div>
+      <div class="cp-result-meta-v55">${meta}</div>
+      <div class="cp-result-summary-v55"></div>
+      ${responseBlock}`;
+
+    result.querySelector(
+      '.cp-result-head-v55 strong'
+    ).textContent = title;
+    result.querySelector(
+      '.cp-result-status-v55'
+    ).textContent = status;
+    result.querySelector(
+      '.cp-result-summary-v55'
+    ).textContent = summary;
+
+    const newPre = result.querySelector(
+      '.cp-result-response-v55 pre'
+    );
+    if (newPre) newPre.textContent = response;
+
+    result.dataset.bamPolishing = 'false';
+  }
+
+  function install() {
+    findRuntimeRows();
+    addExecutionDisclosure();
+    rebuildResult();
+  }
+
+  const observer = new MutationObserver(() => {
+    window.requestAnimationFrame(install);
+  });
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+
+  install();
+  [150, 500, 1200].forEach(delay => {
+    window.setTimeout(install, delay);
+  });
+})();
+
+/* BAM_BANK_UI_REVISION_V57 */
+(() => {
+  if (window.__bamRevisionV57) return;
+  window.__bamRevisionV57 = true;
+
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const liveState = { mode: 'demo', running: false };
+
+  function toastSafe(message) {
+    if (typeof toast === 'function') toast(message);
+    else window.alert(message);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[character]);
+  }
+
+  function collectPayload() {
+    const messages = qa('#cp-messages .cp-message').map(card => ({
+      role: q('select', card)?.value || 'user',
+      content: q('textarea', card)?.value.trim() || ''
+    })).filter(message => message.content);
+
+    return {
+      name: q('#cp-name')?.value.trim() || 'BAM Bank custom prompt',
+      category: q('#cp-category')?.value.trim() || 'Sensitive Data Disclosure',
+      evaluation_criteria: q('#cp-evaluation')?.value.trim() || '',
+      tags: (q('#cp-tags')?.value || '').split(',').map(item => item.trim()).filter(Boolean).slice(0, 20),
+      messages,
+      target: q('#cp-target')?.value || 'vulnerable',
+      model_id: q('#bam-scanner-model-id-v38')?.value.trim() || 'visionone-bank-demo'
+    };
+  }
+
+  function ensureLiveControls() {
+    const studio = q('#cp-studio');
+    const header = q('#cp-studio > header');
+    if (!studio || !header) return false;
+
+    if (!q('#cp-live-mode-v57')) {
+      const mode = document.createElement('div');
+      mode.id = 'cp-live-mode-v57';
+      mode.className = 'cp-live-mode-v57';
+      mode.innerHTML = `
+        <button type="button" class="active" data-cp-execution="demo">Demo</button>
+        <button type="button" data-cp-execution="live"><i aria-hidden="true"></i>Vision One Live</button>`;
+      header.appendChild(mode);
+
+      qa('[data-cp-execution]', mode).forEach(button => {
+        button.addEventListener('click', () => {
+          liveState.mode = button.dataset.cpExecution;
+          syncMode();
+        });
+      });
+    }
+
+    if (!q('#cp-live-progress-v57')) {
+      const progress = document.createElement('div');
+      progress.id = 'cp-live-progress-v57';
+      progress.className = 'cp-live-progress-v57 hidden';
+      progress.innerHTML = `
+        <span aria-hidden="true"></span>
+        <div><strong>Vision One Live scan</strong><small id="cp-live-stage-v57">Preparing custom prompt…</small></div>`;
+      q('#cp-result')?.insertAdjacentElement('beforebegin', progress);
+    }
+
+    if (studio.dataset.v57CaptureBound !== 'true') {
+      studio.dataset.v57CaptureBound = 'true';
+      studio.addEventListener('click', event => {
+        const runButton = event.target.closest('#cp-run');
+        if (!runButton || liveState.mode !== 'live') return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        executeLive(runButton);
+      }, true);
+    }
+
+    syncMode();
+    return true;
+  }
+
+  function syncMode() {
+    qa('[data-cp-execution]').forEach(button => {
+      button.classList.toggle('active', button.dataset.cpExecution === liveState.mode);
+    });
+
+    const live = liveState.mode === 'live';
+    const runButton = q('#cp-run');
+    const noteTitle = q('.cp-execution-note-v55 strong');
+    const noteBody = q('.cp-execution-note-v55 p');
+
+    if (runButton && !liveState.running) {
+      runButton.textContent = live ? 'Run Vision One Live' : 'Test in app';
+    }
+
+    if (noteTitle) {
+      noteTitle.textContent = live ? 'Vision One AI Scanner' : 'Local application validation';
+    }
+
+    if (noteBody) {
+      noteBody.textContent = live
+        ? 'TMAS will execute this exact custom prompt, evaluate it with the Vision One hosted judge, and publish the official result.'
+        : 'This button tests the exact prompt through BAM Bank. The result is shown locally and is not published to Vision One.';
+    }
+  }
+
+  async function requestJson(url, options = {}) {
+    const response = await fetch(url, options);
+    const text = await response.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; }
+    catch (error) { data = { detail: text || 'Unexpected response' }; }
+    if (!response.ok) throw new Error(data.detail || data.message || `HTTP ${response.status}`);
+    return data;
+  }
+
+  async function pollJob(jobId) {
+    const started = Date.now();
+    while (Date.now() - started < 15 * 60 * 1000) {
+      const job = await requestJson('/api/scanner/jobs/' + encodeURIComponent(jobId));
+      const stage = q('#cp-live-stage-v57');
+      if (stage) stage.textContent = job.stage || job.status;
+      if (job.status === 'completed') return job.result;
+      if (job.status === 'failed') throw new Error(job.error || 'Vision One Live scan failed');
+      await new Promise(resolve => window.setTimeout(resolve, 1400));
+    }
+    throw new Error('Vision One Live scan timed out');
+  }
+
+  function outcomeClass(value) {
+    const normalized = String(value || '').toLowerCase();
+    return normalized.includes('success') || normalized.includes('pass') || normalized === 'true'
+      ? 'successful'
+      : 'blocked';
+  }
+
+  function renderLiveResult(payload) {
+    const result = q('#cp-result');
+    if (!result) return;
+
+    const details = payload.details || {};
+    const summary = payload.summary || {};
+    const findings = Array.isArray(payload.results) ? payload.results : [];
+
+    result.dataset.bamPolishing = 'true';
+    result.className = 'cp-result cp-live-result-v57';
+    result.innerHTML = `
+      <div class="cp-live-top-v57">
+        <div><span>VISION ONE LIVE</span><strong>Hosted-judge assessment completed</strong></div>
+        <b>Published to Vision One</b>
+      </div>
+      <p class="cp-live-note-v57">${escapeHtml(payload.visionOneNote || '')}</p>
+      <div class="cp-live-summary-v57">
+        <div><small>TESTS</small><strong>${escapeHtml(summary.total || 0)}</strong></div>
+        <div><small>SUCCESSFUL</small><strong>${escapeHtml(summary.successful || 0)}</strong></div>
+        <div><small>BLOCKED</small><strong>${escapeHtml(summary.blocked || 0)}</strong></div>
+      </div>
+      <div class="cp-live-meta-v57">
+        ${details.visionOneScanId ? `<div><small>VISION ONE SCAN ID</small><code>${escapeHtml(details.visionOneScanId)}</code></div>` : ''}
+        ${details.tmasScanId ? `<div><small>TMAS SCAN ID</small><code>${escapeHtml(details.tmasScanId)}</code></div>` : ''}
+        ${details.duration ? `<div><small>DURATION</small><code>${escapeHtml(details.duration)}</code></div>` : ''}
+      </div>
+      <div class="cp-live-findings-v57">
+        ${findings.length ? findings.map((finding, index) => `
+          <article>
+            <header>
+              <div><small>RESULT ${index + 1}</small><strong>${escapeHtml(finding.objective || 'Custom prompt')}</strong></div>
+              <div><span>${escapeHtml(finding.severity || 'unknown')}</span><b class="${outcomeClass(finding.outcome)}">${escapeHtml(finding.outcome || 'completed')}</b></div>
+            </header>
+            <section><small>EVALUATION</small><p>${escapeHtml(finding.evaluation || 'No evaluation returned.')}</p>${finding.judgeModel ? `<em>Judge: ${escapeHtml(finding.judgeModel)}</em>` : ''}</section>
+            <section><small>CHAT HISTORY</small>
+              ${Array.isArray(finding.chatHistory) && finding.chatHistory.length
+                ? finding.chatHistory.map(message => `<div class="cp-live-message-v57 ${escapeHtml(message.role || 'assistant')}"><small>${escapeHtml(message.role || 'assistant')}</small><p>${escapeHtml(message.content || '')}</p></div>`).join('')
+                : '<p>No chat history returned.</p>'}
+            </section>
+          </article>`).join('')
+          : '<div class="cp-live-empty-v57">No evaluation rows returned.</div>'}
+      </div>`;
+
+    result.classList.remove('hidden');
+  }
+
+  async function executeLive(runButton) {
+    if (liveState.running) return;
+    const payload = collectPayload();
+
+    if (!payload.name || !payload.category || !payload.evaluation_criteria || !payload.tags.length || !payload.messages.length) {
+      toastSafe('Complete all required custom prompt fields.');
+      return;
+    }
+
+    const result = q('#cp-result');
+    const progress = q('#cp-live-progress-v57');
+
+    liveState.running = true;
+    runButton.disabled = true;
+    runButton.textContent = 'Starting Vision One scan…';
+    result?.classList.add('hidden');
+    progress?.classList.remove('hidden');
+
+    try {
+      const job = await requestJson('/api/scanner/vision-one-live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      renderLiveResult(await pollJob(job.jobId));
+    } catch (error) {
+      toastSafe(error.message || 'Vision One Live scan failed');
+    } finally {
+      liveState.running = false;
+      runButton.disabled = false;
+      progress?.classList.add('hidden');
+      syncMode();
+    }
+  }
+
+  function install() { ensureLiveControls(); }
+
+  const observer = new MutationObserver(() => window.requestAnimationFrame(install));
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  install();
+  [200, 650, 1400].forEach(delay => window.setTimeout(install, delay));
+})();
