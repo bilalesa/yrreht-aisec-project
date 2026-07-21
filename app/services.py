@@ -83,7 +83,7 @@ class AIGuardClient:
                         "Harmful or unauthorized request",
                     ),
                     (
-                        r"\b(phishing|credential[- ]?stealing|malware)\b",
+                        r"\b(phishing|credential[- ]?stealing|malware|bomb|bom|nuclear|nuklir|explosive|weapon|senjata)\b",
                         "Harmful content request",
                     ),
                     (

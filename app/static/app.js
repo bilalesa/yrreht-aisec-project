@@ -15,8 +15,19 @@ async function api(path, options = {}) {
   const contentType = response.headers.get('content-type') || '';
   const body = contentType.includes('application/json') ? await response.json() : await response.text();
   if (!response.ok) {
-    const detail = body?.detail || body?.message || body || `HTTP ${response.status}`;
-    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+    const detail =
+      body?.detail ||
+      body?.message ||
+      body ||
+      `HTTP ${response.status}`;
+    const error = new Error(
+      typeof detail === 'string'
+        ? detail
+        : JSON.stringify(detail)
+    );
+    error.payload = body;
+    error.status = response.status;
+    throw error;
   }
   return body;
 }
@@ -138,13 +149,24 @@ async function loadSettings() {
     safeText('#file-limit', `Any file type · maximum ${state.settings.fileSecurity.maxUploadMb} MB`);
     safeText('#tmas-command', `export TMAS_API_KEY=<VISION_ONE_API_KEY>\ntmas aiscan llm -i --region=${state.settings.fileSecurity.region}`);
 
-    const available = guardSettings.forceDemoMode || guardSettings.configured;
-    state.guardEnabled = available;
-    safeChecked('#guard-toggle', available);
-    safeDisabled('#guard-toggle', !available);
-    safeText('#guard-mode-label', available
-      ? 'Protected · prompts and responses inspected'
-      : 'Protection unavailable');
+    const liveAvailable =
+      guardSettings.forceDemoMode ||
+      guardSettings.configured;
+
+    state.guardEnabled = Boolean(liveAvailable);
+    safeChecked('#guard-toggle', liveAvailable);
+
+    // The presenter can always compare protected and unprotected
+    // chat paths. Without a live key, /api/chat uses an honest
+    // local policy simulation and does not claim a Vision One call.
+    safeDisabled('#guard-toggle', false);
+
+    safeText(
+      '#guard-mode-label',
+      liveAvailable
+        ? 'Protected · prompts and responses inspected'
+        : 'Unprotected demo · enable AI Guard for local policy simulation'
+    );
 
     if (guardSettings.forceDemoMode) {
       setPill($('#guard-status-badge'), 'warning', 'Local Demo');
@@ -207,12 +229,37 @@ async function sendChat(message) {
     });
     appendMessage('assistant', result.message || (state.guardEnabled ? 'Allowed by AI Guard.' : 'Processed without AI Guard.'));
   } catch (error) {
-    let reasons = [];
-    try {
-      const parsed = JSON.parse(error.message);
-      reasons = parsed.reasons || [];
-    } catch (_) {}
-    appendMessage('blocked', 'The request was blocked or could not be processed.', reasons.length ? reasons : [error.message]);
+    const payload =
+      error?.payload &&
+      typeof error.payload === 'object'
+        ? error.payload
+        : {};
+
+    const reasons =
+      Array.isArray(payload.reasons)
+        ? payload.reasons
+        : [];
+
+    const blocked =
+      payload.status === 'blocked' ||
+      error.status === 400;
+
+    appendMessage(
+      'blocked',
+      blocked
+        ? (
+            payload.message ||
+            'Blocked by Trend Vision One AI Guard policy.'
+          )
+        : 'The assistant could not process this request.',
+      reasons.length
+        ? reasons
+        : [
+            blocked
+              ? 'AI Guard policy enforcement'
+              : 'Service temporarily unavailable'
+          ]
+    );
   } finally {
     submit.disabled = false;
     submit.textContent = 'Send';
@@ -11008,287 +11055,10 @@ install();
   [200, 650, 1400].forEach(delay => window.setTimeout(install, delay));
 })();
 
-/* BAM_BANK_UI_REVISION_V58 */
-(() => {
-  if (window.__bamRevisionV58) return;
-  window.__bamRevisionV58 = true;
-
-  const q = (selector, root = document) => root.querySelector(selector);
-  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
-  let syncingGuard = false;
-
-  const chatIcon = `
-    <svg viewBox="0 0 48 48" focusable="false">
-      <path class="bam-chat-bubble-v58"
-        d="M10.5 9.5h27a5 5 0 0 1 5 5v16a5 5 0 0 1-5 5H23l-10.5 6v-6.4a5 5 0 0 1-4-4.9V14.5a5 5 0 0 1 5-5Z"/>
-      <circle class="bam-chat-dot-v58 dot-one" cx="18" cy="23" r="2.2"/>
-      <circle class="bam-chat-dot-v58 dot-two" cx="24.5" cy="23" r="2.2"/>
-      <circle class="bam-chat-dot-v58 dot-three" cx="31" cy="23" r="2.2"/>
-      <path class="bam-chat-spark-v58"
-        d="M37 5.2c.45 2.7 2.05 4.3 4.75 4.75-2.7.45-4.3 2.05-4.75 4.75-.45-2.7-2.05-4.3-4.75-4.75C34.95 9.5 36.55 7.9 37 5.2Z"/>
-    </svg>`;
-
-  const guardIcon = `
-    <span class="bam-guard-icon-v58" aria-hidden="true">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3.2 19 6v5.1c0 4.6-2.9 7.8-7 9.4-4.1-1.6-7-4.8-7-9.4V6l7-2.8Z"/>
-        <path d="m8.8 12 2.1 2.1 4.5-4.7"/>
-      </svg>
-    </span>`;
-
-  function polishLauncher() {
-    const launcher = q('#chat-launcher');
-    if (!launcher) return false;
-
-    if (!launcher.classList.contains('bam-chat-launcher-v58')) {
-      launcher.classList.add('bam-chat-launcher-v58');
-      launcher.setAttribute('aria-label', 'Open BAM Assist');
-      launcher.setAttribute('title', 'Open BAM Assist');
-      launcher.innerHTML = `
-        <span class="bam-chat-orb-v58" aria-hidden="true">${chatIcon}</span>
-        <span class="bam-chat-copy-v58">
-          <strong>BAM Assist</strong>
-          <small>Secure AI banking</small>
-        </span>
-        <span class="bam-chat-live-v58"><i></i>Online</span>
-        <i id="launcher-status"></i>`;
-    }
-
-    const avatar = q('#chat-panel .assistant-avatar, .assistant-avatar');
-    if (avatar && !avatar.classList.contains('bam-chat-avatar-v58')) {
-      avatar.classList.add('bam-chat-avatar-v58');
-      avatar.innerHTML = chatIcon;
-    }
-    return true;
-  }
-
-  function findGuardRows() {
-    const rows = new Set();
-
-    const original = q('#guard-toggle');
-    if (original) {
-      const row = original.closest(
-        '.guard-banner,[class*="runtime"],[class*="control"],section,article,div'
-      );
-      if (row) rows.add(row);
-    }
-
-    qa('strong,h2,h3,h4,span,div').forEach(title => {
-      if ((title.textContent || '').trim() !== 'AI Guard') return;
-      let row = title.closest(
-        '[class*="runtime"],[class*="control"],[class*="guard"],section,article,div'
-      );
-      while (row && !row.querySelector('input[type="checkbox"]')) {
-        row = row.parentElement;
-      }
-      if (row) rows.add(row);
-    });
-
-    return [...rows];
-  }
-
-  function guardInputs() {
-    const inputs = new Set();
-    const original = q('#guard-toggle');
-    if (original) inputs.add(original);
-
-    findGuardRows().forEach(row => {
-      qa('input[type="checkbox"]', row).forEach(input => inputs.add(input));
-    });
-
-    qa(
-      'input[type="checkbox"][data-runtime-control="guard"],' +
-      'input[type="checkbox"][id*="ai-guard"],' +
-      'input[type="checkbox"][id*="guard-toggle"]'
-    ).forEach(input => inputs.add(input));
-
-    return [...inputs];
-  }
-
-  function updateGuardVisuals(enabled) {
-    findGuardRows().forEach(row => {
-      row.classList.add('bam-guard-row-v58');
-      row.classList.toggle('is-enabled', enabled);
-
-      qa('small,p', row).forEach(node => {
-        const text = (node.textContent || '').trim().toLowerCase();
-        if (
-          text.includes('unprotected demo') ||
-          text.includes('direct model response') ||
-          text.includes('protected by') ||
-          text.includes('runtime enforcement')
-        ) {
-          node.textContent = enabled
-            ? 'Protected by Trend Vision One AI Guard'
-            : 'Unprotected demo · direct model response';
-        }
-      });
-
-      qa('.pill,[class*="badge"],[class*="status"]').forEach(node => {
-        const text = (node.textContent || '').trim().toLowerCase();
-        if (['baseline', 'protected', 'enabled', 'disabled'].includes(text)) {
-          node.textContent = enabled ? 'Protected' : 'Baseline';
-          node.classList.toggle('is-protected', enabled);
-        }
-      });
-    });
-
-    const label = q('#guard-mode-label');
-    if (label) {
-      label.textContent = enabled
-        ? 'AI Guard protection enabled'
-        : 'Unprotected demo · direct model response';
-    }
-  }
-
-  function setGuardState(enabled, source = null) {
-    if (syncingGuard) return;
-    syncingGuard = true;
-
-    try {
-      const inputs = guardInputs();
-      inputs.forEach(input => {
-        input.disabled = false;
-        input.removeAttribute('disabled');
-        input.setAttribute('aria-disabled', 'false');
-        input.checked = enabled;
-      });
-
-      if (typeof state === 'object' && state) {
-        state.guardEnabled = enabled;
-      }
-
-      const original = q('#guard-toggle');
-      if (original && source !== original) {
-        original.checked = enabled;
-        original.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-
-      updateGuardVisuals(enabled);
-    } finally {
-      syncingGuard = false;
-    }
-  }
-
-  function installGuard() {
-    const inputs = guardInputs();
-    if (!inputs.length) return false;
-
-    inputs.forEach(input => {
-      input.disabled = false;
-      input.removeAttribute('disabled');
-      input.setAttribute('aria-disabled', 'false');
-
-      if (input.dataset.bamGuardV58Bound !== 'true') {
-        input.dataset.bamGuardV58Bound = 'true';
-        input.addEventListener('change', event => {
-          if (!syncingGuard) {
-            setGuardState(Boolean(event.target.checked), event.target);
-          }
-        });
-      }
-    });
-
-    findGuardRows().forEach(row => {
-      row.classList.add('bam-guard-row-v58');
-      qa('.bam-runtime-icon-v55', row).forEach(icon => icon.remove());
-      if (q('.bam-guard-icon-v58', row)) return;
-
-      const title = qa('strong,h2,h3,h4,span,div', row)
-        .find(node => (node.textContent || '').trim() === 'AI Guard');
-      if (!title) return;
-
-      const host = title.parentElement || title;
-      host.classList.add('bam-guard-copy-v58');
-      host.insertAdjacentHTML('afterbegin', guardIcon);
-    });
-
-    const original = q('#guard-toggle');
-    updateGuardVisuals(original ? Boolean(original.checked) : inputs.some(input => input.checked));
-    return true;
-  }
-
-  function modeIcon(type) {
-    if (type === 'live') {
-      return `
-        <span class="cp-mode-icon-v58 live" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M7 17.5h10a4 4 0 0 0 .5-7.97A5.7 5.7 0 0 0 6.65 8.1 4.8 4.8 0 0 0 7 17.5Z"/>
-            <path d="m9.5 13 2 2 3.7-4"/>
-          </svg>
-        </span>`;
-    }
-    return `
-      <span class="cp-mode-icon-v58 demo" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M8 6.5 17 12l-9 5.5v-11Z"/></svg>
-      </span>`;
-  }
-
-  function polishModes() {
-    const studio = q('#cp-studio');
-    const mode = q('#cp-live-mode-v57');
-    if (!studio || !mode) return false;
-
-    let toolbar = q('#cp-execution-toolbar-v58');
-    if (!toolbar) {
-      toolbar = document.createElement('section');
-      toolbar.id = 'cp-execution-toolbar-v58';
-      toolbar.className = 'cp-execution-toolbar-v58';
-      toolbar.innerHTML = `
-        <div class="cp-execution-copy-v58">
-          <span>Execution mode</span>
-          <small>Choose a local preview or an official Vision One assessment.</small>
-        </div>`;
-      q(':scope > header', studio)?.insertAdjacentElement('afterend', toolbar);
-    }
-
-    if (mode.parentElement !== toolbar) toolbar.appendChild(mode);
-    mode.classList.add('cp-live-mode-v58');
-
-    const demo = q('[data-cp-execution="demo"]', mode);
-    const live = q('[data-cp-execution="live"]', mode);
-
-    if (demo && demo.dataset.bamModeV58 !== 'true') {
-      demo.dataset.bamModeV58 = 'true';
-      demo.innerHTML = `
-        ${modeIcon('demo')}
-        <span><strong>Demo</strong><small>Test in app</small></span>`;
-    }
-
-    if (live && live.dataset.bamModeV58 !== 'true') {
-      live.dataset.bamModeV58 = 'true';
-      live.innerHTML = `
-        ${modeIcon('live')}
-        <span><strong>Vision One Live</strong><small>TMAS · hosted judge</small></span>`;
-    }
-
-    const globalMode = q('#bam-scanner-mode-v31');
-    globalMode?.classList.toggle(
-      'bam-hide-global-mode-v58',
-      !studio.classList.contains('hidden')
-    );
-    return true;
-  }
-
-  function install() {
-    polishLauncher();
-    installGuard();
-    polishModes();
-  }
-  // Revision 59.1: avoid observing class and disabled changes
-  // that are also written by install().
-document.addEventListener('click', event => {
-    if (event.target.closest(
-      '#chat-launcher,[data-cp-mode],[data-security-tab="scanner"],#cp-run'
-    )) {
-      window.setTimeout(install, 0);
-      window.setTimeout(install, 220);
-    }
-  });
-
-  install();
-  [120, 400, 900, 1600].forEach(delay => window.setTimeout(install, delay));
-})();
+/* BAM_BANK_UI_REVISION_V58_RETIRED_BY_V60
+ * Removed because it enumerated unrelated runtime checkboxes
+ * and coupled AI Guard to ZTSA.
+ */
 
 /* BAM_BANK_UI_REVISION_V59_1 */
 (() => {
@@ -11358,4 +11128,287 @@ document.addEventListener('click', event => {
   }, true);
 
   scheduleLabelCleanup();
+})();
+
+/* BAM_BANK_UI_REVISION_V60 */
+(() => {
+  if (window.__bamRevisionV60) return;
+  window.__bamRevisionV60 = true;
+
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  const chatIcon = `
+    <svg class="bam-chat-icon-v60" viewBox="0 0 48 48"
+         focusable="false" aria-hidden="true">
+      <path class="bam-chat-shell-v60"
+        d="M9.5 9.5h29a5 5 0 0 1 5 5v16a5 5 0 0 1-5 5H23l-10.5 6v-6.4a5 5 0 0 1-4-4.9V14.5a5 5 0 0 1 5-5Z"/>
+      <circle class="bam-chat-dot-v60 dot-1" cx="18" cy="23" r="2.2"/>
+      <circle class="bam-chat-dot-v60 dot-2" cx="24.5" cy="23" r="2.2"/>
+      <circle class="bam-chat-dot-v60 dot-3" cx="31" cy="23" r="2.2"/>
+      <path class="bam-chat-spark-v60"
+        d="M37 4.8c.45 2.75 2.05 4.35 4.8 4.8-2.75.45-4.35 2.05-4.8 4.8-.45-2.75-2.05-4.35-4.8-4.8 2.75-.45 4.35-2.05 4.8-4.8Z"/>
+    </svg>`;
+
+  const guardIcon = `
+    <span class="bam-guard-icon-v60" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3.2 19 6v5.2c0 4.5-2.8 7.7-7 9.3-4.2-1.6-7-4.8-7-9.3V6l7-2.8Z"></path>
+        <path d="m8.8 12 2.1 2.1 4.5-4.7"></path>
+      </svg>
+    </span>`;
+
+  function currentLanguage() {
+    return (
+      localStorage.getItem('bam-language') === 'id' ||
+      document.documentElement.lang === 'id'
+    ) ? 'id' : 'en';
+  }
+
+  function launcherCopy() {
+    return currentLanguage() === 'id'
+      ? {
+          title: 'BAM Assist',
+          meta: 'Bantuan AI & keamanan',
+          open: 'Buka BAM Assist'
+        }
+      : {
+          title: 'BAM Assist',
+          meta: 'AI help & security',
+          open: 'Open BAM Assist'
+        };
+  }
+
+  function decorateAssistLauncher() {
+    const launcher = q('#bam-assist-launcher');
+    if (!launcher) return false;
+
+    const copy = launcherCopy();
+
+    launcher.classList.add('bam-assist-launcher-v60');
+    launcher.setAttribute('aria-label', copy.open);
+    launcher.setAttribute('title', copy.open);
+
+    if (launcher.dataset.bamLauncherV60 !== 'true') {
+      launcher.dataset.bamLauncherV60 = 'true';
+      launcher.innerHTML = `
+        <span class="bam-assist-launcher-mark-v60">
+          ${chatIcon}
+        </span>
+        <span class="bam-assist-launcher-copy-v60">
+          <strong id="bam-assist-launcher-title">${copy.title}</strong>
+          <small id="bam-assist-launcher-meta">${copy.meta}</small>
+        </span>
+        <span class="bam-assist-presence-v60" aria-hidden="true">
+          <i></i>Online
+        </span>
+        <svg class="bam-assist-chevron-v60" viewBox="0 0 24 24"
+             aria-hidden="true">
+          <path d="m8 10 4 4 4-4"></path>
+        </svg>`;
+    }
+
+    const title = q('#bam-assist-launcher-title', launcher);
+    const meta = q('#bam-assist-launcher-meta', launcher);
+    if (title) title.textContent = copy.title;
+    if (meta) meta.textContent = copy.meta;
+
+    const panelMark = q('#bam-assist-panel .bam-assist-panel-mark');
+    if (panelMark) {
+      panelMark.classList.add('bam-assist-panel-mark-v60');
+      panelMark.innerHTML = chatIcon;
+    }
+
+    const chatAvatar = q('#chat-panel .assistant-avatar');
+    if (chatAvatar) {
+      chatAvatar.classList.add('bam-chat-avatar-v60');
+      chatAvatar.innerHTML = chatIcon;
+    }
+
+    return true;
+  }
+
+  function guardTextWrapper(content) {
+    let wrapper = q('.bam-guard-text-v60', content);
+    if (wrapper) return wrapper;
+
+    wrapper = document.createElement('span');
+    wrapper.className = 'bam-guard-text-v60';
+
+    const title = qa(
+      ':scope > strong,:scope > h2,:scope > h3,:scope > h4',
+      content
+    ).find(node => node.textContent.trim() === 'AI Guard');
+
+    const detail = q(':scope > small,:scope > p', content);
+
+    if (title) wrapper.appendChild(title);
+    if (detail) wrapper.appendChild(detail);
+    content.appendChild(wrapper);
+    return wrapper;
+  }
+
+  function renderGuardState() {
+    const toggle = q('#guard-toggle');
+    const row = q('#chat-panel .guard-banner');
+    if (!toggle || !row) return false;
+
+    const enabled = Boolean(toggle.checked);
+    row.classList.toggle('is-enabled-v60', enabled);
+
+    const label = q('#guard-mode-label');
+    if (label) {
+      label.textContent = enabled
+        ? 'Protected · prompts and responses inspected'
+        : 'Unprotected demo · direct model response';
+    }
+
+    return true;
+  }
+
+  function installGuardControl() {
+    const toggle = q('#guard-toggle');
+    const row = q('#chat-panel .guard-banner');
+    if (!toggle || !row) return false;
+
+    /*
+     * Only #guard-toggle belongs to AI Guard.
+     * ZTSA is an independent control.
+     */
+    toggle.disabled = false;
+    toggle.removeAttribute('disabled');
+    toggle.setAttribute('aria-disabled', 'false');
+
+    row.classList.remove(
+      'bam-guard-row-v58',
+      'bam-runtime-control-v55'
+    );
+    row.classList.add('bam-guard-row-v60');
+
+    qa('.bam-runtime-icon-v55,.bam-guard-icon-v58', row)
+      .forEach(node => node.remove());
+
+    const content = q(':scope > div', row);
+    if (content) {
+      content.classList.remove('bam-guard-copy-v58');
+      content.classList.add('bam-guard-copy-v60');
+
+      if (!q('.bam-guard-icon-v60', content)) {
+        content.insertAdjacentHTML('afterbegin', guardIcon);
+      }
+
+      guardTextWrapper(content);
+    }
+
+    if (toggle.dataset.bamGuardV60 !== 'true') {
+      toggle.dataset.bamGuardV60 = 'true';
+      let ztsaBefore = null;
+
+      toggle.addEventListener('pointerdown', () => {
+        const ztsa = q('#ztsa-toggle-v30');
+        ztsaBefore = ztsa ? Boolean(ztsa.checked) : null;
+      }, true);
+
+      toggle.addEventListener('change', () => {
+        const ztsa = q('#ztsa-toggle-v30');
+
+        if (
+          ztsa &&
+          ztsaBefore !== null &&
+          ztsa.checked !== ztsaBefore
+        ) {
+          ztsa.checked = ztsaBefore;
+          localStorage.setItem(
+            'bam-ztsa-mock-enabled',
+            String(ztsaBefore)
+          );
+          ztsa.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        if (typeof state === 'object' && state) {
+          state.guardEnabled = Boolean(toggle.checked);
+        }
+
+        renderGuardState();
+      });
+    }
+
+    renderGuardState();
+    return true;
+  }
+
+  function removeFileSecurityReady() {
+    [
+      '.bam-file-security-badge-v27',
+      '.file-security-badge',
+      '.file-security-ready',
+      '.bam-file-protection-status',
+      '[data-file-security-ready]'
+    ].forEach(selector => {
+      qa(selector).forEach(node => node.remove());
+    });
+
+    const payBills = q(
+      '#dashboard-page .quick-actions > button[data-open="file"]'
+    );
+
+    if (payBills) {
+      qa('em,b,small,span', payBills).forEach(node => {
+        if (node.classList.contains('bam-file-security-shield-v28')) {
+          return;
+        }
+
+        const text = (node.textContent || '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+
+        if (
+          text === 'file security ready' ||
+          text === 'file security protected' ||
+          text === 'protected by file security' ||
+          text === 'dilindungi file security'
+        ) {
+          node.remove();
+        }
+      });
+    }
+  }
+
+  function install() {
+    decorateAssistLauncher();
+    installGuardControl();
+    removeFileSecurityReady();
+
+    const form = q('#chat-form');
+    if (form) form.noValidate = true;
+  }
+
+  install();
+  [120, 350, 800, 1500, 2800].forEach(delay => {
+    window.setTimeout(install, delay);
+  });
+
+  document.addEventListener('click', event => {
+    if (
+      event.target instanceof Element &&
+      event.target.closest(
+        '#bam-assist-launcher,' +
+        '#bam-assist-chat,' +
+        '#bam-assist-guard,' +
+        '#guard-toggle,' +
+        '[data-open="file"]'
+      )
+    ) {
+      window.setTimeout(install, 0);
+      window.setTimeout(install, 180);
+    }
+  }, true);
+
+  ['#language', '#settings-language'].forEach(selector => {
+    q(selector)?.addEventListener('change', () => {
+      window.setTimeout(install, 0);
+      window.setTimeout(install, 160);
+    });
+  });
 })();

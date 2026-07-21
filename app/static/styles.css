@@ -10198,3 +10198,353 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
   display: none !important;
   pointer-events: none !important;
 }
+
+/* BAM_BANK_UI_REVISION_V60 */
+
+.bam-file-security-badge-v27,
+.file-security-badge,
+.file-security-ready,
+.bam-file-protection-status,
+[data-file-security-ready],
+.bam-file-ready-hidden-v59-1 {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* AI Guard: compact, horizontal and independent from ZTSA. */
+#chat-panel .guard-banner.bam-guard-row-v60 {
+  min-height: 92px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 16px 22px !important;
+}
+
+#chat-panel .guard-banner.bam-guard-row-v60 > .bam-guard-copy-v60 {
+  min-width: 0;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.bam-guard-icon-v60 {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  border: 1px solid #d6e2f3;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #f2f6ff, #e8f0ff);
+  color: #2e68d1;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+  transition: color .18s ease, border-color .18s ease,
+              background .18s ease, transform .18s ease;
+}
+
+.bam-guard-icon-v60 svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bam-guard-row-v60.is-enabled-v60 .bam-guard-icon-v60 {
+  border-color: #bfe7d7;
+  background: linear-gradient(145deg, #e9faf2, #def5ea);
+  color: #11825a;
+  transform: translateY(-1px);
+}
+
+.bam-guard-text-v60 {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.bam-guard-text-v60 > strong,
+.bam-guard-text-v60 > h2,
+.bam-guard-text-v60 > h3,
+.bam-guard-text-v60 > h4 {
+  margin: 0 !important;
+  color: #203452 !important;
+  font-size: 17px !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+}
+
+.bam-guard-text-v60 > small,
+.bam-guard-text-v60 > p {
+  margin: 0 !important;
+  color: #788aa3 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+#chat-panel .guard-banner.bam-guard-row-v60 .switch {
+  flex: none;
+  margin-left: auto !important;
+}
+
+/* The visible BAM Assist hub launcher. */
+#bam-assist-launcher .bam-assist-launcher-mark,
+#bam-assist-launcher .bam-assist-launcher-copy,
+#bam-assist-launcher .bam-assist-online,
+#bam-assist-launcher .bam-assist-chevron {
+  display: none !important;
+}
+
+#bam-assist-launcher.bam-assist-launcher-v60 {
+  isolation: isolate;
+  width: auto !important;
+  min-width: 238px !important;
+  height: 68px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  padding: 8px 13px 8px 9px !important;
+  overflow: visible !important;
+  border: 1px solid rgba(255,255,255,.45) !important;
+  border-radius: 21px !important;
+  background:
+    radial-gradient(circle at 15% -25%, rgba(103,231,255,.82), transparent 41%),
+    linear-gradient(135deg, #102b6f 0%, #155ed4 54%, #168fc6 100%) !important;
+  color: #fff !important;
+  box-shadow:
+    0 18px 42px rgba(16,55,132,.4),
+    inset 0 1px 0 rgba(255,255,255,.28) !important;
+  animation: bam-assist-float-v60 4.2s ease-in-out infinite;
+  transition: transform .2s ease, box-shadow .2s ease,
+              filter .2s ease !important;
+}
+
+#bam-assist-launcher.bam-assist-launcher-v60::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -5px;
+  border: 1px solid rgba(74,188,255,.3);
+  border-radius: 25px;
+  animation: bam-assist-ring-v60 2.9s ease-out infinite;
+}
+
+#bam-assist-launcher.bam-assist-launcher-v60::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  overflow: hidden;
+  border-radius: 20px;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 22%,
+    rgba(255,255,255,.2) 47%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  animation: bam-assist-sheen-v60 5.8s ease-in-out infinite;
+}
+
+#bam-assist-launcher.bam-assist-launcher-v60:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  filter: saturate(1.08) brightness(1.04);
+  box-shadow:
+    0 24px 52px rgba(16,55,132,.48),
+    inset 0 1px 0 rgba(255,255,255,.32) !important;
+}
+
+.bam-assist-launcher-mark-v60 {
+  width: 48px;
+  height: 48px;
+  display: grid !important;
+  place-items: center;
+  flex: 0 0 48px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.34);
+  border-radius: 15px;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,.25),
+    rgba(255,255,255,.08)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    0 8px 20px rgba(5,34,103,.22);
+}
+
+.bam-chat-icon-v60 {
+  width: 34px;
+  height: 34px;
+  overflow: visible;
+}
+
+.bam-chat-shell-v60 {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bam-chat-dot-v60 {
+  fill: #fff;
+  animation: bam-chat-dot-v60 1.8s ease-in-out infinite;
+}
+
+.bam-chat-dot-v60.dot-2 { animation-delay: .16s; }
+.bam-chat-dot-v60.dot-3 { animation-delay: .32s; }
+
+.bam-chat-spark-v60 {
+  fill: #e4fbff;
+  transform-origin: 37px 10px;
+  animation: bam-chat-spark-v60 2.5s ease-in-out infinite;
+}
+
+.bam-assist-launcher-copy-v60 {
+  min-width: 104px;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  text-align: left;
+}
+
+.bam-assist-launcher-copy-v60 strong {
+  color: #fff !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+  white-space: nowrap;
+}
+
+.bam-assist-launcher-copy-v60 small {
+  color: #d9eaff !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 650 !important;
+  white-space: nowrap;
+}
+
+.bam-assist-presence-v60 {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 5px 7px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: rgba(3,30,82,.2);
+  color: #e8f7ff;
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bam-assist-presence-v60 i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ce2a1;
+  box-shadow: 0 0 0 3px rgba(76,226,161,.16);
+}
+
+.bam-assist-chevron-v60 {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  fill: none;
+  stroke: #dceaff;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .18s ease;
+}
+
+#bam-assist-shell.is-open .bam-assist-chevron-v60 {
+  transform: rotate(180deg);
+}
+
+.bam-assist-panel-mark-v60,
+.bam-chat-avatar-v60 {
+  display: grid !important;
+  place-items: center !important;
+  overflow: visible !important;
+  border: 1px solid rgba(255,255,255,.3) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(
+    145deg,
+    #69dfff,
+    #4d89ff 55%,
+    #7159ef
+  ) !important;
+  box-shadow: 0 9px 22px rgba(12,60,153,.25) !important;
+}
+
+.bam-assist-panel-mark-v60 .bam-chat-icon-v60,
+.bam-chat-avatar-v60 .bam-chat-icon-v60 {
+  width: 31px;
+  height: 31px;
+}
+
+@keyframes bam-assist-float-v60 {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes bam-assist-ring-v60 {
+  0% { transform: scale(.96); opacity: .68; }
+  72%,100% { transform: scale(1.08); opacity: 0; }
+}
+
+@keyframes bam-assist-sheen-v60 {
+  0%,58% { transform: translateX(-130%); }
+  77%,100% { transform: translateX(130%); }
+}
+
+@keyframes bam-chat-dot-v60 {
+  0%,55%,100% { opacity: .46; transform: translateY(0); }
+  26% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes bam-chat-spark-v60 {
+  0%,100% { opacity: .72; transform: scale(.86) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.12) rotate(12deg); }
+}
+
+@media(max-width:760px) {
+  #bam-assist-launcher.bam-assist-launcher-v60 {
+    min-width: 64px !important;
+    width: 64px !important;
+    height: 64px !important;
+    padding: 7px !important;
+    justify-content: center !important;
+  }
+
+  .bam-assist-launcher-copy-v60,
+  .bam-assist-presence-v60,
+  .bam-assist-chevron-v60 {
+    display: none !important;
+  }
+
+  #chat-panel .guard-banner.bam-guard-row-v60 {
+    padding: 14px 16px !important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  #bam-assist-launcher.bam-assist-launcher-v60,
+  #bam-assist-launcher.bam-assist-launcher-v60::before,
+  #bam-assist-launcher.bam-assist-launcher-v60::after,
+  .bam-chat-dot-v60,
+  .bam-chat-spark-v60 {
+    animation: none !important;
+  }
+}

@@ -44,7 +44,7 @@ file_security = FileSecurityService(settings)
 app = FastAPI(
     title="BAM Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
-    version="2.2.5",
+    version="2.2.6",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -109,7 +109,7 @@ async def index() -> FileResponse:
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "visionone-bank-demo", "version": "2.2.5"}
+    return {"status": "ok", "service": "visionone-bank-demo", "version": "2.2.6"}
 
 
 _CLIENT_GEO_CACHE: dict[str, tuple[float, dict]] = {}
@@ -637,41 +637,214 @@ async def security_status() -> dict:
     }
 
 
+# BAM_BANK_UI_REVISION_V60_CHAT
+def _local_guard_content(
+    result: dict,
+    fallback: str,
+) -> str:
+    redacted = result.get("redactedRequest")
+
+    if isinstance(redacted, dict):
+        prompt = redacted.get("prompt")
+        if isinstance(prompt, str) and prompt:
+            return prompt
+
+        try:
+            content = redacted["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError):
+            content = None
+
+        if isinstance(content, str) and content:
+            return content
+
+    return fallback
+
+
+async def _chat_with_local_guard(
+    message: str,
+) -> dict:
+    prompt_result = guard._local_scan_text(message)
+
+    if str(prompt_result.get("action", "allow")).lower() == "block":
+        reasons = prompt_result.get("reasons") or [
+            prompt_result.get(
+                "reason",
+                "AI Guard policy enforcement",
+            )
+        ]
+
+        raise GuardBlocked(
+            ", ".join(reasons),
+            details=prompt_result,
+        )
+
+    safe_prompt = _local_guard_content(
+        prompt_result,
+        message,
+    )
+
+    llm_response = await llm.complete(
+        safe_prompt,
+        vulnerable=False,
+    )
+
+    try:
+        raw_output = str(
+            llm_response["choices"][0]["message"]["content"]
+        )
+    except (KeyError, IndexError, TypeError):
+        raw_output = ""
+
+    output_result = guard._local_scan_text(raw_output)
+
+    if str(output_result.get("action", "allow")).lower() == "block":
+        reasons = output_result.get("reasons") or [
+            output_result.get(
+                "reason",
+                "AI Guard response policy enforcement",
+            )
+        ]
+
+        raise GuardBlocked(
+            ", ".join(reasons),
+            details=output_result,
+        )
+
+    return {
+        "status": "allowed",
+        "message": _local_guard_content(
+            output_result,
+            raw_output,
+        ),
+        "guard": {
+            "enabled": True,
+            "mode": "local-demo",
+            "fallback": True,
+            "input": {
+                "action": prompt_result.get("action", "allow"),
+                "reasons": prompt_result.get("reasons", []),
+            },
+            "output": {
+                "action": output_result.get("action", "allow"),
+                "reasons": output_result.get("reasons", []),
+            },
+        },
+    }
+
+
 @app.post("/api/chat")
 async def chat(payload: ChatRequest) -> dict:
     try:
         if not payload.guard_enabled:
-            unprotected_response = await llm.complete(payload.message, vulnerable=True)
-            message = unprotected_response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            unprotected_response = await llm.complete(
+                payload.message,
+                vulnerable=True,
+            )
+
+            message = (
+                unprotected_response
+                .get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "")
+            )
+
             return {
                 "status": "allowed",
                 "message": message,
-                "guard": {"enabled": False, "input": None, "output": None},
+                "guard": {
+                    "enabled": False,
+                    "input": None,
+                    "output": None,
+                },
             }
 
-        prompt_result = await guard.inspect_prompt(payload.message)
-        safe_prompt = prompt_result.get("content", payload.message)
-        llm_response = await llm.complete(safe_prompt, vulnerable=False)
-        output_result = await guard.inspect_response(llm_response)
+        cfg = runtime.snapshot()
+
+        if (
+            not cfg["configured"]
+            and not cfg["force_demo_mode"]
+        ):
+            return await _chat_with_local_guard(
+                payload.message
+            )
+
+        try:
+            prompt_result = await guard.inspect_prompt(
+                payload.message
+            )
+            safe_prompt = prompt_result.get(
+                "content",
+                payload.message,
+            )
+            llm_response = await llm.complete(
+                safe_prompt,
+                vulnerable=False,
+            )
+            output_result = await guard.inspect_response(
+                llm_response
+            )
+        except GuardUnavailable:
+            logger.warning(
+                "Live AI Guard unavailable; using local policy "
+                "simulation for the interactive demo.",
+                exc_info=True,
+            )
+            return await _chat_with_local_guard(
+                payload.message
+            )
+
         return {
             "status": "allowed",
             "message": output_result.get("content", ""),
             "guard": {
                 "enabled": True,
-                "input": {"action": prompt_result.get("action", "allow"), "reasons": prompt_result.get("reasons", [])},
-                "output": {"action": output_result.get("action", "allow"), "reasons": output_result.get("reasons", [])},
+                "mode": "live",
+                "fallback": False,
+                "input": {
+                    "action": prompt_result.get("action", "allow"),
+                    "reasons": prompt_result.get("reasons", []),
+                },
+                "output": {
+                    "action": output_result.get("action", "allow"),
+                    "reasons": output_result.get("reasons", []),
+                },
             },
         }
+
     except GuardBlocked as exc:
+        reasons = (
+            exc.details.get("reasons")
+            or [exc.reason]
+        )
+
         return JSONResponse(
             status_code=400,
-            content={"status": "blocked", "message": "Blocked by TrendAI Vision One AI Guard.", "reasons": exc.details.get("reasons") or [exc.reason]},
+            content={
+                "status": "blocked",
+                "message": (
+                    "Blocked by Trend Vision One "
+                    "AI Guard policy."
+                ),
+                "reasons": reasons,
+                "guard": {
+                    "enabled": True,
+                    "mode": exc.details.get(
+                        "engine",
+                        "policy",
+                    ),
+                },
+            },
         )
-    except GuardUnavailable as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
     except Exception as exc:
         logger.exception("Chat request failed")
-        raise HTTPException(status_code=502, detail=f"Chat backend error: {exc}") from exc
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "The assistant could not "
+                "process this request."
+            ),
+        ) from exc
 
 
 async def _scanner_completion(payload: dict, authorization: Optional[str], protected: bool) -> dict:
