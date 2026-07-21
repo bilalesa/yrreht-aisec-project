@@ -15,3 +15,7 @@ my-image-values.yaml
 *.raw
 .env.*
 !.env.example
+
+# Local BAM Bank runtime secrets and revision tools
+.bam-server-default.env
+apply_bam_revision_v*.py
