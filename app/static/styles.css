@@ -9625,3 +9625,78 @@ html body #scanner-step-2 .attack-grid.bam-attack-grid-v36{
   .chat-launcher{min-width:56px;width:56px;padding:0;justify-content:center;border-radius:17px}
   .chat-launcher .bam-assist-copy-v53{display:none}
 }
+
+/* BAM_BANK_UI_REVISION_V54 */
+.chat-launcher{
+  right:24px;bottom:24px;width:auto;min-width:174px;height:58px;
+  padding:0 16px 0 10px;display:flex;align-items:center;
+  justify-content:flex-start;gap:10px;
+  border:1px solid rgba(255,255,255,.4);border-radius:18px;
+  background:
+    radial-gradient(circle at 16% -10%,rgba(103,229,255,.78),transparent 38%),
+    linear-gradient(135deg,#102e82 0%,#185fe1 54%,#138eda 100%);
+  color:#fff;
+  box-shadow:0 16px 38px rgba(20,72,177,.34),
+             inset 0 1px 0 rgba(255,255,255,.22);
+  overflow:visible;
+  transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+.chat-launcher:hover{
+  transform:translateY(-2px);filter:saturate(1.08);
+  box-shadow:0 21px 46px rgba(20,72,177,.4),
+             inset 0 1px 0 rgba(255,255,255,.25);
+}
+.chat-launcher:active{transform:translateY(0)}
+.bam-assist-mark{
+  width:39px;height:39px;display:grid;place-items:center;flex:none;
+  border:1px solid rgba(255,255,255,.25);border-radius:13px;
+  background:rgba(255,255,255,.15);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),
+             0 6px 15px rgba(7,40,114,.14);
+}
+.bam-assist-mark svg{width:25px;height:25px;overflow:visible}
+.bam-assist-bubble{
+  fill:none;stroke:#fff;stroke-width:2.1;stroke-linejoin:round
+}
+.bam-assist-spark{fill:#fff}
+.bam-assist-copy{
+  display:flex;min-width:95px;flex-direction:column;
+  align-items:flex-start;gap:3px;line-height:1;text-align:left
+}
+.bam-assist-copy strong{
+  color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.005em
+}
+.bam-assist-copy small{
+  color:#dceaff;font-size:7.8px;font-weight:600;white-space:nowrap
+}
+.chat-launcher i{
+  right:-2px;top:-2px;width:11px;height:11px;border:2px solid #fff;
+  box-shadow:0 2px 7px rgba(10,35,86,.2)
+}
+.chat-panel header{
+  background:
+    radial-gradient(circle at 10% -10%,rgba(92,222,255,.3),transparent 34%),
+    linear-gradient(135deg,#091b4b 0%,#123b92 100%)
+}
+.assistant-avatar.bam-assist-avatar{
+  position:relative;width:40px;height:40px;display:grid;
+  place-items:center;flex:none;border:1px solid rgba(255,255,255,.25);
+  border-radius:13px;
+  background:linear-gradient(135deg,#65ddff 0%,#4d83ff 52%,#7358f4 100%);
+  color:#fff;box-shadow:0 8px 19px rgba(20,84,214,.3);overflow:hidden
+}
+.assistant-avatar.bam-assist-avatar::before,
+.assistant-avatar.bam-assist-avatar::after{content:none}
+.assistant-avatar.bam-assist-avatar svg{width:25px;height:25px}
+.assistant-avatar.bam-assist-avatar svg path:first-child{
+  fill:none;stroke:#fff;stroke-width:2;stroke-linejoin:round
+}
+.assistant-avatar.bam-assist-avatar .avatar-spark{fill:#fff;stroke:none}
+.chat-panel header strong{font-size:12px;font-weight:800;letter-spacing:.005em}
+.chat-panel header small{margin-top:3px;color:#bdd1fb;font-size:8.8px}
+@media(max-width:760px){
+  .chat-launcher{
+    width:58px;min-width:58px;padding:0;justify-content:center
+  }
+  .bam-assist-copy{display:none}
+}
