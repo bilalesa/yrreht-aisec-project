@@ -1,6 +1,6 @@
 services:
   tfbank:
-    image: ${APP_IMAGE:-tfbank-demo:118.0.0}
+    image: ${APP_IMAGE:-tfbank-demo:120.0.0}
 
     restart: unless-stopped
 
