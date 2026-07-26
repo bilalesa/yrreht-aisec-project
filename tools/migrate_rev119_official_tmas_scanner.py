@@ -467,6 +467,36 @@ def patch_scanner_ui(repo: Path) -> None:
             label="replace scanner execution function",
         )
 
+    # TF_BANK_REV119_TMAS_OBJECTIVE_FIX
+    text = text.replace(
+        (
+            "scannerObjectives: "
+            "['prompt-injection', 'sensitive-data', "
+            "'system-prompt', 'jailbreak'],"
+        ),
+        (
+            "scannerObjectives: "
+            "['prompt-injection', 'sensitive-data', "
+            "'system-prompt', 'malicious-code'],"
+        ),
+    )
+    text = text.replace(
+        "      ['jailbreak', 'Jailbreak'],",
+        "      ['malicious-code', 'Malicious code'],",
+    )
+
+    if "['jailbreak', 'Jailbreak']" in text:
+        raise MigrationError(
+            "Unsupported Jailbreak objective remains "
+            "in the Built-in TMAS library"
+        )
+
+    if "['malicious-code', 'Malicious code']" not in text:
+        raise MigrationError(
+            "Malicious Code Generation objective "
+            "was not installed"
+        )
+
     if "/api/scanner/live" in text:
         raise MigrationError("UI still references the legacy /api/scanner/live route")
     if "/api/scanner/jobs" not in text:
@@ -599,6 +629,8 @@ def validate_source(repo: Path) -> None:
         "legacy base UI removed": "/api/scanner/live" not in base_ui_text,
         "truthful live label": "Vision One live · TMAS" in ui_text,
         "custom no-record label": "Application-path validation · no tenant record" in ui_text,
+        "canonical malicious-code objective": "['malicious-code', 'Malicious code']" in ui_text,
+        "unsupported built-in jailbreak removed": "['jailbreak', 'Jailbreak']" not in ui_text,
         "Rev119 regression test": "test_rev119_ui_uses_official_tmas_job_api" in test_text,
     }
     failures = [name for name, ok in required.items() if not ok]

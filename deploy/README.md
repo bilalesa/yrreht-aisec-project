@@ -13,7 +13,7 @@ The application runs as UID/GID `10001:10001` with:
 ```bash
 docker build \
   --progress=plain \
-  --tag tfbank-demo:119.0.0 \
+  --tag tfbank-demo:120.0.0 \
   .
 ```
 
@@ -37,7 +37,7 @@ Example runtime configuration:
 
 ```text
 CONTAINER_NAME=tfbank-demo-backup
-APP_IMAGE=tfbank-demo:119.0.0
+APP_IMAGE=tfbank-demo:120.0.0
 APP_ENV_FILE=/home/ec2-user/tfbank-secrets/backup.env
 HOST_PORT=18081
 DATA_VOLUME=tfbank-backup-data

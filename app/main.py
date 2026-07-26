@@ -2461,3 +2461,7 @@ install_rev95_api(app)
 # BAM_REV99_API
 from .rev99_api import install as install_rev99_api
 install_rev99_api(app)
+
+# TF_BANK_REV120_CUSTOM_TMAS_LIVE
+from .rev120_api import install as install_rev120_api
+install_rev120_api(app)

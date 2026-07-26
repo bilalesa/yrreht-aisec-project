@@ -594,3 +594,34 @@ def test_runtime_reset_without_server_key_keeps_custom_active() -> None:
     assert snapshot["configured"] is True
     assert snapshot["using_default_api_key"] is False
     assert snapshot["server_default_available"] is False
+
+
+# TF_BANK_REV119_TMAS_OBJECTIVE_TEST
+def test_rev119_builtin_objectives_are_tmas_canonical() -> None:
+    script = (
+        Path(__file__).parents[1]
+        / "app"
+        / "static"
+        / "bam-suite-v99.js"
+    ).read_text(encoding="utf-8")
+
+    assert "['malicious-code', 'Malicious code']" in script
+    assert "['jailbreak', 'Jailbreak']" not in script
+
+# TF_BANK_REV120_CUSTOM_TMAS_TEST
+def test_rev120_custom_live_uses_official_tmas() -> None:
+    root = Path(__file__).parents[1]
+    script = (
+        root / "app" / "static" / "bam-suite-v99.js"
+    ).read_text(encoding="utf-8")
+    backend = (
+        root / "app" / "rev120_api.py"
+    ).read_text(encoding="utf-8")
+
+    assert "/api/scanner/custom-jobs" in script
+    assert "/api/v99/scanner/custom" in script
+    assert "Vision One live · Custom prompts" in script
+    assert "custom_prompts:" in backend
+    assert 'version: "custom/1.0"' in backend
+    assert "TMAS_API_KEY" in backend
+    assert "tenantRecord" in backend
