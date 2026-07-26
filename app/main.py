@@ -42,7 +42,7 @@ llm = BankLLM(settings)
 file_security = FileSecurityService(settings)
 
 app = FastAPI(
-    title="BAM Bank Demo",
+    title="TF Bank Demo",
     description="Synthetic banking application for TrendAI Vision One AI Security demonstrations.",
     version="2.2.7",
     docs_url="/api/docs",
@@ -932,7 +932,7 @@ async def scanner_custom(payload: CustomPromptRequest) -> dict:
         "visionOnePublished": False,
         "visionOneNote": (
             "This endpoint validates the prompt through the local "
-            "BAM Bank application path. Run the exported custom "
+            "TF Bank application path. Run the exported custom "
             "prompt YAML through TMAS/AI Scanner to create an "
             "official Vision One scan result."
         ),
@@ -1312,7 +1312,7 @@ def _scanner_status_payload() -> dict:
         "targetKeyConfigured": bool(
             _SCANNER_RUNTIME["target_api_key"]
         ),
-        # v35 generates the BAM Bank target YAML for each job. The
+        # v35 generates the TF Bank target YAML for each job. The
         # presenter and customer therefore do not need to paste YAML.
         "configConfigured": True,
         "configSource": "app-generated",
@@ -1830,7 +1830,7 @@ async def _scanner_probe_target(
             {
                 "role": "user",
                 "content": (
-                    "BAM Bank AI Scanner connectivity check. "
+                    "TF Bank AI Scanner connectivity check. "
                     "Reply with OK only."
                 ),
             }
@@ -1960,10 +1960,10 @@ def _scanner_build_app_config(
 
     lines = [
         "version: 1.1.0",
-        'name: "BAM Bank AI Security Assessment"',
+        'name: "TF Bank AI Security Assessment"',
         (
             'description: "Authorized AI security assessment generated '
-            'by the BAM Bank demonstration application"'
+            'by the TF Bank demonstration application"'
         ),
         "target:",
         '  name: "visionone-bank-demo"',
@@ -2148,7 +2148,7 @@ async def _run_live_scanner_job(
         )
         await _scanner_job_log(
             job_id,
-            "Checking the selected BAM Bank target endpoint...",
+            "Checking the selected TF Bank target endpoint...",
         )
 
         await asyncio.wait_for(
@@ -2537,3 +2537,36 @@ async def scanner_get_job_report(job_id: str) -> dict:
             "rawResult": job.get("rawResult"),
             "markdownReport": job.get("markdownReport"),
         }
+
+
+# V14_LIVE_ROUTER
+from .live_v14 import install as install_v14_live
+install_v14_live(app, runtime, settings, guard, llm)
+# BAM_REV86_API
+from .rev86_api import install as install_rev86_api
+install_rev86_api(app)
+# BAM_REV87_API
+from .rev87_api import install as install_rev87_api
+install_rev87_api(app)
+# BAM_REV88_API
+from .rev88_api import install as install_rev88_api
+install_rev88_api(app)
+# BAM_REV89_API
+from .rev89_api import install as install_rev89_api
+install_rev89_api(app)
+# BAM_REV91_API
+from .rev91_api import install as install_rev91_api
+install_rev91_api(app)
+# BAM_REV93_API
+from .rev93_api import install as install_rev93_api
+install_rev93_api(app)
+# BAM_REV94_API
+from .rev94_api import install as install_rev94_api
+install_rev94_api(app)
+# BAM_REV95_API
+from .rev95_api import install as install_rev95_api
+install_rev95_api(app)
+
+# BAM_REV99_API
+from .rev99_api import install as install_rev99_api
+install_rev99_api(app)

@@ -130,7 +130,7 @@ function showPage(name) {
     accounts: ['Your accounts.', 'Manage synthetic balances and account views.'],
     payments: ['Payments.', 'Demonstrate safe AI-assisted payment workflows.'],
     invest: ['Investments.', 'Explore a fictional portfolio.'],
-    support: ['Support center.', 'Get help with your BAM Bank account.']
+    support: ['Support center.', 'Get help with your TF Bank account.']
   };
   $('#page-title').textContent = titles[name][0];
   $('#page-subtitle').textContent = titles[name][1];
@@ -380,7 +380,7 @@ async function scanSelectedFile() {
     const title = result.status === 'clean'
       ? (bankingFlow ? 'Document verified — ready to continue' : 'Clean — processing allowed')
       : result.status === 'quarantined'
-        ? (bankingFlow ? 'Document rejected' : 'Malware detected — file quarantined')
+        ? (bankingFlow ? 'Document rejected' : 'Malware detected — document blocked')
         : 'Submitted for storage scanning';
     const message = result.status === 'clean'
       ? 'The uploaded document passed the safety check.'
@@ -409,7 +409,12 @@ function bindEvents() {
   $('#security-modal').addEventListener('click', event => { if (event.target.id === 'security-modal') closeModal('security-modal'); });
   $$('.security-tabs button').forEach(btn => btn.addEventListener('click', () => activateSecurityTab(btn.dataset.securityTab)));
 
-  $('#chat-launcher').addEventListener('click', () => $('#chat-panel').classList.toggle('open'));
+  // BAM_ASSIST_LAUNCHER_OPEN_V70: opening is idempotent; never toggle closed.
+  $('#chat-launcher').addEventListener('click', () => {
+    const panel = $('#chat-panel');
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+  });
   $('#chat-close').addEventListener('click', () => $('#chat-panel').classList.remove('open'));
   $('#guard-toggle').addEventListener('change', event => {
     state.guardEnabled = event.target.checked;
@@ -469,7 +474,7 @@ function bindEvents() {
   $('#drop-zone').addEventListener('dragleave', event => event.currentTarget.classList.remove('dragging'));
   $('#drop-zone').addEventListener('drop', event => { event.preventDefault(); event.currentTarget.classList.remove('dragging'); selectFile(event.dataTransfer.files[0]); });
   $('#download-clean-sample').addEventListener('click', () => {
-    const blob = new Blob(['Synthetic invoice for BAM Bank. No real customer data.'], { type: 'text/plain' });
+    const blob = new Blob(['Synthetic invoice for TF Bank. No real customer data.'], { type: 'text/plain' });
     const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'demo-invoice.txt'; anchor.click(); URL.revokeObjectURL(url);
   });
   $('#download-eicar-sample').addEventListener('click', () => {
@@ -559,7 +564,7 @@ exposePresenterLabFromUrl();
       investTitle: 'Investments.',
       investSubtitle: 'Explore your synthetic portfolio.',
       supportTitle: 'Support center.',
-      supportSubtitle: 'Get help with your BAM Bank account.',
+      supportSubtitle: 'Get help with your TF Bank account.',
       language: 'Language',
       payBills: 'Pay Bills',
       payBillsSub: 'Protected document upload',
@@ -634,7 +639,7 @@ exposePresenterLabFromUrl();
       investTitle: 'Investasi.',
       investSubtitle: 'Jelajahi portofolio sintetis Anda.',
       supportTitle: 'Pusat bantuan.',
-      supportSubtitle: 'Dapatkan bantuan untuk rekening BAM Bank Anda.',
+      supportSubtitle: 'Dapatkan bantuan untuk rekening TF Bank Anda.',
       language: 'Bahasa',
       payBills: 'Bayar Tagihan',
       payBillsSub: 'Unggah dokumen dengan perlindungan',
@@ -1224,7 +1229,7 @@ exposePresenterLabFromUrl();
 
   if (!chatPanel || !chatLauncher || !demoPromos) return;
 
-  const syncBambangUi = () => {
+  const syncShafeeraUi = () => {
     const isOpen = chatPanel.classList.contains('open');
 
     demoPromos.classList.toggle('chat-open', isOpen);
@@ -1232,16 +1237,16 @@ exposePresenterLabFromUrl();
     chatLauncher.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     chatLauncher.setAttribute(
       'aria-label',
-      isOpen ? 'Close Bambang banking assistant' : 'Open Bambang banking assistant'
+      isOpen ? 'Close Shafeera banking assistant' : 'Open Shafeera banking assistant'
     );
   };
 
-  new MutationObserver(syncBambangUi).observe(chatPanel, {
+  new MutationObserver(syncShafeeraUi).observe(chatPanel, {
     attributes: true,
     attributeFilter: ['class']
   });
 
-  syncBambangUi();
+  syncShafeeraUi();
 })();
 
 
@@ -1251,10 +1256,10 @@ exposePresenterLabFromUrl();
 
   const heroCopy = {
     en: {
-      eyebrow: 'BAM PRIVATE DIGITAL BANKING',
+      eyebrow: 'TF PRIVATE DIGITAL BANKING',
       title: 'Your money, beautifully in motion.',
       body: 'A clearer view of spending, saving, and intelligent protection—built for everyday decisions.',
-      ask: 'Ask Bambang',
+      ask: 'Ask Shafeera',
       security: 'Security center',
       protected: 'AI Guard protected',
       scanner: 'AI Scanner assessment ready',
@@ -1269,7 +1274,7 @@ exposePresenterLabFromUrl();
       eyebrow: 'PERBANKAN DIGITAL PRIVAT BAM',
       title: 'Keuangan Anda, bergerak lebih cerdas.',
       body: 'Pantau pengeluaran, tabungan, dan perlindungan cerdas dalam satu pengalaman yang lebih jernih.',
-      ask: 'Tanya Bambang',
+      ask: 'Tanya Shafeera',
       security: 'Pusat keamanan',
       protected: 'Dilindungi AI Guard',
       scanner: 'AI Scanner siap untuk assessment',
@@ -3450,8 +3455,8 @@ exposePresenterLabFromUrl();
     lab.removeAttribute('style');
 
     const chatLabel = currentLanguage() === 'id'
-      ? 'Buka Bambang'
-      : 'Open Bambang';
+      ? 'Buka Shafeera'
+      : 'Open Shafeera';
     chat.setAttribute('aria-label', chatLabel);
     chat.setAttribute('title', chatLabel);
 
@@ -3487,7 +3492,7 @@ exposePresenterLabFromUrl();
     const tooltip = q('#bam-v16-lab-tooltip');
 
     const isId = currentLanguage() === 'id';
-    const chatLabel = isId ? 'Buka Bambang' : 'Open Bambang';
+    const chatLabel = isId ? 'Buka Shafeera' : 'Open Shafeera';
     const labLabel = isId
       ? 'Buka kontrol demo keamanan AI'
       : 'Open AI security demo controls';
@@ -3597,7 +3602,7 @@ exposePresenterLabFromUrl();
       hubEyebrow: 'ASSISTANCE HUB',
       hubTitle: 'What would you like to do?',
       hubBody: 'Banking help and AI security testing, available from one place.',
-      chatTitle: 'Chat with Bambang',
+      chatTitle: 'Chat with Shafeera',
       chatBody: 'Ask about balances, transfers, and banking.',
       labLabel: 'AI SECURITY LAB',
       scannerTitle: 'AI Scanner',
@@ -3613,7 +3618,7 @@ exposePresenterLabFromUrl();
       hubEyebrow: 'PUSAT BANTUAN',
       hubTitle: 'Apa yang ingin dilakukan?',
       hubBody: 'Bantuan perbankan dan pengujian keamanan AI dari satu tempat.',
-      chatTitle: 'Chat dengan Bambang',
+      chatTitle: 'Chat dengan Shafeera',
       chatBody: 'Tanyakan saldo, transfer, dan layanan perbankan.',
       labLabel: 'LAB KEAMANAN AI',
       scannerTitle: 'AI Scanner',
@@ -4197,7 +4202,7 @@ exposePresenterLabFromUrl();
     article.className = 'bank-card bam-secondary-card-v21';
     article.innerHTML = `
       <div class="bank-card-top">
-        <span>BAM Bank</span>
+        <span>TF Bank</span>
         <span class="bam-visa-wordmark" aria-label="Visa">VISA</span>
       </div>
       <span class="bam-card-type-v21" id="bam-secondary-card-type"></span>
@@ -5064,7 +5069,7 @@ exposePresenterLabFromUrl();
 
   const copy = {
     en: {
-      assistantTitle: 'Bambang',
+      assistantTitle: 'Shafeera',
       assistantMeta: 'AI Banking Assistant · Always available',
       libraryTitle: 'Sample prompt library',
       libraryMeta: 'Choose a scenario or write your own prompt',
@@ -5072,11 +5077,11 @@ exposePresenterLabFromUrl();
       collapse: 'Hide sample prompts',
       banking: 'Banking',
       attacks: 'Security tests',
-      input: 'Ask Bambang or enter a custom security test…',
+      input: 'Ask Shafeera or enter a custom security test…',
       send: 'Send'
     },
     id: {
-      assistantTitle: 'Bambang',
+      assistantTitle: 'Shafeera',
       assistantMeta: 'Asisten Perbankan AI · Selalu tersedia',
       libraryTitle: 'Kumpulan contoh prompt',
       libraryMeta: 'Pilih skenario atau tulis prompt sendiri',
@@ -5084,7 +5089,7 @@ exposePresenterLabFromUrl();
       collapse: 'Sembunyikan contoh prompt',
       banking: 'Perbankan',
       attacks: 'Uji keamanan',
-      input: 'Tanyakan ke Bambang atau masukkan pengujian keamanan…',
+      input: 'Tanyakan ke Shafeera atau masukkan pengujian keamanan…',
       send: 'Kirim'
     }
   };
@@ -7488,9 +7493,15 @@ exposePresenterLabFromUrl();
     ).forEach(button => {
       button.addEventListener('click', () => {
         window.setTimeout(() => {
-          resetScanner(false);
+          // BAM_SCANNER_MODE_RESET_V65
+          // A mode change starts a new assessment flow.
+          resetScanner(true);
           fetchScannerStatus();
           syncScannerUi();
+          document.dispatchEvent(new CustomEvent(
+            'bam:scanner-mode-changed',
+            { detail: { mode: button.dataset.bamScannerMode } }
+          ));
         }, 0);
       });
     });
@@ -8237,13 +8248,13 @@ exposePresenterLabFromUrl();
 
     q('#bam-failure-back-v37', results)
       ?.addEventListener('click', () => {
-        resetScanner(false);
+        resetScanner(true);
         showStep(2);
       });
 
     q('#bam-failure-retry-v37', results)
       ?.addEventListener('click', () => {
-        resetScanner(false);
+        resetScanner(true);
         showStep(2);
         window.setTimeout(startScannerJob, 0);
       });
@@ -9615,12 +9626,12 @@ exposePresenterLabFromUrl();
     }
 
     nodes.forEach(node => {
-      node.nodeValue = node.nodeValue.replace(/Bamsky/g, 'Bambang');
+      node.nodeValue = node.nodeValue.replace(/Bamsky/g, 'Shafeera');
     });
 
     const input = q('#chat-input');
     if (input) {
-      input.placeholder = input.placeholder.replace(/Bamsky/g, 'Bambang');
+      input.placeholder = input.placeholder.replace(/Bamsky/g, 'Shafeera');
     }
   }
 
@@ -10679,7 +10690,7 @@ exposePresenterLabFromUrl();
       <div>
         <strong>Local application validation</strong>
         <p>
-          This button tests the exact prompt through BAM Bank.
+          This button tests the exact prompt through TF Bank.
           It does not create an AI Scanner campaign or publish
           this result to the Vision One console. Download the
           YAML and reference it from a TMAS scan configuration
@@ -10854,7 +10865,7 @@ install();
     })).filter(message => message.content);
 
     return {
-      name: q('#cp-name')?.value.trim() || 'BAM Bank custom prompt',
+      name: q('#cp-name')?.value.trim() || 'TF Bank custom prompt',
       category: q('#cp-category')?.value.trim() || 'Sensitive Data Disclosure',
       evaluation_criteria: q('#cp-evaluation')?.value.trim() || '',
       tags: (q('#cp-tags')?.value || '').split(',').map(item => item.trim()).filter(Boolean).slice(0, 20),
@@ -10933,7 +10944,7 @@ install();
     if (noteBody) {
       noteBody.textContent = live
         ? 'TMAS will execute this exact custom prompt, evaluate it with the Vision One hosted judge, and publish the official result.'
-        : 'This button tests the exact prompt through BAM Bank. The result is shown locally and is not published to Vision One.';
+        : 'This button tests the exact prompt through TF Bank. The result is shown locally and is not published to Vision One.';
     }
   }
 

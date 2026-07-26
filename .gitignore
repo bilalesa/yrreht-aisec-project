@@ -19,3 +19,29 @@ my-image-values.yaml
 # Local BAM Bank runtime secrets and revision tools
 .bam-server-default.env
 apply_bam_revision_v*.py
+
+# Local TF Bank development artifacts
+*.before-*
+*.before-v*
+*.v14-backup
+*.bak
+*.bak.*
+*-backup
+
+# Local runtime and smoke-test configurations
+/config.yaml
+/config.yaml.*
+/config-*.yaml
+/custom-smoke.yaml
+
+# Local patch utilities and deployment notes
+/apply_rev*.py
+/finish_rev*_deploy.py
+/deploy_rev*.sh
+/fix_ai_guard_token.py
+/V14-LIVE-NOTES.md
+/scripts/deploy-v14.sh
+
+# Local private deployment environment
+/deploy/*.env
+!/deploy/*.env.example
