@@ -119,21 +119,20 @@ def test_settings_report_trend_hosted_mode():
 
 
 
-def test_live_scanner_executes_guard_path() -> None:
-    response = client.post(
-        "/api/scanner/live",
-        json={
-            "target": "protected",
-            "objectives": ["prompt-injection"],
-        },
+def test_rev119_ui_uses_official_tmas_job_api() -> None:
+    static_dir = Path(__file__).parents[1] / 'app' / 'static'
+    suite_script = (static_dir / 'bam-suite-v99.js').read_text(
+        encoding='utf-8'
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["simulated"] is False
-    assert body["mode"] == "live"
-    assert body["blocked"] == 1
+    base_script = (static_dir / 'app.js').read_text(
+        encoding='utf-8'
+    )
 
+    for script in (suite_script, base_script):
+        assert '/api/scanner/jobs' in script
+        assert '/api/scanner/live' not in script
 
+    assert 'Vision One live · TMAS' in suite_script
 
 def test_client_context_shape() -> None:
     response = client.get("/api/client-context")

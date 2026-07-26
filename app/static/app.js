@@ -277,9 +277,14 @@ async function runScannerDemo() {
 
   state.scannerTarget = $('input[name="scanner-target"]:checked').value;
   const mode = state.scannerMode === 'live' ? 'live' : 'demo';
-  const endpoint = mode === 'live'
-    ? '/api/scanner/live'
-    : '/api/scanner/simulate';
+  if (mode === 'live') {
+    toast(
+      'Official TMAS workflow is initializing. ' +
+      'Retry the assessment.'
+    );
+    return;
+  }
+  const endpoint = '/api/scanner/simulate';
 
   setScannerStep(3);
   $('#scan-progress').classList.remove('hidden');

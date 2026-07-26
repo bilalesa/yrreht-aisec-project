@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '118.0.0';
+  const VERSION = '119.0.0';
   if (window.__bamSuiteV99Installed) return;
   window.__bamSuiteV99Installed = true;
 
@@ -1401,13 +1401,22 @@
     }).join('');
     const live = state.scannerMode === 'live';
     const custom = result?.source === 'custom' || state.scannerSource === 'custom';
+    const resultModeLabel = custom
+      ? (live ? 'Application-path validation · no tenant record' : 'Custom prompts · demo')
+      : (live ? 'Vision One live · TMAS' : 'Demo');
     const completionCopy = custom
-      ? (live ? 'Exact custom payload validated through the real model path.' : 'Custom prompt simulated locally · no tenant record.')
-      : (live ? 'Completed through the live integration.' : 'Completed locally · no tenant record.');
+      ? (live
+        ? 'The exact custom payload used the real model path, but no Vision One tenant record was created.'
+        : 'Custom prompt simulated locally · no tenant record.')
+      : (live
+        ? (result?.consoleExpected
+          ? `Official TMAS assessment completed for ${result?.tenantLabel || 'the configured Vision One tenant'}.`
+          : 'TMAS completed; verify the full report in the selected Vision One tenant.')
+        : 'Completed locally · no tenant record.');
     return `
       <section class="scanner-result">
         <div class="scanner-result-head">
-          <div><span>${custom ? 'Custom prompts · custom/1.0' : live ? 'Live validation' : 'Demo'}</span><strong>Assessment complete</strong><p>${completionCopy}</p></div>
+          <div><span>${resultModeLabel}</span><strong>Assessment complete</strong><p>${completionCopy}</p></div>
           <b>${summary.errors ? 'COMPLETED WITH ERRORS' : 'COMPLETED'}</b>
         </div>
         <div class="scanner-metrics">
@@ -1427,6 +1436,7 @@
 
     let endpoint;
     let body;
+    let officialTmas = false;
 
     if (state.scannerSource === 'custom') {
       captureCustomPromptFields();
@@ -1476,11 +1486,22 @@
         return;
       }
       state.scannerObjectives = objectives;
-      endpoint = state.scannerMode === 'live' ? '/api/scanner/live' : '/api/scanner/simulate';
-      body = {
-        target: state.scannerTarget,
-        objectives,
-      };
+      officialTmas = state.scannerMode === 'live';
+      endpoint = officialTmas ? '/api/scanner/jobs' : '/api/scanner/simulate';
+      body = officialTmas
+        ? {
+            mode: 'live',
+            target: state.scannerTarget,
+            objectives,
+            techniques: ['None'],
+            modifiers: ['None'],
+            model_id: 'visionone-bank-demo',
+            tenant_mode: 'default',
+          }
+        : {
+            target: state.scannerTarget,
+            objectives,
+          };
     }
 
     state.scannerBusy = true;
@@ -1488,10 +1509,45 @@
     renderScanner();
 
     try {
-      state.scannerResult = await request(endpoint, {
+      const response = await request(endpoint, {
         method: 'POST',
         body: JSON.stringify(body),
       });
+
+      if (!officialTmas) {
+        state.scannerResult = response;
+      } else {
+        const jobId = String(response?.jobId || '');
+        if (!jobId) throw new Error('Vision One did not return a TMAS job ID.');
+
+        let job = null;
+        for (let attempt = 0; attempt < 420; attempt += 1) {
+          job = await request(`/api/scanner/jobs/${encodeURIComponent(jobId)}`);
+          if (job?.status === 'completed' || job?.status === 'failed') break;
+          await new Promise(resolve => window.setTimeout(resolve, 1500));
+        }
+
+        if (!job || job.status !== 'completed') {
+          const detail = job?.error
+            || job?.failure?.message
+            || 'The TMAS assessment did not complete within the expected time.';
+          throw new Error(detail);
+        }
+
+        const summary = job.result || {};
+        state.scannerResult = {
+          ...summary,
+          jobId: job.id || jobId,
+          status: job.status,
+          stage: job.stage,
+          tenantMode: job.tenantMode,
+          tenantRegion: job.tenantRegion,
+          tenantLabel: summary.tenantLabel || 'Server-managed Vision One tenant',
+          processLog: Array.isArray(job.logs) ? job.logs : [],
+          consoleExpected: Boolean(summary.consoleExpected),
+          visionOnePublished: Boolean(summary.consoleExpected),
+        };
+      }
     } catch (error) {
       state.scannerResult = { error: error.message };
     } finally {
@@ -1618,13 +1674,15 @@
     const sourceLabel = state.scannerSource === 'custom'
       ? (state.scannerCustomMode === 'template' ? `Template · ${selectedCustomTemplate().title}` : 'Custom builder')
       : 'Built-in library';
-    const runTitle = state.scannerMode === 'live' ? 'Live validation' : 'Demo';
+    const runTitle = state.scannerMode === 'live'
+      ? (state.scannerSource === 'custom' ? 'Application-path validation' : 'Vision One live')
+      : 'Demo';
     const runCopy = state.scannerSource === 'custom'
       ? (state.scannerMode === 'live'
-        ? 'Runs the exact message sequence through the configured real model path. Download YAML for a TMAS tenant scan.'
+        ? 'Runs the exact message sequence through the real model path. No tenant record is created; use the exported YAML for a TMAS tenant scan.'
         : 'Simulates the selected custom payload locally · no tenant record.')
       : (state.scannerMode === 'live'
-        ? 'Uses the configured live integration.'
+        ? 'Runs the official TMAS campaign and publishes the report to the configured Vision One tenant.'
         : 'Runs locally · no tenant record.');
     const runButton = state.scannerBusy
       ? 'Running…'
@@ -1632,7 +1690,7 @@
         ? (state.scannerCustomMode === 'template'
           ? (state.scannerMode === 'live' ? 'Run selected template' : 'Run template demo')
           : (state.scannerMode === 'live' ? 'Run custom validation' : 'Run custom demo'))
-        : (state.scannerMode === 'live' ? 'Run live assessment' : 'Run demo');
+        : (state.scannerMode === 'live' ? 'Run Vision One assessment' : 'Run demo');
 
     q('#control-body').innerHTML = `
       <div class="form-shell scanner-shell">
@@ -1646,7 +1704,7 @@
             <span class="section-label">Mode</span>
             <div class="scanner-segment">
               <button class="${state.scannerMode === 'demo' ? 'active' : ''}" data-scanner-mode="demo" type="button"><strong>Demo</strong><small>No tenant record</small></button>
-              <button class="${state.scannerMode === 'live' ? 'active' : ''}" data-scanner-mode="live" type="button"><strong>Live validation</strong><small>Real model path</small></button>
+              <button class="${state.scannerMode === 'live' ? 'active' : ''}" data-scanner-mode="live" type="button"><strong>Live</strong><small>${state.scannerSource === 'custom' ? 'Real model path · no tenant record' : 'TMAS tenant report'}</small></button>
             </div>
           </div>
           <div class="scanner-config-card">
@@ -1674,7 +1732,7 @@
         </div>
 
         <div id="scanner-result-host" class="scanner-result-host">
-          ${state.scannerBusy ? `<div class="inspection-progress"><span></span><div><strong>Assessment running</strong><small>Live runs may take several minutes.</small></div></div>` : scannerResultMarkup(state.scannerResult)}
+          ${state.scannerBusy ? `<div class="inspection-progress"><span></span><div><strong>Assessment running</strong><small>${state.scannerSource === 'custom' ? 'Application-path validation in progress.' : 'TMAS is running and will publish to Vision One.'}</small></div></div>` : scannerResultMarkup(state.scannerResult)}
         </div>
       </div>`;
 
