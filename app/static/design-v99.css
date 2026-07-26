@@ -1,0 +1,25 @@
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 100% !important;
+  background: #f3f7fc !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+body.tf99-shell-active > :not(#tf-bank-v99-shell):not(#bam-suite-v99-root):not(script):not(style):not(link) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+#tf-bank-v99-shell {
+  display: block !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+}
+#bam-suite-v99-root {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
