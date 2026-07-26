@@ -49,7 +49,7 @@ config:
   aiGuardMaskPii: true
   aiGuardTimeoutSeconds: 8
   forceDemoMode: false
-  allowRuntimeConfig: false
+  allowRuntimeConfig: true
   llmChatUrl: ""
   llmModel: visionone-bank-demo
   llmTimeoutSeconds: 30
